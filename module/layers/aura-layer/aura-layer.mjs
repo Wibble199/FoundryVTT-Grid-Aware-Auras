@@ -1,9 +1,8 @@
 /** @import { AuraConfig } from "../../utils/aura.mjs"; */
 import { ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, ENTER_LEAVE_AURA_HOOK, MODULE_NAME } from "../../consts.mjs";
 import { getAura, getTokenAuras } from "../../utils/aura.mjs";
-import { getPointsUnderToken as getHexPointsUnderToken } from "../../utils/hex-utils.mjs";
+import { getSpacesUnderToken } from "../../utils/grid-utils.mjs";
 import { isTerrainHeightToolsActive, targetsToken, toggleEffect, warn } from "../../utils/misc-utils.mjs";
-import { getPointsUnderToken as getSquarePointsUnderToken } from "../../utils/square-utils.mjs";
 import { AuraManager } from "./aura-manager.mjs";
 import { Aura } from "./aura.mjs";
 
@@ -25,18 +24,22 @@ export class AuraLayer extends CanvasLayer {
 		return game.ready ? game.canvas?.gaaAuraLayer : undefined;
 	}
 
-	// Sorting within the PrimaryCanvasGroup works by the `elevation`, then by whether it is a token, then by whether it
-	// is a Drawing, then finally by the `sort`. We can then use the same elevation as tokens, then an extremely high
-	// sort value to sort over tiles, but below tokens.
-	// Terrain Height Tools uses 9999999999, so add 1 to ensure we render on top of the height map.
-	get elevation() { return 0; }
-	get sort() { return 10000000000; }
-
 	/** @override */
 	async _draw() {
 		// Reset state
 		this._auraManager.clear();
 		this._isTearingDown = false;
+
+		const debugGraphics = this._debugGraphics = this.addChild(new PIXI.Graphics());
+		window['drawTokenPoints'] = token => {
+			debugGraphics.clear();
+			const occupiedSpaces = getSpacesUnderToken(token, canvas.grid);
+			console.table(occupiedSpaces);
+
+			for (const point of occupiedSpaces) {
+				debugGraphics.beginFill(0x00FF00).drawCircle(point.x, point.y, 5).endFill();
+			};
+		}
 
 		// We do this in the ticker with a lower priority than the token update tick, so that the TokenLayer has time to
 		// initialise the tokens. If we do this now, some of the tokens may not be ready which can cause weirdness. It
@@ -65,7 +68,7 @@ export class AuraLayer extends CanvasLayer {
 			}
 
 			// Remove the aura from the canvas
-			this.removeChild(aura.graphics);
+			canvas.primary.removeChild(aura.graphics);
 			aura.destroy();
 		}
 
@@ -126,7 +129,7 @@ export class AuraLayer extends CanvasLayer {
 					this.#handleTokenEnterLeaveAura(otherToken, token, previousAura.config, false, userId, false);
 				}
 
-				this.removeChild(previousAura.graphics);
+				canvas.primary.removeChild(previousAura.graphics);
 				previousAura.destroy();
 				this._auraManager.deregisterAura(token, previousAura.config.id);
 			}
@@ -140,7 +143,7 @@ export class AuraLayer extends CanvasLayer {
 				} else {
 					const newAura = new Aura(token);
 					newAura.update(auraConfig, { force });
-					this.addChild(newAura.graphics);
+					canvas.primary.addChild(newAura.graphics);
 					this._auraManager.registerAura(token, newAura);
 				}
 			}
@@ -184,23 +187,19 @@ export class AuraLayer extends CanvasLayer {
 
 		// Array of the tokens to test
 		const tokensToTest = (targetToken
-				? [targetToken]
-				: [...game.canvas.tokens.placeables]);
+			? [targetToken]
+			: [...game.canvas.tokens.placeables]);
 
 		// Perform collision tests
 		for (const token of tokensToTest) {
 
-			// Work out the test points under the token
-			const { x: tokenX, y: tokenY } = useActualPosition ? token : token.document;
-			const { width: w, height: h } = token.document;
-			const pointsUnderToken = canvas.grid.type === CONST.GRID_TYPES.SQUARE
-				? getSquarePointsUnderToken({ gridSize: canvas.grid.size, width: w, height: h })
-				: getHexPointsUnderToken({
-					gridSize: canvas.grid.size,
-					cols: [CONST.GRID_TYPES.HEXEVENQ, CONST.GRID_TYPES.HEXODDQ].includes(canvas.grid.type),
-					centerSize: w !== h || (w % 1) !== 0 ? 0 : w,
-					isHeavy: Aura._isTokenHeavy(token)
-				});
+			// Work out the points under the token. Token#getOccupiedSpaces returns the x,y coordinates of the centre of
+			// the spaces under the token at it's current position. However, if we are testing against the document's
+			// position instead of the token's actual position, we need to offset each point.
+			const offsetX = useActualPosition ? 0 : token.document.x - token.x;
+			const offsetY = useActualPosition ? 0 : token.document.y - token.y;
+			const pointsUnderToken = [];//token.getOccupiedSpaces().map(p => ({ x: p.x + offsetX, y: p.y + offsetY }));
+			// TODO:
 
 			for (const { parent, aura } of aurasToTest) {
 				if (parent.id === token.id) // token cannot enter it's own aura
@@ -208,7 +207,7 @@ export class AuraLayer extends CanvasLayer {
 
 				const isInAura = aura.config.enabled
 					&& parent !== destroyToken && token !== destroyToken
-					&& pointsUnderToken.some(point => aura.isInside(tokenX + point.x, tokenY + point.y, { useActualPosition }));
+					&& pointsUnderToken.some(p => aura.isInside(p.x, p.y, { useActualPosition }));
 
 				if (this._auraManager.setIsInside(token, parent, aura.config.id, isInAura)) {
 					this.#handleTokenEnterLeaveAura(token, parent, aura.config, isInAura, userId ?? game.userId, isInit);

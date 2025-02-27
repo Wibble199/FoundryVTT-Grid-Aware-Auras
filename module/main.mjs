@@ -8,7 +8,7 @@ import { toggleEffect } from "./utils/misc-utils.mjs";
 Hooks.once("init", () => {
 	registerSettings();
 
-	CONFIG.Canvas.layers.gaaAuraLayer = { group: "primary", layerClass: AuraLayer };
+	CONFIG.Canvas.layers.gaaAuraLayer = { group: "interface", layerClass: AuraLayer };
 
 	// Wrap the default TokenConfig instead of using the renderTokenConfig hook because the latter does not run when the
 	// config is re-rendered, and it can cause the tab to disappear :(

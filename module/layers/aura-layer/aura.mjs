@@ -1,14 +1,12 @@
 /** @import { AuraConfig } from "../../utils/aura.mjs" */
-import { LINE_TYPES, MODULE_NAME, SQUARE_GRID_MODE_SETTING } from "../../consts.mjs";
+import { LINE_TYPES } from "../../consts.mjs";
 import { auraDefaults, auraVisibilityDefaults } from "../../utils/aura.mjs";
-import { generateHexAuraPolygon } from "../../utils/hex-utils.mjs";
+import { getTokenAura } from "../../utils/grid-utils.mjs";
 import { drawDashedPath } from "../../utils/pixi-utils.mjs";
-import { generateSquareAuraPolygon } from "../../utils/square-utils.mjs";
 
 /**
  * Class that manages a single aura.
  */
-
 export class Aura {
 
 	/** @type {Token} */
@@ -45,6 +43,7 @@ export class Aura {
 	constructor(token) {
 		this.#token = token;
 		this.#graphics = new PIXI.Graphics();
+		this.#graphics.sortLayer = 690; // Render just below tokens
 	}
 
 	get graphics() {
@@ -101,6 +100,7 @@ export class Aura {
 	updatePosition() {
 		this.#graphics.x = this.#token.x;
 		this.#graphics.y = this.#token.y;
+		this.#graphics.elevation = this.#token.document.elevation;
 	}
 
 	updateVisibility() {
@@ -232,38 +232,11 @@ export class Aura {
 	 * @param {AuraConfig} aura
 	 */
 	#getPolygonPoints(aura) {
-		switch (canvas.grid.type) {
-			case CONST.GRID_TYPES.GRIDLESS: {
-				// Gridless not supported
-				return [];
-			}
-
-			case CONST.GRID_TYPES.SQUARE: {
-				return generateSquareAuraPolygon(aura.radius, {
-					gridSize: canvas.grid.size,
-					width: this.#width,
-					height: this.#height,
-					mode: game.settings.get(MODULE_NAME, SQUARE_GRID_MODE_SETTING)
-				});
-			}
-
-			default: { // Any hex
-				const centerSize = this.#width !== this.#height || (this.#width % 1) !== 0
-					? 0
-					: this.#width;
-
-				// Hex only supports tokens with equal width/height and integer size
-				if (centerSize <= 0 || (centerSize % 1) !== 0)
-					return [];
-
-				return generateHexAuraPolygon(aura.radius, {
-					centerSize,
-					gridSize: canvas.grid.size,
-					cols: [CONST.GRID_TYPES.HEXEVENQ, CONST.GRID_TYPES.HEXODDQ].includes(canvas.grid.type),
-					isHeavy: this.#isHeavy
-				});
-			}
-		}
+		return getTokenAura(
+			this.#token,
+			aura.radius,
+			canvas.grid
+		).flatMap(({ x, y }) => [x, y]);
 	}
 
 	/**
