@@ -6,7 +6,7 @@
 [![GitHub downloads (total)](https://img.shields.io/github/downloads/Wibble199/FoundryVTT-Grid-Aware-Auras/release.zip?style=for-the-badge&label=downloads%20(total))](https://github.com/Wibble199/FoundryVTT-Grid-Aware-Auras/releases/latest)
 [![GitHub downloads (latest version)](https://img.shields.io/github/downloads/Wibble199/FoundryVTT-Grid-Aware-Auras/latest/release.zip?style=for-the-badge&label=downloads%20(latest))](https://github.com/Wibble199/FoundryVTT-Grid-Aware-Auras/releases/latest)
 
-A module which draws grid-accurate auras around tokens, which supports any size token and has customisable display styles. Supports the Token Border Supplements (formerly Hex Size Support) module.
+A module which draws grid-accurate auras around tokens, which supports any size token and has customisable display styles.
 
 ![Preview image](./docs/img/preview.png)
 
