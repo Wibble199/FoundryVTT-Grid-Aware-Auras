@@ -76,15 +76,19 @@ Hooks.on("targetToken", (_user, token) => {
 });
 
 // When combat is updated (e.g. if a turn was changed), we need to check aura visibility
-Hooks.on("updateCombat", combat => {
+Hooks.on("updateCombat", (combat, delta) => {
 	for (const combatant of combat.combatants) {
-		AuraLayer.current?._updateAuraGraphics({ token: combatant.token });
+		// combatant.token returns a TokenDocument, but we need Token
+		const token = game.canvas.tokens.get(combatant.tokenId);
+		AuraLayer.current?._updateAuraGraphics({ token });
 	}
 });
 
 Hooks.on("deleteCombat", combat => {
 	for (const combatant of combat.combatants) {
-		AuraLayer.current?._updateAuraGraphics({ token: combatant.token });
+		// combatant.token returns a TokenDocument, but we need Token
+		const token = game.canvas.tokens.get(combatant.tokenId);
+		AuraLayer.current?._updateAuraGraphics({ token: token });
 	}
 });
 
