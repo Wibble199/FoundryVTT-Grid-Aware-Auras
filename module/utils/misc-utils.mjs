@@ -64,7 +64,7 @@ export async function toggleEffect(actorOrUuid, effectId, state, overlay, allowD
 			await actor.createEmbeddedDocuments("ActiveEffect", [
 				{
 					name: effect.name,
-					icon: effect.icon,
+					img: effect.img,
 					statuses: [effect.id],
 					flags: overlay ? { "core.overlay": true } : {}
 				}
@@ -128,4 +128,39 @@ export function partialEqual(a, b) {
 export function isTerrainHeightToolsActive() {
 	const module = game.modules.get("terrain-height-tools");
 	return module?.active === true && !foundry.utils.isNewerVersion("0.4.7", module.version);
+}
+
+/**
+ * Wraps a function such that the return value of the function is cached based on the parameters passed to it.
+ * @template {(...args: any) => any} T
+ * @param {T} func Function to wrap.
+ * @param {(args: Parameters<T>) => string} keyFunc Optional function to generate cache key from the arguments. If not
+ * provided, defaults to all arguments joined by a "|".
+ * @returns {T}
+ */
+export function cacheReturn(func, keyFunc = undefined) {
+	const cache = new Map();
+	keyFunc ??= args => args.join("|");
+
+	return function(...args) {
+		const key = keyFunc(args);
+		if (cache.has(key)) return cache.get(key);
+		const result = func(...args);
+		cache.set(key, result);
+		return result;
+	}
+}
+
+/**
+ * Picks the selected properties from the given objects. The value returned will be from the first object which has a
+ * property of that name.
+ * @template {string} T
+ * @param {T[]} properties Properties to pick
+ * @param {...any} objects Objects to pick properties from, prioritising first objects.
+ * @returns {{ [K in T]: any; }}
+ * @example
+ * pickProperties(["a", "b"], { a: 1, c: 9 }, { a: 2, b: 4, d: 10 }) // => { a: 1, b: 4 }
+ */
+export function pickProperties(properties, ...objects) {
+	return Object.fromEntries(properties.map(p => [p, objects.find(o => o && p in o)?.[p]]));
 }

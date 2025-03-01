@@ -34,7 +34,7 @@
 		<div class="form-group">
 			<label>{{localize "DRAWING.StrokeColor"}}</label>
 			<div class="form-fields">
-				{{colorPicker name="lineColor" value=object.lineColor}}
+				<color-picker name="lineColor" value="{{object.lineColor}}" />
 			</div>
 		</div>
 
@@ -66,7 +66,7 @@
 		<div class="form-group">
 			<label>{{localize "DRAWING.FillColor"}}</label>
 			<div class="form-fields">
-				{{colorPicker name="fillColor" value=object.fillColor}}
+				<color-picker name="fillColor" value="{{object.fillColor}}" />
 			</div>
 		</div>
 
@@ -80,8 +80,7 @@
 		<div class="form-group">
 			<label>{{localize "DRAWING.FillTexture"}}</label>
 			<div class="form-fields">
-				{{filePicker target="fillTexture" type="image"}}
-				<input class="image" type="text" name="fillTexture" placeholder="path/image.png" value="{{object.fillTexture}}"/>
+				<file-picker name="fillTexture" type="image" value="{{object.fillTexture}}" />
 			</div>
 		</div>
 
@@ -183,7 +182,7 @@
 			<div class="form-group">
 				<label>Effect</label>
 				<select name="effect.effectId" {{disabled (not effectsEnabled)}}>
-					{{selectOptions statusEffects selected=object.effect.effectId localize=true sort=true blank="None" nameAttr="id" labelAttr="name"}}
+					{{selectOptions statusEffects selected=object.effect.effectId localize=true sort=true blank="None" valueAttr="id" labelAttr="name"}}
 				</select>
 			</div>
 
