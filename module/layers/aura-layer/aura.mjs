@@ -2,6 +2,7 @@
 import { LINE_TYPES } from "../../consts.mjs";
 import { auraDefaults, auraVisibilityDefaults } from "../../utils/aura.mjs";
 import { getTokenAura } from "../../utils/grid-utils.mjs";
+import { pickProperties } from "../../utils/misc-utils.mjs";
 import { drawDashedPath } from "../../utils/pixi-utils.mjs";
 
 /**
@@ -64,11 +65,7 @@ export class Aura {
 
 		// If a relevant property has changed, do a redraw
 		if (shouldRedraw || force) {
-			this.#redraw({
-				width: tokenDelta?.width || this.#token.document.width,
-				height: tokenDelta?.height || this.#token.document.height,
-				hexagonalShape: tokenDelta?.hexagonalShape || this.#token.document.hexagonalShape
-			});
+			this.#redraw(pickProperties(["width", "height", "hexagonalShape"], tokenDelta, this.#token.document));
 		}
 
 		this.updateVisibility();
@@ -95,12 +92,14 @@ export class Aura {
 	 * @param {number} x
 	 * @param {number} y
 	 * @param {Object} [options]
+	 * @param {{ x?: number; y?: number; }} [options.tokenPosition] If provided, treats the token that owns the aura as
+	 * being at this position. If not provided, falls back to the Token or TokenDocument position.
 	 * @param {boolean} [options.useActualPosition] If false (default), uses the position of the token document. If true,
 	 * uses the actual position of the token on the canvas.
 	 */
-	isInside(x, y, { useActualPosition = false } = {}) {
+	isInside(x, y, { tokenPosition, useActualPosition = false } = {}) {
 		// Need to offset by token position, as the geometry is relative to token position, not relative to canvas pos
-		const { x: xOffset, y: yOffset } = useActualPosition ? this.#token : this.#token.document;
+		const { x: xOffset, y: yOffset } = pickProperties(["x", "y"], tokenPosition, useActualPosition ? this.#token : this.#token.document);
 
 		return this.#geometry?.isInside(x - xOffset, y - yOffset) ?? false;
 	}

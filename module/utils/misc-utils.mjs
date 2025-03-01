@@ -64,7 +64,7 @@ export async function toggleEffect(actorOrUuid, effectId, state, overlay, allowD
 			await actor.createEmbeddedDocuments("ActiveEffect", [
 				{
 					name: effect.name,
-					icon: effect.icon,
+					img: effect.img,
 					statuses: [effect.id],
 					flags: overlay ? { "core.overlay": true } : {}
 				}
@@ -149,4 +149,18 @@ export function cacheReturn(func, keyFunc = undefined) {
 		cache.set(key, result);
 		return result;
 	}
+}
+
+/**
+ * Picks the selected properties from the given objects. The value returned will be from the first object which has a
+ * property of that name.
+ * @template {string} T
+ * @param {T[]} properties Properties to pick
+ * @param {...any} objects Objects to pick properties from, prioritising first objects.
+ * @returns {{ [K in T]: any; }}
+ * @example
+ * pickProperties(["a", "b"], { a: 1, c: 9 }, { a: 2, b: 4, d: 10 }) // => { a: 1, b: 4 }
+ */
+export function pickProperties(properties, ...objects) {
+	return Object.fromEntries(properties.map(p => [p, objects.find(o => o && p in o)?.[p]]));
 }

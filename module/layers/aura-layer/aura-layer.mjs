@@ -2,7 +2,7 @@
 import { ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, ENTER_LEAVE_AURA_HOOK, MODULE_NAME } from "../../consts.mjs";
 import { getAura, getTokenAuras } from "../../utils/aura.mjs";
 import { getSpacesUnderToken } from "../../utils/grid-utils.mjs";
-import { isTerrainHeightToolsActive, targetsToken, toggleEffect, warn } from "../../utils/misc-utils.mjs";
+import { isTerrainHeightToolsActive, pickProperties, targetsToken, toggleEffect, warn } from "../../utils/misc-utils.mjs";
 import { AuraManager } from "./aura-manager.mjs";
 import { Aura } from "./aura.mjs";
 
@@ -140,7 +140,7 @@ export class AuraLayer extends CanvasLayer {
 		}
 
 		if (token) {
-			this._testCollisionsForToken(token, { userId });
+			this._testCollisionsForToken(token, { tokenDelta, userId });
 		} else {
 			this.#testCollisions({ userId, isInit });
 		}
@@ -151,7 +151,9 @@ export class AuraLayer extends CanvasLayer {
 	 * @param {Object} [options]
 	 * @param {string} [options.userId] The user ID of the user that has triggered this test. Defaults to current user.
 	 * @param {Token} [options.sourceToken] If provided, only tests the auras from this token. If not, tests all auras.
+	 * @param {Record<string, any>} [options.sourceTokenDelta] If provided, prefers this over values in sourceToken.
 	 * @param {Token} [options.targetToken] If provided, only tests this token against the auras. If not, tests all tokens.
+	 * @param {Record<string, any>} [options.targetTokenDelta] If provided, prefers this over values in targetToken.
 	 * @param {Token} [options.destroyToken] If provided, assumes that any tests involving this token are non-entered.
 	 * @param {boolean} [options.useActualPosition] If false (default), uses the position of the token document. If true,
 	 * uses the actual position of the token on the canvas.
@@ -160,7 +162,9 @@ export class AuraLayer extends CanvasLayer {
 	#testCollisions({
 		userId,
 		sourceToken,
+		sourceTokenDelta,
 		targetToken,
+		targetTokenDelta,
 		destroyToken,
 		useActualPosition = false,
 		isInit = false
@@ -183,7 +187,10 @@ export class AuraLayer extends CanvasLayer {
 		// Perform collision tests
 		for (const token of tokensToTest) {
 
-			const pointsUnderToken = getSpacesUnderToken(token, canvas.grid, useActualPosition ? token : token.document);
+			// Prefer values from the delta if provided, if not use the token's x/y or the document's x/y depending on
+			// if we want the displayed position of the token or the persisted position.
+			const position = pickProperties(["x", "y"], targetTokenDelta, useActualPosition ? token : token.document);
+			const pointsUnderToken = getSpacesUnderToken(token, canvas.grid, position);
 
 			for (const { parent, aura } of aurasToTest) {
 				if (parent.id === token.id) // token cannot enter it's own aura
@@ -191,7 +198,7 @@ export class AuraLayer extends CanvasLayer {
 
 				const isInAura = aura.config.enabled
 					&& parent !== destroyToken && token !== destroyToken
-					&& pointsUnderToken.some(p => aura.isInside(p.x, p.y, { useActualPosition }));
+					&& pointsUnderToken.some(p => aura.isInside(p.x, p.y, { tokenPosition: sourceTokenDelta, useActualPosition }));
 
 				if (this._auraManager.setIsInside(token, parent, aura.config.id, isInAura)) {
 					this.#handleTokenEnterLeaveAura(token, parent, aura.config, isInAura, userId ?? game.userId, isInit);
@@ -204,14 +211,15 @@ export class AuraLayer extends CanvasLayer {
 	 * Tests collisions for the specific token.
 	 * @param {Token} token
 	 * @param {Object} [options]
+	 * @param {Record<string, any>} [options.tokenDelta] If provided, uses values from this instead of the token's.
 	 * @param {string} [options.userId] The ID of the user that has triggered this test. Default to current user.
 	 * @param {boolean} [options.useActualPosition] If false (default), uses the position of the token document. If true,
 	 * uses the actual position of the token on the canvas.
 	 * @param {boolean} [options.destroyToken] If true, treats the passed `token` as destroy for collisions.
 	 */
-	_testCollisionsForToken(token, { userId, useActualPosition = false, destroyToken = false } = {}) {
-		this.#testCollisions({ userId, sourceToken: token, destroyToken: destroyToken ? token : undefined, useActualPosition });
-		this.#testCollisions({ userId, targetToken: token, destroyToken: destroyToken ? token : undefined, useActualPosition });
+	_testCollisionsForToken(token, { tokenDelta, userId, useActualPosition = false, destroyToken = false } = {}) {
+		this.#testCollisions({ userId, sourceToken: token, sourceTokenDelta: tokenDelta, destroyToken: destroyToken ? token : undefined, useActualPosition });
+		this.#testCollisions({ userId, targetToken: token, targetTokenDelta: tokenDelta, destroyToken: destroyToken ? token : undefined, useActualPosition });
 	}
 
 	/**
