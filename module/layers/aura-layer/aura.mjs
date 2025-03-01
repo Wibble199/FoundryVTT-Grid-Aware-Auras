@@ -15,18 +15,6 @@ export class Aura {
 	/** @type {AuraConfig} */
 	#config;
 
-	/**
-	 * For evenly-sized tokens on hex grids, whether that token is "heavy" (i.e. the largest part of the token is on
-	 * the bottom or the right).
-	 */
-	#isHeavy = false;
-
-	/** @type {number} */
-	#width;
-
-	/** @type {number} */
-	#height;
-
 	#isVisible = false;
 
 	/** @type {PIXI.Graphics} */
@@ -58,49 +46,42 @@ export class Aura {
 	 * Updates this aura graphic, and redraws it if required.
 	 * @param {AuraConfig} config
 	 * @param {Object} [options]
+	 * @param {Record<string, any>} [options.tokenDelta] If provided, uses the properties from this instead of the token
 	 * @param {boolean} [options.force] Force a redraw, even if no aura properties have changed.
 	*/
-	update(config, { force = false } = {}) {
-		let shouldRedraw = false;
+	update(config, { tokenDelta, force = false } = {}) {
+		this.updatePosition({ tokenDelta });
 
-		this.updatePosition();
+		const shouldRedraw = force ||
+			this.#config != config ||
+			(tokenDelta && (
+				"width" in tokenDelta ||
+				"height" in tokenDelta ||
+				"hexagonalShape" in tokenDelta
+			));
 
-		// Update token size
-		if (this.#width !== this.#token.document.width) {
-			this.#width = this.#token.document.width;
-			shouldRedraw = true;
-		}
-
-		if (this.#height !== this.#token.document.height) {
-			this.#height = this.#token.document.height;
-			shouldRedraw = true;
-		}
-
-		// Update aura
-		if (this.#config !== config) {
-			this.#config = config;
-			shouldRedraw = true;
-		}
-
-		// Update heavy flag
-		const isHeavy = Aura._isTokenHeavy(this.#token);
-		if (this.#isHeavy !== isHeavy) {
-			this.#isHeavy = isHeavy;
-			shouldRedraw = true;
-		}
+		this.#config = config;
 
 		// If a relevant property has changed, do a redraw
 		if (shouldRedraw || force) {
-			this.#redraw();
+			this.#redraw({
+				width: tokenDelta?.width || this.#token.document.width,
+				height: tokenDelta?.height || this.#token.document.height,
+				hexagonalShape: tokenDelta?.hexagonalShape || this.#token.document.hexagonalShape
+			});
 		}
 
 		this.updateVisibility();
 	}
 
-	updatePosition() {
-		this.#graphics.x = this.#token.x;
-		this.#graphics.y = this.#token.y;
-		this.#graphics.elevation = this.#token.document.elevation;
+	/**
+	 * @param {Object} [options]
+	 * @param {Record<string, any>} [options.tokenDelta] If provided, uses the properties from this instead of the token
+	 */
+	updatePosition({ tokenDelta } = {}) {
+		this.#graphics.x = tokenDelta?.x ?? this.#token.x;
+		this.#graphics.y = tokenDelta?.y ?? this.#token.y;
+		this.#graphics.elevation = tokenDelta?.elevation ?? this.#token.document.elevation;
 	}
 
 	updateVisibility() {
@@ -128,17 +109,23 @@ export class Aura {
 		this.#graphics.destroy();
 	}
 
-	async #redraw() {
-		const config = { ...auraDefaults, ...this.#config };
+	async #redraw({ width, height, hexagonalShape } = {}) {
+		const auraConfig = { ...auraDefaults, ...this.#config };
+
+		width ??= this.#token.document.width;
+		height ??= this.#token.document.height;
+		hexagonalShape ??= this.#token.document.hexagonalShape;
 
 		// Negative radii are not supported
-		if (config.radius < 0) {
+		if (auraConfig.radius < 0) {
 			this.#graphics.clear();
 			return;
 		}
 
 		// Generate polygon points. If there are none, early exit
-		const points = this.#getPolygonPoints(config);
+		const points = getTokenAura(width, height, auraConfig.radius, canvas.grid, hexagonalShape)
+			.flatMap(({ x, y }) => [x, y]);
+
 		if (points.length === 0) {
 			this.#graphics.clear();
 			this.#geometry = null;
@@ -148,24 +135,24 @@ export class Aura {
 		this.#geometry = new AuraGeometry(points);
 
 		// Load the texture BEFORE clearing, otherwise there's a noticable flash every time something is chaned.
-		const texture = config.fillType === CONST.DRAWING_FILL_TYPES.PATTERN
-			? await loadTexture(config.fillTexture)
+		const texture = auraConfig.fillType === CONST.DRAWING_FILL_TYPES.PATTERN
+			? await loadTexture(auraConfig.fillTexture)
 			: null;
 
 		this.#graphics.clear();
 
-		this.#configureFillStyle({ ...config, fillTexture: texture });
+		this.#configureFillStyle({ ...auraConfig, fillTexture: texture });
 
 		// If we are using a dashed path, because of the way the dash is implemted, we need to draw the fill separately
 		// from the stroke.
-		if (config.lineType === LINE_TYPES.DASHED) {
+		if (auraConfig.lineType === LINE_TYPES.DASHED) {
 			this.#configureLineStyle({ lineType: LINE_TYPES.NONE });
 			this.#graphics.drawPolygon(points);
 			this.#graphics.endFill();
-			this.#configureLineStyle(config);
-			drawDashedPath(this.#graphics, points, { closed: true, dashSize: config.lineDashSize, gapSize: config.lineGapSize });
+			this.#configureLineStyle(auraConfig);
+			drawDashedPath(this.#graphics, points, { closed: true, dashSize: auraConfig.lineDashSize, gapSize: auraConfig.lineGapSize });
 		} else {
-			this.#configureLineStyle(config);
+			this.#configureLineStyle(auraConfig);
 			this.#graphics.drawPolygon(points);
 		}
 	}
@@ -175,12 +162,7 @@ export class Aura {
 	 */
 	#getVisibility() {
 		// If token is hidden or set as invisible in config, then it is definitely not visible
-		if (!this.#token.visible || !this.#config.enabled) {
-			return false;
-		}
-
-		// If the token has a preview, hide the token's own auras
-		if (this.#token.hasPreview) {
+		if (!this.#token.visible || this.#token.hasPreview || !this.#config.enabled) {
 			return false;
 		}
 
@@ -225,18 +207,6 @@ export class Aura {
 		}
 
 		return !hasRelevantNonDefaultState && visibility.default;
-	}
-
-	/**
-	 * Gets the points of the shape polygon for the current state.
-	 * @param {AuraConfig} aura
-	 */
-	#getPolygonPoints(aura) {
-		return getTokenAura(
-			this.#token,
-			aura.radius,
-			canvas.grid
-		).flatMap(({ x, y }) => [x, y]);
 	}
 
 	/**

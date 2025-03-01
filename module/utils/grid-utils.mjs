@@ -4,16 +4,16 @@ import { getSquareAuraBorder } from "./square-utils.mjs";
 
 /**
  * Gets the polygon for an aura for the given token with the given radius.
- * @param {Token} token
- * @param {number} radius
- * @param {BaseGrid} grid
+ * @param {number} width Width of the token (in grid spaces).
+ * @param {number} height Height of the token (in grid spaces).
+ * @param {number} radius Radius of the aura (in grid spaces).
+ * @param {BaseGrid} grid Grid config.
+ * @param {number} hexagonalShape The token's hexagonal shape.
  */
-export function getTokenAura(token, radius, grid) {
+export function getTokenAura(width, height, radius, grid, hexagonalShape) {
 	if (grid.type === CONST.GRID_TYPES.GRIDLESS) {
 		return []; // Gridless not supported
 	}
-
-	const { width, height, hexagonalShape } = token.document;
 
 	// Non-integer token sizes or radii are not supported
 	if (width % 1 !== 0 || height % 1 !== 0 || radius % 1 !== 0 || width < 1 || height < 1 || radius < 0) {

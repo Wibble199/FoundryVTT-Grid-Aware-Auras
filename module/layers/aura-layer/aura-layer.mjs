@@ -30,17 +30,6 @@ export class AuraLayer extends CanvasLayer {
 		this._auraManager.clear();
 		this._isTearingDown = false;
 
-		const debugGraphics = this._debugGraphics = this.addChild(new PIXI.Graphics());
-		window['drawTokenPoints'] = token => {
-			debugGraphics.clear();
-			const occupiedSpaces = getSpacesUnderToken(token, canvas.grid);
-			console.table(occupiedSpaces);
-
-			for (const point of occupiedSpaces) {
-				debugGraphics.beginFill(0x00FF00).drawCircle(point.x, point.y, 5).endFill();
-			};
-		}
-
 		// We do this in the ticker with a lower priority than the token update tick, so that the TokenLayer has time to
 		// initialise the tokens. If we do this now, some of the tokens may not be ready which can cause weirdness. It
 		// also becomes a LOT more difficult to track whether isInit should be true or false. Doing it this way solves
@@ -104,17 +93,18 @@ export class AuraLayer extends CanvasLayer {
 	 * @param {string} [options.userId] The user ID of the user that has triggered this test. Defaults to current user.
 	 * @param {boolean} [options.isInit] Should be set to true when performing initial tests on scene load.
 	 */
-	_updateAuras({ token, force = false, userId, isInit = false } = {}) {
+	_updateAuras({ token, tokenDelta, force = false, userId, isInit = false } = {}) {
 		// Tokens may not all be ready yet
 		if (!this.#isInitialised) return;
 
 		userId ??= game.userId;
+		force ||= isInit;
 
 		/** @type {Token[]} */
 		const tokens = token ? [token] : canvas.tokens.placeables;
 
 		for (const token of tokens) {
-			const auras = token.hasPreview || canvas.grid.type === CONST.GRID_TYPES.GRIDLESS
+			const auras = canvas.grid.type === CONST.GRID_TYPES.GRIDLESS
 				? []
 				: getTokenAuras(token);
 
@@ -139,10 +129,10 @@ export class AuraLayer extends CanvasLayer {
 			for (const auraConfig of auras) {
 				const aura = previousAuras.find(a => a.config.id === auraConfig.id);
 				if (aura) {
-					aura.update(auraConfig, { force });
+					aura.update(auraConfig, { tokenDelta, force });
 				} else {
 					const newAura = new Aura(token);
-					newAura.update(auraConfig, { force });
+					newAura.update(auraConfig, { tokenDelta, force });
 					canvas.primary.addChild(newAura.graphics);
 					this._auraManager.registerAura(token, newAura);
 				}

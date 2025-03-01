@@ -38,10 +38,10 @@ Hooks.on("createToken", (tokenDocument, _options, userId) => {
 	}
 });
 
-Hooks.on("updateToken", (tokenDocument, _delta, _options, userId) => {
+Hooks.on("updateToken", (tokenDocument, delta, _options, userId) => {
 	const token = game.canvas.tokens.get(tokenDocument.id);
 	if (token && AuraLayer.current) {
-		AuraLayer.current._updateAuras({ token, userId });
+		AuraLayer.current._updateAuras({ token, tokenDelta: delta, userId });
 	}
 });
 
