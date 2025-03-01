@@ -1,6 +1,25 @@
 import { SQUARE_GRID_MODE } from "../consts.mjs";
 import { cacheReturn } from "./misc-utils.mjs";
 
+const generateSquareHexTokenSpaces = cacheReturn(
+	/**
+	 * Calculates the coordinates of all spaces occupied by an trapezoid token with the given width/height.
+	 * @param {number} width The width of the token (in grid spaces).
+	 * @param {number} height The height of the token (in grid spaces).
+	 */
+	function(width, height) {
+		/** @type {{ x: number; y: number; }[]} */
+		const spaces = [];
+
+		for (let y = 0; y < height; y++)
+		for (let x = 0; x < width; x++) {
+			spaces.push({ x: x + 0.5, y: y + 0.5 });
+		}
+
+		return spaces;
+	}
+);
+
 const generateSquareAuraBorder = cacheReturn(
 	/**
 	 * Generates a square aura polygon for the given radius.
@@ -104,4 +123,16 @@ const generateSquareAuraBorder = cacheReturn(
  */
 export function getSquareAuraBorder(width, height, radius, mode, gridSize) {
 	return generateSquareAuraBorder(width, height, radius, mode).map(({ x, y }) => ({ x: x * gridSize, y: y * gridSize }));
+}
+
+/**
+ * Returns the centre of the cells occupied by the token.
+ * @param {number} x The X position of the token.
+ * @param {number} y The Y position of the token.
+ * @param {number} width The width of the token (in grid cells).
+ * @param {number} height The height of the token (in grid cells).
+ * @param {number} gridSize Size of the grid to generate.
+ */
+export function getSpacesUnderSquareToken(x, y, width, height, gridSize) {
+	return generateSquareHexTokenSpaces(width, height).map(p => ({ x: x + p.x * gridSize, y: y + p.y * gridSize }));
 }

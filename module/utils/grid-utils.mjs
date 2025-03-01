@@ -1,6 +1,6 @@
 import { MODULE_NAME, SQUARE_GRID_MODE, SQUARE_GRID_MODE_SETTING } from "../consts.mjs";
 import { getHexAuraBorder, getSpacesUnderHexToken } from "./hex-utils.mjs";
-import { getSquareAuraBorder } from "./square-utils.mjs";
+import { getSpacesUnderSquareToken, getSquareAuraBorder } from "./square-utils.mjs";
 
 /**
  * Gets the polygon for an aura for the given token with the given radius.
@@ -51,7 +51,7 @@ export function getSpacesUnderToken(token, grid, altPosition = undefined) {
 		points = getSpacesUnderHexToken(x, y, width, height, hexagonalShape, [CONST.GRID_TYPES.HEXEVENQ, CONST.GRID_TYPES.HEXODDQ].includes(grid.type), grid.size);
 
 	} else {
-		points = []; // TODO:
+		points = getSpacesUnderSquareToken(x, y, width, height, grid.size);
 	}
 
 	// If the points were not valid (e.g. unsupported hex size), just return a single point at the centre of the token

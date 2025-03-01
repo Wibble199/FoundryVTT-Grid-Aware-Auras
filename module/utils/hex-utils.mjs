@@ -11,7 +11,7 @@ const RADIANS_60 = 60 * Math.PI / 180;
 
 const getEllipseHexTokenSpaces = cacheReturn(
 	/**
-	 * Calculates the cube coordinates of all spaces occupied by an ellipse token with the given width/height.
+	 * Calculates the coordinates of all spaces occupied by an ellipse token with the given width/height.
 	 * @param {number} primaryAxisSize Size of the token in the primary direction, measured in cells.
 	 * @param {number} secondaryAxisSize Size of the token in the secondary direction, measured in cells.
 	 * @param {boolean} isColumnar true for hex columns, false for hex rows.
@@ -96,7 +96,7 @@ const getEllipseHexAuraBorder = cacheReturn(
 
 const getTrapezoidHexTokenSpaces = cacheReturn(
 	/**
-	 * Calculates the cube coordinates of all spaces occupied by an trapezoid token with the given width/height.
+	 * Calculates the coordinates of all spaces occupied by an trapezoid token with the given width/height.
 	 * @param {number} primaryAxisSize Size of the token in the primary direction, measured in cells.
 	 * @param {number} secondaryAxisSize Size of the token in the secondary direction, measured in cells.
 	 * @param {boolean} isColumnar true for hex columns, false for hex rows.
@@ -165,7 +165,7 @@ const getTrapezoidHexAuraBorder = cacheReturn(
 
 const getRectangleHexTokenSpaces = cacheReturn(
 	/**
-	 * Calculates the cube coordinates of all spaces occupied by an trapezoid token with the given width/height.
+	 * Calculates the coordinates of all spaces occupied by an trapezoid token with the given width/height.
 	 * @param {number} primaryAxisSize Size of the token in the primary direction, measured in cells.
 	 * @param {number} secondaryAxisSize Size of the token in the secondary direction, measured in cells.
 	 * @param {boolean} isColumnar true for hex columns, false for hex rows.
@@ -215,7 +215,7 @@ const getRectangleHexAuraBorder = cacheReturn(
 	 * @param {boolean} isColumnar true for hex columns, false for hex rows.
 	 * @param {boolean} isVariant2 false for RECTANGLE_1, true for RECTANGLE_2.
 	 */
-	window.test = function (primaryAxisSize, secondaryAxisSize, radius, isColumnar, isVariant2) {
+	function (primaryAxisSize, secondaryAxisSize, radius, isColumnar, isVariant2) {
 		// If the size in the primary direction is 1, the size in the secondary direction must be no more than one.
 		// For primary size >= 2, any size secondary is acceptable.
 		if (primaryAxisSize === 1 && secondaryAxisSize > 1) {
