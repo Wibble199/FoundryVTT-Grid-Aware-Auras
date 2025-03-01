@@ -51,11 +51,10 @@ export function getSpacesUnderToken(token, grid, altPosition = undefined) {
 		points = getSpacesUnderHexToken(x, y, width, height, hexagonalShape, [CONST.GRID_TYPES.HEXEVENQ, CONST.GRID_TYPES.HEXODDQ].includes(grid.type), grid.size);
 
 	} else {
-		/** @type {SQUARE_GRID_MODE} */
-		const squareGridMode = game.settings.get(MODULE_NAME, SQUARE_GRID_MODE_SETTING);
 		points = []; // TODO:
 	}
 
+	// If the points were not valid (e.g. unsupported hex size), just return a single point at the centre of the token
 	return points?.length > 0
 		? points
 		: [{ x: x + width * grid.size / 2, y: y + height * grid.size / 2 }];

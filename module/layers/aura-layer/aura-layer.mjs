@@ -193,13 +193,7 @@ export class AuraLayer extends CanvasLayer {
 		// Perform collision tests
 		for (const token of tokensToTest) {
 
-			// Work out the points under the token. Token#getOccupiedSpaces returns the x,y coordinates of the centre of
-			// the spaces under the token at it's current position. However, if we are testing against the document's
-			// position instead of the token's actual position, we need to offset each point.
-			const offsetX = useActualPosition ? 0 : token.document.x - token.x;
-			const offsetY = useActualPosition ? 0 : token.document.y - token.y;
-			const pointsUnderToken = [];//token.getOccupiedSpaces().map(p => ({ x: p.x + offsetX, y: p.y + offsetY }));
-			// TODO:
+			const pointsUnderToken = getSpacesUnderToken(token, canvas.grid, useActualPosition ? token : token.document);
 
 			for (const { parent, aura } of aurasToTest) {
 				if (parent.id === token.id) // token cannot enter it's own aura
