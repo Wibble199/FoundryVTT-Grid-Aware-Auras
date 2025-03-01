@@ -23,9 +23,6 @@ Alternatively, paste this URL into the 'Manifest URL' field of the 'Install Modu
 3. If you need to edit an existing aura, you can click the cog button next to it to edit it. You can also quickly toggle whether that aura is visible by clicking the eye icon.
 4. Finally, just click the "Update Token" button.
 
-> [!NOTE]
-> For hex grids, GAA only supports cases where the width and height of the token are identical. If this is not the case, the aura will not be shown. Square grids do not have this restriction.
-
 ### Visibility
 
 By default, newly created auras are visible to everyone so long as the token itself is visible. This can be changed in the 'Visibility' tab of the aura's config.
