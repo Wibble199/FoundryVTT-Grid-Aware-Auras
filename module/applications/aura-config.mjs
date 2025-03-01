@@ -58,7 +58,7 @@ export class AuraConfigApplication extends FormApplication {
 		data.visibilityMode = this.#getVisibilityMode(data.object.ownerVisibility, data.object.nonOwnerVisibility);
 
 		data.effectsEnabled = game.settings.get(MODULE_NAME, ENABLE_EFFECT_AUTOMATION_SETTING);
-		data.statusEffects = CONFIG.statusEffects;
+		data.statusEffects = CONFIG.statusEffects.map(({ id, name }) => ({ id, name })); // fix compat warning on .label
 
 		data.macrosEnabled = game.settings.get(MODULE_NAME, ENABLE_MACRO_AUTOMATION_SETTING);
 
