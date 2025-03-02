@@ -55,25 +55,7 @@ export async function toggleEffect(actorOrUuid, effectId, state, overlay, allowD
 	if (!actor) return;
 
 	if (actor.canUserModify(game.user, "update")) {
-		// If current user can edit this actor, then do it
-		const existingEffects = actor.effects.filter(e => e.statuses.size === 1 && e.statuses.has(effectId));
-
-		if (existingEffects.length === 0 && state) {
-			const effect = CONFIG.statusEffects.find(e => e.id === effectId);
-			if (!effect) return;
-			await actor.createEmbeddedDocuments("ActiveEffect", [
-				{
-					name: effect.name,
-					img: effect.img,
-					statuses: [effect.id],
-					flags: overlay ? { "core.overlay": true } : {}
-				}
-			]);
-		}
-
-		else if (existingEffects.length > 0 && !state) {
-			await actor.deleteEmbeddedDocuments("ActiveEffect", existingEffects.map(e => e.id));
-		}
+		await actor.toggleStatusEffect(effectId, { active: state, overlay });
 
 	} else if (allowDelegation) {
 		// If the user can't edit this actor, but delegation is allowed, delegate to a GM user
