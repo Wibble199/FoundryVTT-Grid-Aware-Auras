@@ -76,8 +76,9 @@ When dealing with square grids, there are different ways of handling diagonals. 
 |Name|Picture|Description|
 |-|-|-|
 |Equidistant (1/1/1)|![Equidistant example](./docs/img/square-equidistant.png)|In this ruleset, moving diagonally always costs 1 (i.e. the same as moving horizontally or vertically). Therefore, the resulting aura ends up being a large square around the token. For example, this is how D&D5E usually works.|
-|Alternating (1/2/1)|![Equidistant example](./docs/img/square-alternating.png)|In this ruleset, the first diagonal costs 1, the second 2, the third 1 again, then 2 again, etc. This is the technique that Pathfinder 2E uses, for example.|
-|Manhattan|![Equidistant example](./docs/img/square-manhattan.png)|In this ruleset, diagonals are effectly disallowed. Moving 1 square diagonally would always cost 2 (1 horizontal and 1 vertical).|
+|Alternating (1/2/1)|![Alternating example](./docs/img/square-alternating.png)|In this ruleset, the first diagonal costs 1, the second 2, the third 1 again, then 2 again, etc. This is the technique that Pathfinder 2E uses, for example.|
+|Manhattan (2/2/2)|![Manhattan example](./docs/img/square-manhattan.png)|In this ruleset, diagonals are effectly disallowed. Moving 1 square diagonally would always cost 2 (1 horizontal and 1 vertical).|
+|Exact (√2/√2/√2)|![Exact example](./docs/img/square-exact.png)|Also known as euclidean, this ruleset treats diagonals as √2. This is the same area you would get if you used Foundry's circle template tool with an equivalent radius from the centre of each cell.
 
 _(Numbers are for illustrative purposes only)_
 

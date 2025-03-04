@@ -1,6 +1,14 @@
 import { SQUARE_GRID_MODE } from "../consts.mjs";
 import { cacheReturn } from "./misc-utils.mjs";
 
+/** @type {Map<SQUARE_GRID_MODE, (xOffset: number, yOffset: number, radius: number) => boolean>} */
+const costFuncs = new Map([
+	[SQUARE_GRID_MODE.EQUIDISTANT, (x, y, r) => Math.max(x, y) <= r],
+	[SQUARE_GRID_MODE.ALTERNATING, (x, y, r) => Math.max(x, y) + Math.floor(Math.min(x, y) / 2) <= r],
+	[SQUARE_GRID_MODE.MANHATTAN, (x, y, r) => x + y <= r],
+	[SQUARE_GRID_MODE.EXACT, (x, y, r) => x * x + y * y <= r * r]
+]);
+
 const generateSquareHexTokenSpaces = cacheReturn(
 	/**
 	 * Calculates the coordinates of all spaces occupied by an trapezoid token with the given width/height.
@@ -30,86 +38,73 @@ const generateSquareAuraBorder = cacheReturn(
 	 * @param {SQUARE_GRID_MODE} mode The algorithm used to generate the aura.
 	 */
 	function(width, height, radius, mode) {
-		const r = radius;
-		switch (mode) {
-			// This is the easiest to implement, just a large rectangle/square around the centre
-			case SQUARE_GRID_MODE.EQUIDISTANT: {
-				return [
-					/* top-left: */ { x: -r, y: -r },
-					/* top-right: */ { x: (width + r), y: -r },
-					/* bottom-right: */ { x: (width + r), y: (height + r) },
-					/* bottom-left: */ { x: -r, y: (height + r) }
-				];
+		const costFunc = costFuncs.get(mode);
+		if (!costFunc) throw new Error("Unknown `mode` for generateSquareAuraBorder.");
+
+		// All the corners are the same, so we only need to calculate one corner and can re-use this for all 4 corners
+		// by 'rotating' the points.
+		/** @type {{ x: number; y: number; }[]} */
+		const cornerPoints = [];
+
+		// Loop over all spaces, starting from closest to the centre of the token and working outwards (left-to-right
+		// then top-to-bottom). Keep track of the previous time the X value of the edge of the aura changed. Work out
+		// where the X edge of the aura is at the current Y. If the X is different, add a pair of points for it.
+		// Finally, we add just a single point at the same previous X at Y = radius, UNLESS that X is 0 (because if so
+		// it will already be handled by the straight edge part).
+		// E.G. if the aura was a radius 4 with a pattern like this:
+		// ■■■□
+		// ■■■□
+		// ■■□□
+		// □□□□
+		// The initial 'lastX' will be 4 (we assume this carries over from the straight edge, and will be at the radius)
+		// The X value at the the first Y is 3. This is different from 4, add { x: 4, y: 0 }, { x: 3, y: 0 } to points.
+		// The next X value is the same as the previous. Doesn't need any new points.
+		// The next X value is 2, which is different, so add { x: 3, y: 2 }, { x: 2, y: 2 }
+		// The next X value is 0, which is different, so add { x: 2, y: 3 }, { x: 0, y: 3 }
+		// We do not add the final point, because X is 0.
+		let lastXPoint = radius;
+		for (let y = 0; y < radius; y++) {
+			let x = 0;
+			for (; x < radius; x++) {
+				const isInAura = costFunc(x + 1, y + 1, radius);
+				if (!isInAura) break;
 			}
 
-			// Alternating seems to generate a pattern where there are 3 distinct slopes between adjacent sides, e.g.
-			// from the top to the right, the x:y ratio of the first slope is 2:1, the second 1:1, then finally 1:2. The
-			// 1:1 part is always either 1 or 3 squares in size.
-			case SQUARE_GRID_MODE.ALTERNATING: {
-				const padding = r > 0 ? 1 : 0 // All radii except 0 have the straight side extend 1 square further than the width/height
-				const innerDiagonalLength = Math.max(r - 1, 0) % 3; // The length of the 1:1 slope part
-				const outerDialogalLength = Math.floor(Math.max(r - 1, 0) / 3); // The length of the two 2:1/2:1 parts
-
-				return [
-					/* top: */ { x: -padding, y: -r },
-					/* top-right diagonals: */ ...alternatingDiagonals(width + padding, -r, "x", 1, 1),
-					/* right: */ { x: (width + r), y: -padding },
-					/* bottom-right diagonals: */ ...alternatingDiagonals(width + r, height + padding, "y", -1, 1),
-					/* bottom: */ { x: (width + padding), y: (height + r) },
-					/* bottom-left diagonals: */ ...alternatingDiagonals(-padding, height + r, "x", -1, -1),
-					/* left: */ { x: -r, y: (height + padding) },
-					/* top-left diagonals: */ ...alternatingDiagonals(-radius, -padding, "y", 1, -1)
-				];
-
-				/**
-				 * Generates diagonals for the alternating aura. One call of this will generate the 3 distinct diagonals.
-				 * Dir will determine which values are stretched. dx/dy will determine the direction of the diagonals.
-				 * @type {(x: number, y: number, dir: "x" | "y", dx: number, dy: number) => Generator<{ x: number; y: number; }, void, void>}
-				 */
-				function* alternatingDiagonals(x, y, dir, dx, dy) {
-					const ifX = v => dir === "x" ? v : 0;
-					const ifY = v => dir === "y" ? v : 0;
-					([x, y] = yield *diagonal(x, y, outerDialogalLength, ifY(1) * dx, ifX(1) * dy, ifX(2) * dx, ifY(2) * dy));
-					([x, y] = yield *diagonal(x, y, innerDiagonalLength, ifY(1) * dx, ifX(1) * dy, ifX(1) * dx, ifY(1) * dy));
-					([x, y] = yield *diagonal(x, y, outerDialogalLength, ifY(2) * dx, ifX(2) * dy, ifX(1) * dx, ifY(1) * dy));
-				}
-			}
-
-			// Manhattan can be boiled down to a top/bottom/left/right which are the same as the width/heigh, and then a
-			// diagonal between the sides. The length of the diagonals equals the radius of aura.
-			case SQUARE_GRID_MODE.MANHATTAN: {
-				return [
-					/** top: */ { x: 0, y: -r },
-					/** top-right diagonal: */ ...diagonal(width, -r, r, 0, 1, 1, 0),
-					/** right: */ { x: (width + r), y: 0 },
-					/** bottom-right diagonal: */ ...diagonal(width + r, height, r, -1, 0, 0, 1),
-					/** bottom: */ { x: width, y: (height + r) },
-					/** bottom-left diagonal: */ ...diagonal(0, height + r, r, 0, -1, -1, 0),
-					/** left: */ { x: -r, y: height },
-					/** top-left diagonal: */ ...diagonal(-r, 0, r, 1, 0, 0, -1)
-				];
+			if (lastXPoint !== x) {
+				cornerPoints.push({ x: lastXPoint, y });
+				cornerPoints.push({ x, y });
+				lastXPoint = x;
 			}
 		}
 
-		throw new Error("Unknown `mode` for generateSquareAuraBorder.");
-
-		/**
-		 * Creates a diagonal for a square grid. dx0/dy0 are the number of squares to move on the first step, and
-		 * dx1/dy1 are the number of squares to move on the second step.
-		 * @type {(x: number, y: number, count: number, dx0: number, dy0: number, dx1: number, dy1: number) => Generator<{ x: number; y: number; }, [number, number], void>}
-		 */
-		function* diagonal(x, y, count, dx0, dy0, dx1, dy1) {
-			for (let i = 0; i < count; i++) {
-				yield { x, y };
-				x += dx0;
-				y += dy0;
-				yield { x, y };
-				x += dx1;
-				y += dy1;
-			}
-
-			return [x, y];
+		if (lastXPoint > 0) {
+			cornerPoints.push({ x: lastXPoint, y: radius });
 		}
+
+		// Now, we can take the points we calculated for a single corner, and use them to generate the whole points for
+		// the entire aura.
+		return [
+			// Top-left corner:
+			...cornerPoints.map(({ x, y }) => ({ x: -x, y: -y })),
+			// Top edge
+			{ x: 0, y: -radius },
+			{ x: width, y: -radius },
+			// Top-right corner
+			...cornerPoints.map(({ x, y }) => ({ x: y + width, y: -x })),
+			// Right edge
+			{ x: width + radius, y: 0 },
+			{ x: width + radius, y: height },
+			// Bottom-right corner
+			...cornerPoints.map(({ x, y }) => ({ x: x + width, y: y + height })),
+			// Bottom edge
+			{ x: width, y: height + radius },
+			{ x: 0, y: height + radius },
+			// Bottom-left corner:
+			...cornerPoints.map(({ x, y }) => ({ x: -y, y: x + height })),
+			// Left edge:
+			{ x: -radius, y: height },
+			{ x: -radius, y: 0 }
+		];
 	}
 );
 

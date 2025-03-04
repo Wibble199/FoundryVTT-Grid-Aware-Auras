@@ -28,7 +28,8 @@ export const LINE_TYPES = /** @type {const} */ ({
 export const SQUARE_GRID_MODE = /** @type {const} */ ({
 	EQUIDISTANT: 0,
 	ALTERNATING: 1,
-	MANHATTAN: 2
+	MANHATTAN: 2,
+	EXACT: 3
 });
 
 /** @enum {keyof typeof AURA_VISIBILITY_MODES} */

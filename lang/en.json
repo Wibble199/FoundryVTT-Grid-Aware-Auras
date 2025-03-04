@@ -12,7 +12,8 @@
 		"LineTypeSolid": "Solid",
 		"SquareGridModeEquidistant": "Equidistant (1/1/1)",
 		"SquareGridModeAlternating": "Alternating (1/2/1)",
-		"SquareGridModeManhattan": "Manhattan",
+		"SquareGridModeManhattan": "Manhattan (2/2/2)",
+		"SquareGridModeExact": "Exact (√2/√2/√2)",
 		"ThtRulerOnDragModeNone": "Don't show",
 		"ThtRulerOnDragModeC2C": "Centre Only",
 		"ThtRulerOnDragModeE2E": "Centre and Edge"
