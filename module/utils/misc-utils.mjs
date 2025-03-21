@@ -71,22 +71,6 @@ export async function toggleEffect(actorOrUuid, effectId, state, overlay, allowD
 }
 
 /**
- * Determines if the token should be affected by automation that targets the given `target`.
- * @param {Token} token
- * @param {import("../consts.mjs").TOKEN_TARGETS} target
- */
-export function targetsToken(token, target) {
-	const { disposition } = token.document;
-	switch (target) {
-		case "ALL": return disposition !== CONST.TOKEN_DISPOSITIONS.SECRET;
-		case "FRIENDLY": return disposition === CONST.TOKEN_DISPOSITIONS.FRIENDLY;
-		case "NEUTRAL": return disposition === CONST.TOKEN_DISPOSITIONS.NEUTRAL;
-		case "HOSTILE": return disposition === CONST.TOKEN_DISPOSITIONS.HOSTILE;
-		default: return false;
-	}
-}
-
-/**
  * Determines if the `a` and `b` are partially equal. For each property in `b`, if it has a property in `a` with the
  * same value, it is equal. Does not check additional properties on `a`.
  * @param {Object} a

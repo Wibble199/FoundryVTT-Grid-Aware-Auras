@@ -9,6 +9,7 @@ export const TOKEN_AURAS_FLAG = "auras";
 export const ENABLE_EFFECT_AUTOMATION_SETTING = "enableEffectAutomation";
 export const ENABLE_MACRO_AUTOMATION_SETTING = "enableMacroAutomation";
 export const SQUARE_GRID_MODE_SETTING = "squareGridMode";
+export const CUSTOM_AURA_TARGET_FILTERS_SETTING = "customAuraTargetFilters";
 
 // Hooks
 const HOOK_PREFIX = "gridAwareAuras";
@@ -44,14 +45,6 @@ export const AURA_VISIBILITY_MODES = /** @type {const} */ ({
 	OWNER_TURN: "GRIDAWAREAURAS.AuraDisplayTurn",
 	NONE: "TOKEN.DISPLAY_NONE",
 	CUSTOM: "GRIDAWAREAURAS.AuraDisplayCustom"
-});
-
-/** @enum {keyof typeof TOKEN_TARGETS} */
-export const TOKEN_TARGETS = /** @type {const} */ ({
-	ALL: "All",
-	FRIENDLY: "TOKEN.DISPOSITION.FRIENDLY",
-	NEUTRAL: "TOKEN.DISPOSITION.NEUTRAL",
-	HOSTILE: "TOKEN.DISPOSITION.HOSTILE"
 });
 
 /** @enum {keyof typeof THT_RULER_ON_DRAG_MODES} */

@@ -93,6 +93,7 @@ GAA does not check from the vertices of the token's border because rounding erro
 ## See Also
 - [API Reference](./docs/api.md)
 - [Hooks](./docs/hooks.md)
+- [Custom Aura Target Filters](./docs/custom-aura-target-filters.md)
 
 ## Roadmap
 

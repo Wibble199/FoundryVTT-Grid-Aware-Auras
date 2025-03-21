@@ -1,6 +1,6 @@
-/** @import { AuraConfig } from "../utils/aura.mjs"; */
+/** @import { AuraConfig } from "../data/aura.mjs"; */
 import { ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, LINE_TYPES, MODULE_NAME, TOKEN_AURAS_FLAG } from "../consts.mjs";
-import { createAura, getAura, getTokenAuras } from "../utils/aura.mjs";
+import { createAura, getAura, getTokenAuras } from "../data/aura.mjs";
 import { AuraConfigApplication } from "./aura-config.mjs";
 import { ContextMenuGaa } from "./context-menu-gaa.mjs";
 

@@ -93,6 +93,74 @@
 	text-shadow: 0 0 8px var(--color-shadow-primary);
 }
 
+/* -------------------------------- */
+/* Aura Target Custom Filter Config */
+/* -------------------------------- */
+#gaa-custom-aura-target-filter-config .filter-list {
+	flex-grow: 1;
+	overflow-y: auto;
+}
+
+#gaa-custom-aura-target-filter-config .filter-item {
+	display: grid;
+	grid-template:
+		"name delete" min-content
+		"body delete" min-content
+		/ 1fr min-content;
+	gap: 0.5rem;
+	padding: 0.5rem;
+	border: 1px solid var(--color-border-dark-4);
+	border-radius: 4px;
+}
+
+#gaa-custom-aura-target-filter-config .filter-item:not(:last-child) {
+	margin-bottom: 1rem;
+}
+
+#gaa-custom-aura-target-filter-config .filter-item .name {
+	grid-area: name;
+}
+
+#gaa-custom-aura-target-filter-config .filter-item .body {
+	grid-area: body;
+	padding: 1rem;
+	border: 1px solid var(--color-cool-4);
+    border-radius: 4px;
+	font-family: var(--font-monospace);
+}
+
+#gaa-custom-aura-target-filter-config .filter-item .body.is-invalid {
+	border-color: var(--color-level-error);
+}
+
+#gaa-custom-aura-target-filter-config .filter-item .body span {
+	opacity: 0.6;
+}
+
+#gaa-custom-aura-target-filter-config .filter-item .body textarea {
+	min-height: auto;
+	resize: vertical;
+	field-sizing: content;
+	padding: 0;
+	padding-left: 1rem;
+	border: none;
+	border-radius: 0;
+}
+
+#gaa-custom-aura-target-filter-config .filter-item .body.is-invalid textarea {
+	color: var(--color-level-error);
+}
+
+#gaa-custom-aura-target-filter-config .filter-item .body .error {
+	margin-bottom: 0;
+	color: var(--color-level-error);
+}
+
+#gaa-custom-aura-target-filter-config .filter-item .delete {
+	grid-area: delete;
+	align-self: center;
+}
+
 /* ------- */
 /* Utility */
 /* ------- */

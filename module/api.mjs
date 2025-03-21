@@ -1,5 +1,5 @@
+import { getTokenAuras as getTokenAurasImpl } from "./data/aura.mjs";
 import { AuraLayer } from "./layers/aura-layer/aura-layer.mjs";
-import { getTokenAuras as getTokenAurasImpl } from "./utils/aura.mjs";
 import { toggleEffect as toggleEffectImpl } from "./utils/misc-utils.mjs";
 
 /**

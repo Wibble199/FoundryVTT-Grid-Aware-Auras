@@ -1,8 +1,9 @@
-/** @import { AuraConfig } from "../../utils/aura.mjs"; */
+/** @import { AuraConfig } from "../../data/aura.mjs"; */
 import { ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, ENTER_LEAVE_AURA_HOOK, MODULE_NAME } from "../../consts.mjs";
-import { getAura, getTokenAuras } from "../../utils/aura.mjs";
+import { canTargetToken } from "../../data/aura-target-filters.mjs";
+import { getAura, getTokenAuras } from "../../data/aura.mjs";
 import { getSpacesUnderToken } from "../../utils/grid-utils.mjs";
-import { isTerrainHeightToolsActive, pickProperties, targetsToken, toggleEffect, warn } from "../../utils/misc-utils.mjs";
+import { isTerrainHeightToolsActive, pickProperties, toggleEffect, warn } from "../../utils/misc-utils.mjs";
 import { AuraManager } from "./aura-manager.mjs";
 import { Aura } from "./aura.mjs";
 
@@ -247,7 +248,7 @@ export class AuraLayer extends CanvasLayer {
 
 		// Apply/remove effects
 		if (!isInit && !isPreview && aura.effect.effectId?.length && userId === game.userId
-			&& targetsToken(token, aura.effect.targetTokens)
+			&& canTargetToken(token, parent, aura, aura.effect.targetTokens)
 			&& game.settings.get(MODULE_NAME, ENABLE_EFFECT_AUTOMATION_SETTING)) {
 			// We only do this if the current user is the user that triggered the change. We only want this code to run
 			// once, regardless of how many users are on the scene when it happens. Ideally we'd limit this to just GM
@@ -280,7 +281,7 @@ export class AuraLayer extends CanvasLayer {
 		// Terrain Height Tools integration
 		if (parent.isPreview && aura.terrainHeightTools.rulerOnDrag !== "NONE" && isTerrainHeightToolsActive()) {
 			const group = [MODULE_NAME, parent.document.uuid, aura.id, token.document.uuid].join("|");
-			if (hasEntered && targetsToken(token, aura.terrainHeightTools.targetTokens))
+			if (hasEntered && canTargetToken(token, parent, aura, aura.terrainHeightTools.targetTokens))
 				terrainHeightTools.drawLineOfSightRaysBetweenTokens(parent, token, { group, drawForOthers: false, includeEdges: aura.terrainHeightTools.rulerOnDrag === "E2E" });
 			else
 				terrainHeightTools.clearLineOfSightRays({ group });

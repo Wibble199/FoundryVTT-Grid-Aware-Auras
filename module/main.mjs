@@ -1,12 +1,14 @@
 import * as api from "./api.mjs";
 import { tokenConfigClose, tokenConfigRenderInner } from "./applications/token-aura-config.mjs";
 import { MODULE_NAME, SOCKET_NAME, TOGGLE_EFFECT_FUNC } from "./consts.mjs";
+import { initialiseAuraTargetFilters } from "./data/aura-target-filters.mjs";
 import { AuraLayer } from "./layers/aura-layer/aura-layer.mjs";
 import { registerSettings } from "./settings.mjs";
 import { toggleEffect } from "./utils/misc-utils.mjs";
 
 Hooks.once("init", () => {
 	registerSettings();
+	initialiseAuraTargetFilters();
 
 	CONFIG.Canvas.layers.gaaAuraLayer = { group: "interface", layerClass: AuraLayer };
 

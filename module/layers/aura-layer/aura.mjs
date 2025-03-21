@@ -1,6 +1,6 @@
-/** @import { AuraConfig } from "../../utils/aura.mjs" */
+/** @import { AuraConfig } from "../../data/aura.mjs" */
 import { LINE_TYPES } from "../../consts.mjs";
-import { auraDefaults, auraVisibilityDefaults } from "../../utils/aura.mjs";
+import { auraDefaults, auraVisibilityDefaults } from "../../data/aura.mjs";
 import { getTokenAura } from "../../utils/grid-utils.mjs";
 import { pickProperties } from "../../utils/misc-utils.mjs";
 import { drawDashedPath } from "../../utils/pixi-utils.mjs";

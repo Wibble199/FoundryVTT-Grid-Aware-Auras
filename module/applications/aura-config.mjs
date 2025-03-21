@@ -1,11 +1,12 @@
-/** @import { Aura } from ("../utils/aura.mjs"); */
-import { AURA_VISIBILITY_MODES, ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, LINE_TYPES, MODULE_NAME, THT_RULER_ON_DRAG_MODES, TOKEN_TARGETS } from "../consts.mjs";
-import { auraVisibilityModeMatrices, getAura } from "../utils/aura.mjs";
+/** @import { AuraConfig } from ("../data/aura.mjs"); */
+import { AURA_VISIBILITY_MODES, ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, LINE_TYPES, MODULE_NAME, THT_RULER_ON_DRAG_MODES } from "../consts.mjs";
+import { listAuraTargetFilters } from "../data/aura-target-filters.mjs";
+import { auraVisibilityModeMatrices, getAura } from "../data/aura.mjs";
 import { isTerrainHeightToolsActive, partialEqual } from "../utils/misc-utils.mjs";
 
 export class AuraConfigApplication extends FormApplication {
 
-	/** @type {((aura: Aura) => void) | undefined} */
+	/** @type {((aura: AuraConfig) => void) | undefined} */
 	onChange;
 
 	/** @type {(() => void) | undefined} */
@@ -65,7 +66,7 @@ export class AuraConfigApplication extends FormApplication {
 		data.isTerrainHeightToolsActive = isTerrainHeightToolsActive();
 		data.terrainHeightToolsRulerOnDragMode = THT_RULER_ON_DRAG_MODES;
 
-		data.tokenTargets = TOKEN_TARGETS;
+		data.tokenTargets = listAuraTargetFilters();
 
 		return data;
 	}
@@ -142,8 +143,8 @@ export class AuraConfigApplication extends FormApplication {
 	}
 
 	/**
-	 * @param {import("../utils/aura.mjs").VisibilityConfig} ownerVisibility
-	 * @param {import("../utils/aura.mjs").VisibilityConfig} nonOwnerVisibility
+	 * @param {import("../data/aura.mjs").VisibilityConfig} ownerVisibility
+	 * @param {import("../data/aura.mjs").VisibilityConfig} nonOwnerVisibility
 	 * @returns {AURA_VISIBILITY_MODES}
 	 */
 	#getVisibilityMode(ownerVisibility, nonOwnerVisibility) {

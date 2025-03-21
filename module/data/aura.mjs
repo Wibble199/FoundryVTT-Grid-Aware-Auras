@@ -1,4 +1,4 @@
-/** @import { THT_RULER_ON_DRAG_MODES, TOKEN_TARGETS } from "../consts.mjs" */
+/** @import { THT_RULER_ON_DRAG_MODES } from "../consts.mjs" */
 import { LINE_TYPES, MODULE_NAME, TOKEN_AURAS_FLAG } from "../consts.mjs";
 
 /**
@@ -24,12 +24,12 @@ import { LINE_TYPES, MODULE_NAME, TOKEN_AURAS_FLAG } from "../consts.mjs";
  * @property {Object} effect
  * @property {string} effect.effectId
  * @property {boolean} effect.isOverlay
- * @property {TOKEN_TARGETS} effect.targetTokens
+ * @property {string} effect.targetTokens ID of the filter to use to specify targetable tokens.
  * @property {Object} macro
  * @property {string | null} macro.macroId
  * @property {Object} terrainHeightTools
  * @property {THT_RULER_ON_DRAG_MODES} terrainHeightTools.rulerOnDrag
- * @property {TOKEN_TARGETS} terrainHeightTools.targetTokens
+ * @property {string} terrainHeightTools.targetTokens ID of the filter to use to specify targetable tokens.
  */
 /**
  * @typedef {Object} VisibilityConfig
@@ -83,20 +83,20 @@ export const auraDefaults = {
 	effect: {
 		effectId: null,
 		isOverlay: false,
-		targetTokens: "ALL"
+		targetTokens: ""
 	},
 	macro: {
 		macroId: null
 	},
 	terrainHeightTools: {
 		rulerOnDrag: "NONE",
-		targetTokens: "ALL"
+		targetTokens: ""
 	}
 };
 
 /** @returns {AuraConfig} */
 export function createAura() {
-	return { ...auraDefaults, id: foundry.utils.randomID() };
+	return foundry.utils.mergeObject(auraDefaults, { id: foundry.utils.randomID() }, { inplace: false });
 }
 
 /**
