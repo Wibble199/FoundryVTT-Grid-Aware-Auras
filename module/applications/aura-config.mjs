@@ -1,11 +1,11 @@
-/** @import { AuraConfig } from ("../data/aura.mjs"); */
+/** @import { AuraConfig, VisibilityConfig } from "../data/aura.mjs"; */
 import "../components/tabs.mjs";
 import { AURA_VISIBILITY_MODES, ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, LINE_TYPES, MODULE_NAME, THT_RULER_ON_DRAG_MODES } from "../consts.mjs";
 import { listAuraTargetFilters } from "../data/aura-target-filters.mjs";
 import { auraVisibilityModeMatrices } from "../data/aura.mjs";
 import { classMap, html, render, when } from "../lib/lit-all.min.js";
 import { selectOptions } from "../utils/lit-utils.mjs";
-import { isTerrainHeightToolsActive } from "../utils/misc-utils.mjs";
+import { isTerrainHeightToolsActive, partialEqual } from "../utils/misc-utils.mjs";
 
 const { ApplicationV2 } = foundry.applications.api;
 
@@ -14,6 +14,7 @@ const l = k => game.i18n.localize(k);
 
 export class AuraConfigApplication extends ApplicationV2 {
 
+	/** @type {AuraConfig} */
 	#aura;
 
 	#visibilityMode;
@@ -29,6 +30,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 		super(options);
 
 		this.#aura = foundry.utils.deepClone(aura);
+		this.#visibilityMode = this.#getVisibilityMode(aura.ownerVisibility, aura.nonOwnerVisibility);
 	}
 
 	static DEFAULT_OPTIONS = {
@@ -386,6 +388,19 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 		this.render();
 	};
+
+	/**
+	 * @param {VisibilityConfig} ownerVisibility
+	 * @param {VisibilityConfig} nonOwnerVisibility
+	 * @returns {AURA_VISIBILITY_MODES}
+	 */
+	#getVisibilityMode(ownerVisibility, nonOwnerVisibility) {
+		for (const [mode, modeConfig] of Object.entries(auraVisibilityModeMatrices)) {
+			if (partialEqual(ownerVisibility, modeConfig.owner) && partialEqual(nonOwnerVisibility, modeConfig.nonOwner))
+				return mode;
+		}
+		return "CUSTOM";
+	}
 
 	/** @param {DragEvent} event */
 	#onMacroDragOver = event => {
