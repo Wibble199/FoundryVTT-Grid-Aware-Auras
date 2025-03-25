@@ -1,8 +1,11 @@
-/** @import { THT_RULER_ON_DRAG_MODES } from "../consts.mjs" */
+/** @import { EFFECT_APPLICATION_MODES, THT_RULER_ON_DRAG_MODES } from "../consts.mjs" */
 import { LINE_TYPES, MODULE_NAME, TOKEN_AURAS_FLAG } from "../consts.mjs";
+
+export const latestAuraConfigVersion = 1;
 
 /**
  * @typedef {Object} AuraConfig
+ * @property {number} _v
  * @property {string} id
  * @property {string} name
  * @property {boolean} enabled
@@ -21,12 +24,8 @@ import { LINE_TYPES, MODULE_NAME, TOKEN_AURAS_FLAG } from "../consts.mjs";
  * @property {{ x: number; y: number; }} fillTextureScale
  * @property {VisibilityConfig} ownerVisibility
  * @property {VisibilityConfig} nonOwnerVisibility
- * @property {Object} effect
- * @property {string} effect.effectId
- * @property {boolean} effect.isOverlay
- * @property {string} effect.targetTokens ID of the filter to use to specify targetable tokens.
- * @property {Object} macro
- * @property {string | null} macro.macroId
+ * @property {EffectConfig[]} effects
+ * @property {MacroConfig[]} macros
  * @property {Object} terrainHeightTools
  * @property {THT_RULER_ON_DRAG_MODES} terrainHeightTools.rulerOnDrag
  * @property {string} terrainHeightTools.targetTokens ID of the filter to use to specify targetable tokens.
@@ -40,6 +39,16 @@ import { LINE_TYPES, MODULE_NAME, TOKEN_AURAS_FLAG } from "../consts.mjs";
  * @property {boolean} targeted
  * @property {boolean} turn
  */
+/**
+ * @typedef {Object} EffectConfig
+ * @property {string} effectId
+ * @property {boolean} isOverlay
+ * @property {string} targetTokens ID of the filter to use to specify targetable tokens.
+ */
+/**
+ * @typedef {Object} MacroConfig
+ * @property {string} macroId
+ */
 
 /**
  * Gets the auras that are present on the given token.
@@ -48,7 +57,8 @@ import { LINE_TYPES, MODULE_NAME, TOKEN_AURAS_FLAG } from "../consts.mjs";
  */
 export function getTokenAuras(token) {
 	const tokenDoc = token instanceof Token ? token.document : token;
-	return tokenDoc.getFlag(MODULE_NAME, TOKEN_AURAS_FLAG) ?? [];
+	const auras = tokenDoc.getFlag(MODULE_NAME, TOKEN_AURAS_FLAG) ?? [];
+	return auras.map(getAura);
 }
 
 /** @type {VisibilityConfig} */
@@ -63,6 +73,7 @@ export const auraVisibilityDefaults = {
 
 /** @type {Omit<AuraConfig, "id">} */
 export const auraDefaults = {
+	_v: latestAuraConfigVersion,
 	name: "New Aura",
 	enabled: true,
 	radius: 1,
@@ -80,19 +91,50 @@ export const auraDefaults = {
 	fillTextureScale: { x: 100, y: 100 },
 	ownerVisibility: auraVisibilityDefaults,
 	nonOwnerVisibility: auraVisibilityDefaults,
-	effect: {
-		effectId: null,
-		isOverlay: false,
-		targetTokens: ""
-	},
-	macro: {
-		macroId: null
-	},
+	effects: [],
+	macros: [],
 	terrainHeightTools: {
 		rulerOnDrag: "NONE",
 		targetTokens: ""
 	}
 };
+
+/** @type {EffectConfig} */
+export const effectConfigDefaults = {
+	effectId: null,
+	isOverlay: false,
+	targetTokens: "ALL"
+};
+
+/** @type {MacroConfig} */
+export const macroConfigDefaults = {
+	macroId: null
+};
+
+/**
+* Migration functions to migrate Aura config to newer versions.
+* Note that the incoming config may be partial in some rare cases.
+* @type {((config: any) => any)[]}
+*/
+const migrations = [
+	// v0 -> v1
+	// Change `effect` and `macro` properties into arrays.
+	config => {
+		const { effect, macro } = config;
+
+		// Because the inner property names (effectId, isOverlay, targetTokens) are the same, can just place the
+		// existing object into the array. Any any additional default values (such as mode) will be set in `getAura`.
+		if (effect?.effectId?.length)
+			config.effects = [effect, ...(config.effects ?? [])];
+		delete config.effect;
+
+		if (macro?.macroId?.length)
+			config.macros = [macro, ...(config.macros ?? [])];
+		delete config.macro;
+
+		return config;
+	},
+];
 
 /** @returns {AuraConfig} */
 export function createAura() {
@@ -105,7 +147,17 @@ export function createAura() {
  * @returns {AuraConfig}
  */
 export function getAura(config) {
-	return foundry.utils.mergeObject(auraDefaults, config, { inplace: false });
+	// Migrate
+	for (let version = +(config._v ?? 0); version < latestAuraConfigVersion; version++) {
+		config = migrations[version](config);
+	}
+	config._v = latestAuraConfigVersion;
+
+	// Merge with defaults
+	config = foundry.utils.mergeObject(auraDefaults, config, { inplace: false });
+	config.effects = config.effects?.map(e => foundry.utils.mergeObject(effectConfigDefaults, e, { inplace: false })) ?? [];
+	config.macros = config.macros?.map(m => foundry.utils.mergeObject(macroConfigDefaults, m, { inplace: false })) ?? [];
+	return config;
 }
 
 // Some default visibility presets

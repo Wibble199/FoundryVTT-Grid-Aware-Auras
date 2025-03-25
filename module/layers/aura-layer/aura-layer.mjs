@@ -1,7 +1,7 @@
 /** @import { AuraConfig } from "../../data/aura.mjs"; */
 import { ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, ENTER_LEAVE_AURA_HOOK, MODULE_NAME } from "../../consts.mjs";
 import { canTargetToken } from "../../data/aura-target-filters.mjs";
-import { getAura, getTokenAuras } from "../../data/aura.mjs";
+import { getTokenAuras } from "../../data/aura.mjs";
 import { getSpacesUnderToken } from "../../utils/grid-utils.mjs";
 import { isTerrainHeightToolsActive, pickProperties, toggleEffect, warn } from "../../utils/misc-utils.mjs";
 import { AuraManager } from "./aura-manager.mjs";
@@ -229,13 +229,10 @@ export class AuraLayer extends CanvasLayer {
 	 * @param {Token} parent The token that owns the aura.
 	 * @param {AuraConfig} aura
 	 * @param {boolean} hasEntered
-	 * @param {string} userId The user (not the ID) of the user that has triggered this test.
+	 * @param {string} userId The ID of the user that has triggered this test.
 	 * @param {boolean} isInit
 	 */
 	#handleTokenEnterLeaveAura(token, parent, aura, hasEntered, userId, isInit) {
-		// Ensure defaults are set
-		aura = getAura(aura);
-
 		const isPreview = parent.isPreview || token.isPreview;
 
 		// Call hooks
@@ -247,34 +244,40 @@ export class AuraLayer extends CanvasLayer {
 			{ hasEntered, isPreview, isInit, userId });
 
 		// Apply/remove effects
-		if (!isInit && !isPreview && aura.effect.effectId?.length && userId === game.userId
-			&& canTargetToken(token, parent, aura, aura.effect.targetTokens)
-			&& game.settings.get(MODULE_NAME, ENABLE_EFFECT_AUTOMATION_SETTING)) {
-			// We only do this if the current user is the user that triggered the change. We only want this code to run
-			// once, regardless of how many users are on the scene when it happens. Ideally we'd limit this to just GM
-			// users so that we know we'd be able to do this, however a GM user may not have this scene loaded and
-			// therefore would not recieve this event.
+		if (game.settings.get(MODULE_NAME, ENABLE_EFFECT_AUTOMATION_SETTING)) {
+			for (const auraEffect of aura.effects) {
+				if (!isInit && !isPreview && auraEffect.effectId?.length && userId === game.userId
+					&& canTargetToken(token, parent, aura, auraEffect.targetTokens)) {
+					// We only do this if the current user is the user that triggered the change. We only want this code to run
+					// once, regardless of how many users are on the scene when it happens. Ideally we'd limit this to just GM
+					// users so that we know we'd be able to do this, however a GM user may not have this scene loaded and
+					// therefore would not recieve this event.
 
-			// If removing the effect, check that there are no other auras that the target token is inside that would be
-			// applying the same effect.
-			const shouldApplyOrRemoveEffect = hasEntered
-				|| !(this._auraManager.getAurasContainingToken(token).some(a =>
-					(a.aura.config.id !== aura.id || a.parent !== parent) &&
-					a.aura.config.effect?.effectId === aura.effect.effectId));
+					// If removing the effect, check that there are no other auras that the target token is inside that would be
+					// applying the same effect.
+					// TODO: the test for other auras does not respect the other aura's target tokens
+					const shouldApplyOrRemoveEffect = hasEntered
+						|| !(this._auraManager.getAurasContainingToken(token).some(a =>
+							(a.aura.config.id !== aura.id || a.parent !== parent) &&
+							a.aura.config.effects?.some(e => e.effectId === auraEffect.effectId)));
 
-			if (shouldApplyOrRemoveEffect) {
-				toggleEffect(token.actor, aura.effect.effectId, hasEntered, aura.effect.isOverlay, true);
+					if (shouldApplyOrRemoveEffect) {
+						toggleEffect(token.actor, auraEffect.effectId, hasEntered, auraEffect.isOverlay, true);
+					}
+				}
 			}
 		}
 
 		// Run macros
-		if (aura.macro.macroId && game.settings.get(MODULE_NAME, ENABLE_MACRO_AUTOMATION_SETTING)) {
-			const macro = game.macros.get(aura.macro.macroId);
-			if (macro) {
-				// Foundry already wraps the execution inside a try..catch, so we do not need to worry about errors thrown in macros.
-				macro.execute({ token, parent, aura, options: { hasEntered, isPreview: token.isPreview || parent.isPreview, isInit, userId } });
-			} else {
-				warn(`Attempted to call macro with ID '${aura.macro.macroId}' due to enter/leave from aura '${aura.name}' on token '${parent.name}', but it could not be found.`);
+		if (game.settings.get(MODULE_NAME, ENABLE_MACRO_AUTOMATION_SETTING)) {
+			for (const auraMacro of aura.macros) {
+				const macro = game.macros.get(auraMacro.macroId);
+				if (macro) {
+					// Foundry already wraps the execution inside a try..catch, so we do not need to worry about errors thrown in macros.
+					macro.execute({ token, parent, aura, options: { hasEntered, isPreview: token.isPreview || parent.isPreview, isInit, userId } });
+				} else {
+					warn(`Attempted to call macro with ID '${auraMacro.macroId}' due to enter/leave from aura '${aura.name}' on token '${parent.name}', but it could not be found.`);
+				}
 			}
 		}
 

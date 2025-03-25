@@ -47,6 +47,20 @@ export const AURA_VISIBILITY_MODES = /** @type {const} */ ({
 	CUSTOM: "GRIDAWAREAURAS.AuraDisplayCustom"
 });
 
+/** @enum {keyof typeof EFFECT_APPLICATION_MODES} */
+export const EFFECT_APPLICATION_MODES = ({
+	APPLY_WHILE_INSIDE: "GRIDAWAREAURAS.EffectApplicationModeApplyWhileInside",
+	APPLY_ON_ENTER: "GRIDAWAREAURAS.EffectApplicationModeApplyOnEnter",
+	APPLY_ON_LEAVE: "GRIDAWAREAURAS.EffectApplicationModeApplyOnLeave",
+	APPLY_ON_TURN_START: "GRIDAWAREAURAS.EffectApplicationModeApplyOnTurnStart",
+	APPLY_ON_ROUND_START: "GRIDAWAREAURAS.EffectApplicationModeApplyOnRoundStart",
+	SUPPRESS_WHILE_INSIDE: "GRIDAWAREAURAS.EffectApplicationModeSuppressWhileInside",
+	CLEAR_ON_ENTER: "GRIDAWAREAURAS.EffectApplicationModeClearOnEnter",
+	CLEAR_ON_LEAVE: "GRIDAWAREAURAS.EffectApplicationModeClearOnLeave",
+	CLEAR_ON_TURN_START: "GRIDAWAREAURAS.EffectApplicationModeClearOnTurnStart",
+	CLEAR_ON_ROUND_START: "GRIDAWAREAURAS.EffectApplicationModeClearOnRoundStart"
+});
+
 /** @enum {keyof typeof THT_RULER_ON_DRAG_MODES} */
 export const THT_RULER_ON_DRAG_MODES = /** @type {const} */ ({
 	NONE: "GRIDAWAREAURAS.ThtRulerOnDragModeNone",

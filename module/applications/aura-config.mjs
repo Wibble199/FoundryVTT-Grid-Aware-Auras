@@ -2,8 +2,8 @@
 import "../components/tabs.mjs";
 import { AURA_VISIBILITY_MODES, ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, LINE_TYPES, MODULE_NAME, THT_RULER_ON_DRAG_MODES } from "../consts.mjs";
 import { listAuraTargetFilters } from "../data/aura-target-filters.mjs";
-import { auraVisibilityModeMatrices } from "../data/aura.mjs";
-import { classMap, html, render, when } from "../lib/lit-all.min.js";
+import { auraVisibilityModeMatrices, effectConfigDefaults, macroConfigDefaults } from "../data/aura.mjs";
+import { classMap, html, render, styleMap, when } from "../lib/lit-all.min.js";
 import { selectOptions } from "../utils/lit-utils.mjs";
 import { isTerrainHeightToolsActive, partialEqual } from "../utils/misc-utils.mjs";
 
@@ -265,28 +265,45 @@ export class AuraConfigApplication extends ApplicationV2 {
 		</fieldset>
 	`;
 
-	#automationTab = () => {
-		const tokenTargets = listAuraTargetFilters();
+	#automationTab = () => html`
+		<gaa-tabs .tabs=${[
+			{
+				name: "Effect",
+				icon: "fas fa-stars",
+				template: this.#automationEffectTab
+			},
+			{
+				name: "Macro",
+				icon: "fas fa-scroll",
+				template: this.#automationMacroTab
+			},
+			{
+				name: "Terrain Height Tools",
+				icon: "fas fa-chart-simple",
+				template: this.#automationThtTab,
+				hidden: !isTerrainHeightToolsActive()
+			}
+		]} navStyle="margin-top: -0.75rem"></gaa-tabs>
+	`;
+
+	#automationEffectTab = () => {
 		const effectsEnabled = game.settings.get(MODULE_NAME, ENABLE_EFFECT_AUTOMATION_SETTING);
-		const macrosEnabled = game.settings.get(MODULE_NAME, ENABLE_MACRO_AUTOMATION_SETTING);
 
 		return html`
-			<gaa-tabs .tabs=${[
-				{
-					name: "Effect",
-					icon: "fas fa-stars",
-					template: () => html`
-						${when(!effectsEnabled, () => html`
-							<p class="alert" role="alert">Effect automation is not turned on for this world. GMs can configure this in the settings.</p>
-						`)}
+			${when(!effectsEnabled, () => html`
+				<p class="alert" role="alert">Effect automation is not turned on for this world. GMs can configure this in the settings.</p>
+			`)}
 
+			<div style="max-height: 30vh; overflow-y: auto">
+				${this.#aura.effects.map((effect, idx) => html`
+					<fieldset style=${styleMap({ marginTop: idx === 0 ? "" : "1rem" })}>
 						<div class="form-group">
 							<label>Effect</label>
 							<div class="form-fields">
-								<select name="effect.effectId" ?disabled=${!effectsEnabled}>
+								<select name=${`effects.${idx}.effectId`} ?disabled=${!effectsEnabled}>
 									<option value="">-${l("None")}-</option>
 									${selectOptions(CONFIG.statusEffects, {
-										selected: this.#aura.effect.effectId,
+										selected: effect.effectId,
 										labelSelector: "name",
 										valueSelector: "id",
 										sort: true
@@ -298,69 +315,82 @@ export class AuraConfigApplication extends ApplicationV2 {
 						<div class="form-group">
 							<label>Overlay?</label>
 							<div class="form-fields">
-								<input type="checkbox" name="effect.isOverlay" .checked=${this.#aura.effect.isOverlay} ?disabled=${!effectsEnabled}>
+								<input type="checkbox" name=${`effects.${idx}.isOverlay`} .checked=${effect.isOverlay} ?disabled=${!effectsEnabled}>
 							</div>
 						</div>
 
 						<div class="form-group">
 							<label>Target Tokens</label>
 							<div class="form-fields">
-								<select name="effect.targetTokens" ?disabled=${!effectsEnabled}>
-									${selectOptions(tokenTargets, { selected: this.#aura.effect.targetTokens })}
-								</select>
-							</div>
-						</div>
-					`
-				},
-				{
-					name: "Macro",
-					icon: "fas fa-scroll",
-					template: () => html`
-						<div @dragover=${this.#onMacroDragOver} @drop=${this.#onMacroDrop} style="display: contents">
-							${when(!macrosEnabled, () => html`
-								<p class="alert" role="alert">Macro automation is not turned on for this world. GMs can configure this in the settings.</p>
-							`)}
-
-							<div class="form-group">
-								<label>Enter/Leave Macro</label>
-								<div class="form-fields">
-									<input type="text" name="macro.macroId" .value=${this.#aura.macro.macroId} ?disabled=${!macrosEnabled}>
-								</div>
-							</div>
-
-							${when(macrosEnabled, () => html`
-								<p class="hint">Enter a macro's ID, or drag and drop it onto the textbox.</p>
-							`)}
-					</div>
-					`
-				},
-				{
-					name: "Terrain Height Tools",
-					icon: "fas fa-chart-simple",
-					template: () => html`
-						<div class="form-group">
-							<label>Token Ruler on Drag</label>
-							<div class="form-fields">
-								<select name="terrainHeightTools.rulerOnDrag">
-									${selectOptions(THT_RULER_ON_DRAG_MODES, { selected: this.#aura.terrainHeightTools.rulerOnDrag })}
+								<select name=${`effects.${idx}.targetTokens`} ?disabled=${!effectsEnabled}>
+									${selectOptions(listAuraTargetFilters(), { selected: effect.targetTokens })}
 								</select>
 							</div>
 						</div>
 
-						<div class="form-group">
-							<label>Target Tokens</label>
-							<div class="form-fields">
-								<select name="terrainHeightTools.targetTokens">
-									${selectOptions(tokenTargets, { selected: this.#aura.terrainHeightTools.targetTokens })}
-								</select>
-							</div>
-						</div>
-					`,
-					hidden: !isTerrainHeightToolsActive()
-				}
-			]} navStyle="margin-top: -0.75rem"></gaa-tabs>
+						<button type="button" @click=${() => this.#deleteEffect(idx)} ?disabled=${!effectsEnabled}>
+							<i class="fas fa-times"></i>
+						</button>
+					</fieldset>
+				`)}
+			</div>
+
+			<button type="button" @click=${this.#createEffect} ?disabled=${!effectsEnabled}>
+				<i class="fas fa-plus"></i>
+			</button>
 		`;
 	};
+
+	#automationMacroTab = () => {
+		const macrosEnabled = game.settings.get(MODULE_NAME, ENABLE_MACRO_AUTOMATION_SETTING);
+
+		return html`
+			${when(!macrosEnabled, () => html`
+				<p class="alert" role="alert">Macro automation is not turned on for this world. GMs can configure this in the settings.</p>
+			`)}
+
+			${this.#aura.macros.map((macro, idx) => html`
+				<div class="form-group" @dragover=${this.#onMacroDragOver} @drop=${e => this.#onMacroDrop(e, idx)}>
+					<label>Enter/Leave Macro</label>
+					<div class="form-fields">
+						<input type="text" name=${`macros.${idx}.macroId`} .value=${macro.macroId} ?disabled=${!macrosEnabled}>
+					</div>
+				</div>
+
+				<button type="button" @click=${() => this.#deleteMacro(idx)} ?disabled=${!macrosEnabled}>
+					<i class="fas fa-times"></i>
+				</button>
+			`)}
+
+			${when(macrosEnabled && this.#aura.macros?.length > 0, () => html`
+				<p class="hint">Enter a macro's ID, or drag and drop it onto the textbox.</p>
+			`)}
+
+			<button type="button" @click=${this.#createMacro} ?disabled=${!macrosEnabled}>
+				<i class="fas fa-plus"></i>
+			</button>
+		`;
+	};
+
+	#automationThtTab = () => html`
+		<div class="form-group">
+			<label>Token Ruler on Drag</label>
+			<div class="form-fields">
+				<select name="terrainHeightTools.rulerOnDrag">
+					${selectOptions(THT_RULER_ON_DRAG_MODES, { selected: this.#aura.terrainHeightTools.rulerOnDrag })}
+				</select>
+			</div>
+		</div>
+
+		<div class="form-group">
+			<label>Target Tokens</label>
+			<div class="form-fields">
+				<select name="terrainHeightTools.targetTokens">
+					${selectOptions(listAuraTargetFilters(), { selected: this.#aura.terrainHeightTools.targetTokens })}
+				</select>
+			</div>
+		</div>
+	`;
 
 	/** @type {(e: Event) => void} */
 	#valueChange = e => {
@@ -369,8 +399,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 		const formData = new FormDataExtended(this.element);
 		const value = foundry.utils.getProperty(formData.object, name);
 		foundry.utils.setProperty(this.#aura, name, value);
-		this.onChange?.(this.#aura);
-		this.render();
+		this.#auraUpdated();
 	};
 
 	/** @type {(e: Event) => void} */
@@ -402,21 +431,51 @@ export class AuraConfigApplication extends ApplicationV2 {
 		return "CUSTOM";
 	}
 
+	#createEffect = () => {
+		this.#aura.effects.push(foundry.utils.deepClone(effectConfigDefaults));
+		this.#auraUpdated();
+	}
+
+	/** @param {number} effectIndex */
+	#deleteEffect = effectIndex => {
+		this.#aura.effects = this.#aura.effects.filter((_, idx) => idx !== effectIndex);
+		this.#auraUpdated();
+	};
+
+	#createMacro = () => {
+		this.#aura.macros.push(foundry.utils.deepClone(macroConfigDefaults));
+		this.#auraUpdated();
+	};
+
+	/** @param {number} macroIndex */
+	#deleteMacro = macroIndex => {
+		this.#aura.macros = this.#aura.macros.filter((_, idx) => idx !== macroIndex);
+		this.#auraUpdated();
+	};
+
 	/** @param {DragEvent} event */
 	#onMacroDragOver = event => {
 		if (game.settings.get(MODULE_NAME, ENABLE_MACRO_AUTOMATION_SETTING))
 			event.preventDefault(); // allow dropping
 	};
 
-	/** @param {DragEvent} event */
-	#onMacroDrop = async event => {
+	/**
+	 * @param {DragEvent} event
+	 * @param {number} macroIndex
+	 */
+	#onMacroDrop = async (event, macroIndex) => {
 		const macro = await this.#getMacroFromDragData(event);
 		if (macro) {
-			this.#aura.macro.macroId = macro.id;
-			this.onChange?.(this.#aura);
-			this.render();
+			this.#aura.macros[macroIndex].macroId = macro.id;
+			this.#auraUpdated();
 		}
 	};
+
+	#auraUpdated() {
+		this.onChange?.(this.#aura);
+		this.render();
+		setTimeout(() => this.setPosition({ height: "auto" }))
+	}
 
 	/** @override */
 	_replaceHTML(templateResult, container, { isFirstRender }) {
