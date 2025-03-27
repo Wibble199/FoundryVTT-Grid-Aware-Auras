@@ -1,7 +1,6 @@
-import { classMap, html, LitElement, literal, nothing } from "../lib/lit-all.min.js";
+import { classMap, html, LitElement, nothing } from "../lib/lit-all.min.js";
 
 export const elementName = "gaa-tabs";
-export const elementLiteral = literal`gaa-tabs`;
 
 class Tabs extends LitElement {
 

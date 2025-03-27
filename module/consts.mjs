@@ -3,7 +3,7 @@ export const MODULE_NAME = "grid-aware-auras";
 export const SOCKET_NAME = `module.${MODULE_NAME}`;
 
 // Flags
-export const TOKEN_AURAS_FLAG = "auras";
+export const DOCUMENT_AURAS_FLAG = "auras";
 
 // Settings
 export const ENABLE_EFFECT_AUTOMATION_SETTING = "enableEffectAutomation";

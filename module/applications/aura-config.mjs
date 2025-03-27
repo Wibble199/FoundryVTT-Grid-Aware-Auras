@@ -1,6 +1,12 @@
 /** @import { AuraConfig, VisibilityConfig } from "../data/aura.mjs"; */
 import "../components/tabs.mjs";
-import { AURA_VISIBILITY_MODES, ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, LINE_TYPES, MODULE_NAME, THT_RULER_ON_DRAG_MODES } from "../consts.mjs";
+import {
+	AURA_VISIBILITY_MODES,
+	ENABLE_EFFECT_AUTOMATION_SETTING,
+	ENABLE_MACRO_AUTOMATION_SETTING,
+	LINE_TYPES, MODULE_NAME,
+	THT_RULER_ON_DRAG_MODES
+} from "../consts.mjs";
 import { listAuraTargetFilters } from "../data/aura-target-filters.mjs";
 import { auraVisibilityModeMatrices, effectConfigDefaults, macroConfigDefaults } from "../data/aura.mjs";
 import { classMap, html, render, styleMap, when } from "../lib/lit-all.min.js";
@@ -19,18 +25,23 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	#visibilityMode;
 
-	/** @type {((aura: AuraConfig) => void) | undefined} */
-	onChange;
+	#onChange;
 
-	/** @type {(() => void) | undefined} */
-	onClose;
+	#onClose;
 
-	/** @param {AuraConfig} aura */
-	constructor(aura, options = {}) {
+	/**
+	 * @param {AuraConfig} aura
+	 * @param {Object} [options]
+	 * @param {(aura: AuraConfig) => void} [options.onChange]
+	 * @param {() => void} [options.onClose]
+	 */
+	constructor(aura, { onChange, onClose, ...options } = {}) {
 		super(options);
 
 		this.#aura = foundry.utils.deepClone(aura);
 		this.#visibilityMode = this.#getVisibilityMode(aura.ownerVisibility, aura.nonOwnerVisibility);
+		this.#onChange = onChange;
+		this.#onClose = onClose;
 	}
 
 	static DEFAULT_OPTIONS = {
@@ -412,7 +423,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 			const preset = auraVisibilityModeMatrices[newMode];
 			Object.entries(preset.owner).forEach(([key, value]) => this.#aura.ownerVisibility[key] = value);
 			Object.entries(preset.nonOwner).forEach(([key, value]) => this.#aura.nonOwnerVisibility[key] = value);
-			this.onChange?.(this.#aura);
+			this.#onChange?.(this.#aura);
 		}
 
 		this.render();
@@ -472,7 +483,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 	};
 
 	#auraUpdated() {
-		this.onChange?.(this.#aura);
+		this.#onChange?.(this.#aura);
 		this.render();
 		setTimeout(() => this.setPosition({ height: "auto" }))
 	}
@@ -490,7 +501,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 	/** @override */
 	async close(options) {
 		if (options?.callOnClose !== false)
-			this.onClose?.();
+			this.#onClose?.();
 		await super.close(options);
 	}
 

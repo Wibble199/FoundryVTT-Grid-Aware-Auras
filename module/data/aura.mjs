@@ -1,5 +1,5 @@
 /** @import { EFFECT_APPLICATION_MODES, THT_RULER_ON_DRAG_MODES } from "../consts.mjs" */
-import { LINE_TYPES, MODULE_NAME, TOKEN_AURAS_FLAG } from "../consts.mjs";
+import { DOCUMENT_AURAS_FLAG, LINE_TYPES, MODULE_NAME } from "../consts.mjs";
 
 export const latestAuraConfigVersion = 1;
 
@@ -57,7 +57,7 @@ export const latestAuraConfigVersion = 1;
  */
 export function getTokenAuras(token) {
 	const tokenDoc = token instanceof Token ? token.document : token;
-	const auras = tokenDoc.getFlag(MODULE_NAME, TOKEN_AURAS_FLAG) ?? [];
+	const auras = tokenDoc.getFlag(MODULE_NAME, DOCUMENT_AURAS_FLAG) ?? [];
 	return auras.map(getAura);
 }
 

@@ -66,13 +66,13 @@
 }
 
 /* ---------------------- */
-/* Token Config Aura List */
+/* Token Config Aura Table */
 /* ---------------------- */
-.grid-aware-auras-list {
+.grid-aware-auras-table {
 	border: none;
 	background: none;
 }
-.grid-aware-auras-list thead {
+.grid-aware-auras-table thead {
 	background: none;
 	border-bottom: none;
 	color: inherit;
