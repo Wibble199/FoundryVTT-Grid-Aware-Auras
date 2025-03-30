@@ -217,7 +217,8 @@ export class Aura {
 		this.#graphics.lineStyle({
 			color: Color.from(lineColor),
 			alpha: lineOpacity,
-			width: lineType === LINE_TYPES.NONE ? 0 : lineWidth
+			width: lineType === LINE_TYPES.NONE ? 0 : lineWidth,
+			alignment: 0
 		});
 	}
 
