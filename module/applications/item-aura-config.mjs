@@ -54,6 +54,7 @@ export class ItemAuraConfigApplication extends ApplicationV2 {
 			<gaa-aura-table
 				name="auras"
 				.value=${getDocumentOwnAuras(this.#item)}
+				.parentId=${this.#item.id}
 				${ref(this.#auraTableRef)}>
 			</gaa-aura-table>
 

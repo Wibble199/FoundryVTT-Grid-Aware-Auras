@@ -2,7 +2,7 @@
 import { AuraConfigApplication } from "../applications/aura-config.mjs";
 import { ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, LINE_TYPES, MODULE_NAME } from "../consts.mjs";
 import { createAura } from "../data/aura.mjs";
-import { html, LitElement, ref, when } from "../lib/lit-all.min.js";
+import { html, LitElement, when } from "../lib/lit-all.min.js";
 import { ContextMenuGaa } from "./context-menu-gaa.mjs";
 
 export const elementName = "gaa-aura-table";
@@ -12,7 +12,10 @@ export class AuraTable extends LitElement {
 	static properties = {
 		value: { attribute: "value", type: Array, reflect: true },
 		disabled: { type: Boolean },
-		showHeader: { type: Boolean }
+		showHeader: { type: Boolean },
+		subHeadingText: { type: String },
+		parentId: { type: String },
+		attachConfigsTo: { attribute: false }
 	};
 
 	static formAssociated = true;
@@ -38,6 +41,17 @@ export class AuraTable extends LitElement {
 		this.disabled = false;
 
 		this.showHeader = true;
+
+		/** @type {string | undefined} */
+		this.subHeadingText = undefined;
+
+		/** @type {string | undefined} */
+		this.parentId = undefined;
+
+		/** @type {Record<string, any> | undefined} */
+		this.attachConfigsTo = undefined;
+
+		this.#setupContextMenu();
 	}
 
 	get form() {
@@ -57,21 +71,36 @@ export class AuraTable extends LitElement {
 		const macrosEnabled = game.settings.get(MODULE_NAME, ENABLE_MACRO_AUTOMATION_SETTING);
 
 		return html`
-			<table class="grid-aware-auras-table" ${ref(this.#tableChanged)}>
-				${when(this.showHeader, () => html`<thead>
-					<th style="width: 24px">&nbsp;</th>
-					<th class="text-left">Name</th>
-					<th class="text-center" style="width: 58px">Radius</th>
-					<th class="text-center" style="width: 58px">Line</th>
-					<th class="text-center" style="width: 58px">Fill</th>
-					<th class="text-center" style="width: 24px">
-						${when(!this.disabled, () => html`
-							<a @click="${this.#createAura}">
-								<i class="fas fa-plus"></i>
-							</a>
-						`)}
-					</th>
-				</thead>`)}
+			<table class="grid-aware-auras-table">
+				<thead>
+					${when(this.showHeader, () => html`
+						<tr style="background: none">
+							<th style="width: 24px">&nbsp;</th>
+							<th class="text-left">${when(!this.subHeadingText?.length, () => "Name")}</th>
+							<th class="text-center" style="width: 58px">Radius</th>
+							<th class="text-center" style="width: 58px">Line</th>
+							<th class="text-center" style="width: 58px">Fill</th>
+							<th class="text-center" style="width: 24px">
+								${when(!this.disabled, () => html`
+									<a @click="${this.#createAura}">
+										<i class="fas fa-plus"></i>
+									</a>
+								`)}
+							</th>
+						</tr>
+					`)}
+
+					${when(this.subHeadingText?.length, () => html`
+						<tr style="background: none">
+							<th colspan="6">
+								<div class="grid-aware-auras-table-item-header">
+									<span>${this.subHeadingText}</span>
+									<hr class="hr-narrow" />
+								</div>
+							</th>
+						</tr>
+					`)}
+				</thead>
 				<tbody>
 					${this.value.map(a => this.#renderAura(a, effectsEnabled, macrosEnabled))}
 				</tbody>
@@ -124,13 +153,7 @@ export class AuraTable extends LitElement {
 		`;
 	}
 
-	/**
-	 * When the render has completed, set up the context menu.
-	 * @param {HTMLTableElement | undefined} table
-	 */
-	#tableChanged(table) {
-		if (!table) return;
-
+	#setupContextMenu() {
 		/**
 		 * Callback wrapper for context menu which adds auraId and aura to the callback parameter.
 		 * @template T
@@ -145,7 +168,7 @@ export class AuraTable extends LitElement {
 			};
 		}
 
-		this.#contextMenu = new ContextMenuGaa(table, "[data-aura-id]", [
+		this.#contextMenu = new ContextMenuGaa(this, "[data-aura-id]", [
 			{
 				name: "Edit",
 				icon: "<i class='fas fa-edit'></i>",
@@ -219,7 +242,9 @@ export class AuraTable extends LitElement {
 				this.value = this.value.map(a => a.id === aura.id ? ({ ...a, ...newAura }) : a);
 				this.#dispatchChangeEvent();
 			},
-			onClose: () => this.#openAuraConfigApps.delete(aura.id)
+			onClose: () => this.#openAuraConfigApps.delete(aura.id),
+			parentId: this.parentId,
+			attachTo: this.attachConfigsTo
 		});
 
 		this.#openAuraConfigApps.set(aura.id, app);

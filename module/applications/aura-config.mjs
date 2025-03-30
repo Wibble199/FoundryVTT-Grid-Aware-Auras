@@ -29,19 +29,27 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	#onClose;
 
+	#parentId;
+
+	#attachTo;
+
 	/**
 	 * @param {AuraConfig} aura
 	 * @param {Object} [options]
 	 * @param {(aura: AuraConfig) => void} [options.onChange]
 	 * @param {() => void} [options.onClose]
+	 * @param {string} [options.parentId]
+	 * @param {Record<string, any>} [options.attachTo]
 	 */
-	constructor(aura, { onChange, onClose, ...options } = {}) {
+	constructor(aura, { onChange, onClose, parentId, attachTo, ...options } = {}) {
 		super(options);
 
 		this.#aura = foundry.utils.deepClone(aura);
 		this.#visibilityMode = this.#getVisibilityMode(aura.ownerVisibility, aura.nonOwnerVisibility);
 		this.#onChange = onChange;
 		this.#onClose = onClose;
+		this.#parentId = parentId;
+		this.#attachTo = attachTo;
 	}
 
 	static DEFAULT_OPTIONS = {
@@ -59,7 +67,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	/** @override */
 	get id() {
-		return `gaa-aura-config-${this.#aura.id}`;
+		return `gaa-aura-config-${this.#parentId ? "-" + this.#parentId : ""}${this.#aura.id}`;
 	}
 
 	/** @override */
@@ -135,14 +143,14 @@ export class AuraConfigApplication extends ApplicationV2 {
 			<div class="form-group">
 				<label>${l("DRAWING.StrokeColor")}</label>
 				<div class="form-fields">
-					<color-picker name="lineColor" .value=${this.#aura.lineColor} />
+					<color-picker name="lineColor" .value=${this.#aura.lineColor}></color-picker>
 				</div>
 			</div>
 
 			<div class="form-group">
 				<label>${l("DRAWING.LineOpacity")}</label>
 				<div class="form-fields">
-					<range-picker name="lineOpacity" .value=${this.#aura.lineOpacity} min="0" max="1" step="0.1" />
+					<range-picker name="lineOpacity" .value=${this.#aura.lineOpacity} min="0" max="1" step="0.1"></range-picker>
 				</div>
 			</div>
 
@@ -175,21 +183,21 @@ export class AuraConfigApplication extends ApplicationV2 {
 			<div class="form-group">
 				<label>${l("DRAWING.FillColor")}</label>
 				<div class="form-fields">
-					<color-picker name="fillColor" .value=${this.#aura.fillColor} />
+					<color-picker name="fillColor" .value=${this.#aura.fillColor}></color-picker>
 				</div>
 			</div>
 
 			<div class="form-group">
 				<label>${l("DRAWING.FillOpacity")}</label>
 				<div class="form-fields">
-					<range-picker name="fillOpacity" .value=${this.#aura.fillOpacity} min="0" max="1" step="0.1" />
+					<range-picker name="fillOpacity" .value=${this.#aura.fillOpacity} min="0" max="1" step="0.1"></range-picker>
 				</div>
 			</div>
 
 			<div class="form-group">
 				<label>${l("DRAWING.FillTexture")}</label>
 				<div class="form-fields">
-					<file-picker name="fillTexture" type="image" value=${this.#aura.fillTexture} />
+					<file-picker name="fillTexture" type="image" value=${this.#aura.fillTexture}></file-picker>
 				</div>
 			</div>
 
@@ -486,6 +494,22 @@ export class AuraConfigApplication extends ApplicationV2 {
 		this.#onChange?.(this.#aura);
 		this.render();
 		setTimeout(() => this.setPosition({ height: "auto" }))
+	}
+
+	/** @override */
+	_onFirstRender(...args) {
+		super._onFirstRender(...args);
+		if (this.#attachTo) {
+			this.#attachTo[this.id] = this;
+		}
+	}
+
+	/** @override */
+	_onClose(...args) {
+		super._onClose(...args);
+		if (this.#attachTo) {
+			delete this.#attachTo[this.id];
+		}
 	}
 
 	/** @override */
