@@ -69,6 +69,7 @@
 /* Token Config Aura Table */
 /* ---------------------- */
 .grid-aware-auras-table {
+	margin: 0 !important;
 	border: none;
 	background: none;
 }
@@ -79,19 +80,8 @@
 	text-shadow: none;
 }
 
-.icon-checkbox {
-	display: inline-block;
-	cursor: pointer;
-}
-.icon-checkbox > input {
-	display: none;
-}
-.icon-checkbox:has(input:checked) > .icon-unchecked,
-.icon-checkbox:has(input:not(:checked)) > .icon-checked {
-	display: none;
-}
-.icon-checkbox:hover > i {
-	text-shadow: 0 0 8px var(--color-shadow-primary);
+.grid-aware-auras-table td {
+	padding: 0.25em 0;
 }
 
 /* -------------------------------- */

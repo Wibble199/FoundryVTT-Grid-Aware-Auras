@@ -5,6 +5,9 @@
  * Code taken from the 5e system's ContextMenu5e.
  */
 export class ContextMenuGaa extends ContextMenu {
+
+	disabled = false;
+
 	/** @override */
 	_setPosition(html, target, options = {}) {
 		if (game.release.generation > 12) {
@@ -30,5 +33,10 @@ export class ContextMenuGaa extends ContextMenu {
 		if (this._expandUp) html.style.bottom = `${clientHeight - clientY}px`;
 		else html.style.top = `${clientY}px`;
 		target.classList.add("context");
+	}
+
+	/** @override */
+	render(target) {
+		if (!this.disabled) super.render(target);
 	}
 }

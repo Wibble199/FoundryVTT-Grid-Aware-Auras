@@ -53,11 +53,37 @@ export const latestAuraConfigVersion = 1;
 /**
  * Gets the auras that are present on the given token.
  * @param {Token | TokenDocument} token
- * @return {AuraConfig[]}
+ * @returns {AuraConfig[]}
  */
 export function getTokenAuras(token) {
 	const tokenDoc = token instanceof Token ? token.document : token;
-	const auras = tokenDoc.getFlag(MODULE_NAME, DOCUMENT_AURAS_FLAG) ?? [];
+
+	const auras = getDocumentOwnAuras(tokenDoc);
+	const auraIds = new Set(auras.map(a => a.id));
+
+	for (const item of tokenDoc.actor.items) {
+		for (const aura of getDocumentOwnAuras(item)) {
+			// If there are multiple auras with the same ID, only use one of them.
+			// This prevents multiple of the same item with the same aura from having multiple identical auras, and
+			// prevents issues with the enter/leave detection (which works off the aura ID, and requires each aura to
+			// have a unique ID per actor).
+			if (auraIds.has(aura.id)) continue;
+
+			auras.push(aura);
+			auraIds.add(aura.id);
+		}
+	}
+
+	return auras;
+}
+
+/**
+ * Gets the auras defined on a document.
+ * @param {Document} document
+ * @returns {AuraConfig[]}
+ */
+export function getDocumentOwnAuras(document) {
+	const auras = document.getFlag(MODULE_NAME, DOCUMENT_AURAS_FLAG) ?? [];
 	return auras.map(getAura);
 }
 

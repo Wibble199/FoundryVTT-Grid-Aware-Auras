@@ -6,6 +6,7 @@
 Grid-Aware Auras exposes an API to be used by other macros, scripts, or modules. It is available through the module: `game.modules.get("grid-aware-auras").api`.
 
 - [`getAurasContainingToken`](#getaurascontainingtoken)
+- [`getDocumentAuras`](#getdocumentauras)
 - [`getTokenAuras`](#gettokenauras)
 - [`getTokensInsideAura`](#gettokensinsideaura)
 - [`isTokenInside`](#istokeninside)
@@ -43,18 +44,17 @@ for (const { parent, aura } of auras) {
 	console.log(`${token.name} is inside ${parent.name}'s "${aura.name}" aura.`);
 }
 ```
+## getDocumentOwnAuras
 
-## getTokenAuras
+![Available Since v0.4.0](https://img.shields.io/badge/Available%20Since-v0.4.0-blue?style=flat-square)
 
-![Available Since v0.2.0](https://img.shields.io/badge/Available%20Since-v0.2.0-blue?style=flat-square)
-
-Returns a list of auras that are defined on the given token.
+Returns a list of auras that are defined on the given document (TokenDocument or ItemDocument).
 
 ### Parameters
 
 |Name|Type|Default|Description|
 |-|-|-|-|
-|token|`Token`|*Required*|The token whose auras to return.|
+|document|`Document`|*Required*|The document whose auras to return.|
 
 ### Returns
 
@@ -64,12 +64,47 @@ An array of [`AuraConfig`s](#auraconfig).
 
 ```js
 const { api } = game.modules.get("grid-aware-auras");
+const item = game.items.get("Some Item");
+
+const auras = api.geDocumentAuras(item);
+console.log(`Item ${item.name} has the following auras:`);
+for (const aura of auras) {
+	console.log(` - ${aura.name} (radius: ${aura.radius})`);
+}
+```
+
+## getTokenAuras
+
+![Available Since v0.2.0](https://img.shields.io/badge/Available%20Since-v0.2.0-blue?style=flat-square)
+![Changed In v0.4.0](https://img.shields.io/badge/Changed%20In-v0.4.0-orange?style=flat-square)
+
+Returns a list of auras that are defined on the given token and any items owned by the token's actor.
+
+### Parameters
+
+|Name|Type|Default|Description|
+|-|-|-|-|
+|token|`Token`|*Required*|The token whose auras to return.|
+
+### Returns
+
+An array of objects with the following properties:
+
+|Name|Type|Description|
+|-|-|-|
+|aura|`AuraConfig`|The aura's config|
+|owner|`Document`|The document that defines the aura - either the TokenDocument for auras defined on the token itself, or the ItemDocument for auras defined on items|
+
+### Example
+
+```js
+const { api } = game.modules.get("grid-aware-auras");
 const [token] = [...game.user.targets];
 
 const auras = api.getTokenAuras(token);
 console.log(`Token ${token.name} has the following auras:`);
-for (const aura of auras) {
-	console.log(` - ${aura.name} (radius: ${aura.radius})`);
+for (const { aura, owner } of auras) {
+	console.log(` - ${aura.name} - defined on ${owner.name}`);
 }
 ```
 

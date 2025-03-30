@@ -148,6 +148,18 @@ export class AuraLayer extends CanvasLayer {
 	}
 
 	/**
+	 * Updates all of the given actor's linked tokens, as per `_updateAuras`.
+	 * @param {Actor} actor Actor whose tokens to update.
+	 * @param {Object} [options]
+	 * @param {string} [options.userId] The user ID of the user that has triggered this test. Defaults to current user.
+	 */
+	_updateActorAuras(actor, { userId } = {}) {
+		for (const token of actor.getActiveTokens({ linked: true, document: true })) {
+			this._updateAuras({ token, userId });
+		}
+	}
+
+	/**
 	 * Tests whether or not a specific/all tokens are inside a specific/any auras.
 	 * @param {Object} [options]
 	 * @param {string} [options.userId] The user ID of the user that has triggered this test. Defaults to current user.

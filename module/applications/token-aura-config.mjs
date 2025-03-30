@@ -1,7 +1,7 @@
 /** @import { AuraTable } from "../components/aura-table.mjs"; */
 import { elementName as auraTableElementName } from "../components/aura-table.mjs";
 import { DOCUMENT_AURAS_FLAG, MODULE_NAME } from "../consts.mjs";
-import { getTokenAuras } from "../data/aura.mjs";
+import { getDocumentOwnAuras } from "../data/aura.mjs";
 
 const auraTableElementRef = Symbol("auraTableElementRef");
 const auraTableChangeListener = Symbol("auraTableChangeListener");
@@ -26,6 +26,8 @@ export async function tokenConfigRenderInner(wrapped, ...args) {
 	`);
 
 	// Create an AuraTable custom element, if there isn't one already and update the data
+	// Don't destroy and re-create the table on redraw because then we lose track of which aura config apps have been
+	// opened.
 	/** @type {AuraTable} */
 	let auraTableElement = this[auraTableElementRef];
 	if (!auraTableElement) {
@@ -36,14 +38,32 @@ export async function tokenConfigRenderInner(wrapped, ...args) {
 			updateTokenConfigSize();
 		});
 	}
-	auraTableElement.value = getTokenAuras(this.preview ?? this.document);
+	auraTableElement.value = getDocumentOwnAuras(this.preview ?? this.document);
 
 	// Create the tab where the table will reside
-	const tagContent = $(`<div class="tab" data-group="main" data-tab="gridawareauras"></div>`);
-	html.find("> footer").before(tagContent);
+	const tabContent = $(`<div class="tab" data-group="main" data-tab="gridawareauras"></div>`);
+	html.find("> footer").before(tabContent);
 
 	// Attach the table to the tab
-	tagContent.get(0).appendChild(auraTableElement);
+	tabContent.get(0).appendChild(auraTableElement);
+
+	// Render a table for any items with auras too
+	for (const item of this.document.actor.items) {
+		const itemAuras = getDocumentOwnAuras(item);
+		if (itemAuras.length) {
+			const header = document.createElement("p");
+			header.innerText = item.name;
+			header.style.fontWeight = "bold";
+			tabContent.get(0).appendChild(header);
+
+			/** @type {AuraTable} */
+			const itemAuraTableElement = document.createElement(auraTableElementName);
+			itemAuraTableElement.disabled = true;
+			itemAuraTableElement.showHeader = false;
+			itemAuraTableElement.value = itemAuras;
+			tabContent.get(0).appendChild(itemAuraTableElement);
+		}
+	}
 
 	updateTokenConfigSize();
 

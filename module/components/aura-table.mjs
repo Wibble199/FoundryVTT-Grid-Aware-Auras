@@ -10,13 +10,18 @@ export const elementName = "gaa-aura-table";
 export class AuraTable extends LitElement {
 
 	static properties = {
-		value: { attribute: "value", type: Array, reflect: true }
+		value: { attribute: "value", type: Array, reflect: true },
+		disabled: { type: Boolean },
+		showHeader: { type: Boolean }
 	};
 
 	static formAssociated = true;
 
 	/** @type {ElementInternals} */
 	#internals;
+
+	/** @type {ContextMenuGaa | undefined} */
+	#contextMenu;
 
 	/** @type {Map<string, AuraConfigApplication>} */
 	#openAuraConfigApps = new Map();
@@ -28,6 +33,11 @@ export class AuraTable extends LitElement {
 
 		/** @type {AuraConfig[]} */
 		this.value = [];
+
+		/** @type {boolean} */
+		this.disabled = false;
+
+		this.showHeader = true;
 	}
 
 	get form() {
@@ -48,18 +58,20 @@ export class AuraTable extends LitElement {
 
 		return html`
 			<table class="grid-aware-auras-table" ${ref(this.#tableChanged)}>
-				<thead>
+				${when(this.showHeader, () => html`<thead>
 					<th style="width: 24px">&nbsp;</th>
 					<th class="text-left">Name</th>
-					<th style="width: 58px">Radius</th>
-					<th style="width: 58px">Line</th>
-					<th style="width: 58px">Fill</th>
-					<th style="width: 24px">
-						<a @click="${this.#createAura}">
-							<i class="fas fa-plus"></i>
-						</a>
+					<th class="text-center" style="width: 58px">Radius</th>
+					<th class="text-center" style="width: 58px">Line</th>
+					<th class="text-center" style="width: 58px">Fill</th>
+					<th class="text-center" style="width: 24px">
+						${when(!this.disabled, () => html`
+							<a @click="${this.#createAura}">
+								<i class="fas fa-plus"></i>
+							</a>
+						`)}
 					</th>
-				</thead>
+				</thead>`)}
 				<tbody>
 					${this.value.map(a => this.#renderAura(a, effectsEnabled, macrosEnabled))}
 				</tbody>
@@ -75,31 +87,38 @@ export class AuraTable extends LitElement {
 	#renderAura(aura, effectsEnabled, macrosEnabled) {
 		return html`
 			<tr data-aura-id="${aura.id}">
-				<td>
-					<a data-tooltip="Enable/disable aura" style="width: 18px" @click=${() => this.#setAuraEnabled(aura.id, !aura.enabled)}>
-						<i class=${`fas fa-toggle-${aura.enabled ? 'on' : 'off'}`}></i>
-					</a>
+				<td style="width: 24px">
+					${this.disabled
+						? html`<p style="width: 18px">
+							<i class=${`fas fa-toggle-${aura.enabled ? 'on' : 'off'}`}></i>
+						</p>`
+						: html`<a data-tooltip="Enable/disable aura" style="width: 18px" @click=${() => !this.disabled && this.#setAuraEnabled(aura.id, !aura.enabled)}>
+							<i class=${`fas fa-toggle-${aura.enabled ? 'on' : 'off'}`}></i>
+						</a>`
+					}
 				</td>
 				<td>
 					${aura.name}
 					${when((effectsEnabled && aura.effects?.length) || (macrosEnabled && aura.macros?.length),
 						() => html`<i class="fas fa-bolt" data-tooltip="This aura applies effects or calls macros"></i>`)}
 				</td>
-				<td class="text-center">
+				<td class="text-center" style="width: 58px">
 					${aura.radius}
 				</td>
-				<td class="text-center">
+				<td class="text-center" style="width: 58px">
 					${when(aura.lineType !== LINE_TYPES.NONE,
 						() => html`<input type="color" value="${aura.lineColor}" disabled>`)}
 				</td>
-				<td class="text-center">
+				<td class="text-center" style="width: 58px">
 					${when(aura.fillType !== CONST.DRAWING_FILL_TYPES.NONE,
 						() => html`<input type="color" value="${aura.fillColor}" disabled>`)}
 				</td>
-				<td class="text-center">
-					<a @click=${this.#openContextMenu} style="width: 100%; display: inline-block;">
-						<i class="fas fa-ellipsis-vertical"></i>
-					</a>
+				<td class="text-center" style="width: 24px">
+					${when(!this.disabled, () => html`
+						<a @click=${this.#openContextMenu} style="width: 100%; display: inline-block;">
+							<i class="fas fa-ellipsis-vertical"></i>
+						</a>
+					`)}
 				</td>
 			</tr>
 		`;
@@ -126,7 +145,7 @@ export class AuraTable extends LitElement {
 			};
 		}
 
-		new ContextMenuGaa(table, "[data-aura-id]", [
+		this.#contextMenu = new ContextMenuGaa(table, "[data-aura-id]", [
 			{
 				name: "Edit",
 				icon: "<i class='fas fa-edit'></i>",
@@ -163,12 +182,18 @@ export class AuraTable extends LitElement {
 				})
 			}
 		]);
+
+		this.#contextMenu.disabled = this.disabled;
 	}
 
 	/** @param {Map<string, any>} changedProperties */
 	updated(changedProperties) {
 		if (changedProperties.has("value")) {
 			this.#internals.setFormValue(JSON.stringify(this.value));
+		}
+
+		if (this.#contextMenu) {
+			this.#contextMenu.disabled = this.disabled;
 		}
 	}
 

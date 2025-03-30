@@ -1,6 +1,7 @@
 import * as api from "./api.mjs";
+import { addAuraConfigItemHeaderButton } from "./applications/item-aura-config.mjs";
 import { tokenConfigClose, tokenConfigRenderInner } from "./applications/token-aura-config.mjs";
-import { MODULE_NAME, SOCKET_NAME, TOGGLE_EFFECT_FUNC } from "./consts.mjs";
+import { DOCUMENT_AURAS_FLAG, MODULE_NAME, SOCKET_NAME, TOGGLE_EFFECT_FUNC } from "./consts.mjs";
 import { initialiseAuraTargetFilters } from "./data/aura-target-filters.mjs";
 import { AuraLayer } from "./layers/aura-layer/aura-layer.mjs";
 import { registerSettings } from "./settings.mjs";
@@ -77,8 +78,29 @@ Hooks.on("targetToken", (_user, token) => {
 	AuraLayer.current?._updateAuraGraphics({ token });
 });
 
+// When an item is created, if it has auras and belongs to an actor, update auras on any of that actor's tokens
+Hooks.on("createItem", (item, _options, userId) => {
+	if (!!item.actor && item.flags?.[MODULE_NAME]?.[DOCUMENT_AURAS_FLAG]?.length > 0) {
+		AuraLayer.current?._updateActorAuras(item.actor, { userId });
+	}
+});
+
+// When an item's auras are updated, update auras on any of that actor's tokens
+Hooks.on("updateItem", (item, delta, _options, userId) => {
+	if (!!item.actor && delta.flags?.[MODULE_NAME]?.[DOCUMENT_AURAS_FLAG] !== undefined) {
+		AuraLayer.current?._updateActorAuras(item.actor, { userId });
+	}
+});
+
+// When an item is created, if it had auras and belonged to an actor, update auras on any of that actor's tokens
+Hooks.on("deleteItem", (item, _options, userId) => {
+	if (!!item.actor && item.flags?.[MODULE_NAME]?.[DOCUMENT_AURAS_FLAG]?.length > 0) {
+		AuraLayer.current?._updateActorAuras(item.actor, { userId });
+	}
+});
+
 // When combat is updated (e.g. if a turn was changed), we need to check aura visibility
-Hooks.on("updateCombat", (combat, delta) => {
+Hooks.on("updateCombat", combat => {
 	for (const combatant of combat.combatants) {
 		// combatant.token returns a TokenDocument, but we need Token
 		const token = game.canvas.tokens.get(combatant.tokenId);
@@ -104,5 +126,7 @@ Hooks.on("canvasTearDown", () => {
 	if (AuraLayer.current)
 		AuraLayer.current._isTearingDown = true;
 });
+
+Hooks.on("getItemSheetHeaderButtons", addAuraConfigItemHeaderButton);
 
 Hooks.on("closeTokenConfig", tokenConfigClose);

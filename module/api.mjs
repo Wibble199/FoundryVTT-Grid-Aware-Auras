@@ -1,13 +1,27 @@
-import { getTokenAuras as getTokenAurasImpl } from "./data/aura.mjs";
+import { getDocumentOwnAuras as getDocumentOwnAurasImpl } from "./data/aura.mjs";
 import { AuraLayer } from "./layers/aura-layer/aura-layer.mjs";
 import { toggleEffect as toggleEffectImpl } from "./utils/misc-utils.mjs";
 
 /**
- * For the given token, returns the auras defined on that token.
+ * For the given document, returns the auras defined on that document.
+ * @param {Document} document
+ */
+export function getDocumentOwnAuras(document) {
+	return getDocumentOwnAurasImpl(document);
+}
+
+/**
+ * For the given token, returns the auras defined on that token and any items owned by the token's actor.
  * @param {Token | TokenDocument} token
+ * @returns {{ aura: AuraConfig; owner: Document; }[]}
  */
 export function getTokenAuras(token) {
-	return getTokenAurasImpl(token);
+	const tokenDoc = token instanceof Token ? token.document : token;
+
+	return [
+		...getDocumentOwnAuras(tokenDoc).map(aura => ({ aura, owner: tokenDoc })),
+		...tokenDoc.actor.items.map(item => getDocumentOwnAuras(item).map(aura => ({ aura, owner: item }))).flat()
+	];
 }
 
 /**
