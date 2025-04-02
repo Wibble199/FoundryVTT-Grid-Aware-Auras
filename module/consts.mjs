@@ -48,18 +48,42 @@ export const AURA_VISIBILITY_MODES = /** @type {const} */ ({
 });
 
 /** @enum {keyof typeof EFFECT_APPLICATION_MODES} */
-export const EFFECT_APPLICATION_MODES = ({
+export const EFFECT_APPLICATION_MODES = /** @type {const} */ ({
 	APPLY_WHILE_INSIDE: "GRIDAWAREAURAS.EffectApplicationModeApplyWhileInside",
 	APPLY_ON_ENTER: "GRIDAWAREAURAS.EffectApplicationModeApplyOnEnter",
 	APPLY_ON_LEAVE: "GRIDAWAREAURAS.EffectApplicationModeApplyOnLeave",
-	APPLY_ON_TURN_START: "GRIDAWAREAURAS.EffectApplicationModeApplyOnTurnStart",
+	APPLY_ON_OWNER_TURN_START: "GRIDAWAREAURAS.EffectApplicationModeApplyOnOwnerTurnStart",
+	APPLY_ON_OWNER_TURN_END: "GRIDAWAREAURAS.EffectApplicationModeApplyOnOwnerTurnEnd",
+	APPLY_ON_TARGET_TURN_START: "GRIDAWAREAURAS.EffectApplicationModeApplyOnTargetTurnStart",
+	APPLY_ON_TARGET_TURN_END: "GRIDAWAREAURAS.EffectApplicationModeApplyOnTargetTurnEnd",
 	APPLY_ON_ROUND_START: "GRIDAWAREAURAS.EffectApplicationModeApplyOnRoundStart",
-	SUPPRESS_WHILE_INSIDE: "GRIDAWAREAURAS.EffectApplicationModeSuppressWhileInside",
-	CLEAR_ON_ENTER: "GRIDAWAREAURAS.EffectApplicationModeClearOnEnter",
-	CLEAR_ON_LEAVE: "GRIDAWAREAURAS.EffectApplicationModeClearOnLeave",
-	CLEAR_ON_TURN_START: "GRIDAWAREAURAS.EffectApplicationModeClearOnTurnStart",
-	CLEAR_ON_ROUND_START: "GRIDAWAREAURAS.EffectApplicationModeClearOnRoundStart"
+	APPLY_ON_ROUND_END: "GRIDAWAREAURAS.EffectApplicationModeApplyOnRoundEnd",
+	REMOVE_WHILE_INSIDE: "GRIDAWAREAURAS.EffectApplicationModeRemoveWhileInside",
+	REMOVE_ON_ENTER: "GRIDAWAREAURAS.EffectApplicationModeRemoveOnEnter",
+	REMOVE_ON_LEAVE: "GRIDAWAREAURAS.EffectApplicationModeRemoveOnLeave",
+	REMOVE_ON_OWNER_TURN_START: "GRIDAWAREAURAS.EffectApplicationModeRemoveOnOwnerTurnStart",
+	REMOVE_ON_OWNER_TURN_END: "GRIDAWAREAURAS.EffectApplicationModeRemoveOnOwnerTurnEnd",
+	REMOVE_ON_TARGET_TURN_START: "GRIDAWAREAURAS.EffectApplicationModeRemoveOnTargetTurnStart",
+	REMOVE_ON_TARGET_TURN_END: "GRIDAWAREAURAS.EffectApplicationModeRemoveOnTargetTurnEnd",
+	REMOVE_ON_ROUND_START: "GRIDAWAREAURAS.EffectApplicationModeRemoveOnRoundStart",
+	REMOVE_ON_ROUND_END: "GRIDAWAREAURAS.EffectApplicationModeRemoveOnRoundEnd"
 });
+
+/** @type {EFFECT_APPLICATION_MODES[]} */
+export const ONGOING_EFFECT_APPLICATION_MODES = [
+	"APPLY_WHILE_INSIDE",
+	"REMOVE_WHILE_INSIDE"
+];
+
+/** @type {EFFECT_APPLICATION_MODES[]} */
+export const PRIORITISABLE_EFFECT_APPLICATION_MODES = [
+	"APPLY_WHILE_INSIDE",
+	"APPLY_ON_ROUND_START",
+	"APPLY_ON_ROUND_END",
+	"REMOVE_WHILE_INSIDE",
+	"REMOVE_ON_ROUND_START",
+	"REMOVE_ON_ROUND_END"
+];
 
 /** @enum {keyof typeof THT_RULER_ON_DRAG_MODES} */
 export const THT_RULER_ON_DRAG_MODES = /** @type {const} */ ({

@@ -44,6 +44,8 @@ export const latestAuraConfigVersion = 1;
  * @property {string} effectId
  * @property {boolean} isOverlay
  * @property {string} targetTokens ID of the filter to use to specify targetable tokens.
+ * @property {EFFECT_APPLICATION_MODES} mode
+ * @property {number} priority For ongoing effect modes, determines which one takes priority. For non-ongoing effects, determines which order they apply/remove (if applicable). However, ongoing effects ALWAYS take priority over non-ongoing ones.
  */
 /**
  * @typedef {Object} MacroConfig
@@ -129,7 +131,9 @@ export const auraDefaults = {
 export const effectConfigDefaults = {
 	effectId: null,
 	isOverlay: false,
-	targetTokens: "ALL"
+	targetTokens: "ALL",
+	mode: "APPLY_WHILE_INSIDE",
+	priority: 0
 };
 
 /** @type {MacroConfig} */

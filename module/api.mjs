@@ -81,5 +81,5 @@ export async function toggleEffect(target, effectId, state, { overlay = false } 
 	}
 
 	// Toggle the effect
-	await toggleEffectImpl(actor, effectId, !!state, overlay, true);
+	await toggleEffectImpl(actor, effectId, !!state, { overlay }, true);
 }

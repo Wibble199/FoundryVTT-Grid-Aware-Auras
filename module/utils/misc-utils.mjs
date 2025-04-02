@@ -19,6 +19,35 @@ export function warn(message, ...args) {
 }
 
 /**
+ * Logs a debug message to the console.
+ * @param {string} message
+ * @param  {...any} args
+ */
+export function debug(message, ...args) {
+	console.debug(`Grid Aware Auras | ${message}`, ...args);
+}
+
+/**
+ * Groups elements in the iterable by the specified keySelector.
+ * Sort order will be maintained with the groups.
+ * @template TElement
+ * @template TKey
+ * @param {Iterable<TElement>} source
+ * @param {(item: TElement) => TKey} keySelector
+ */
+export function groupBy(source, keySelector) {
+	/** @type {Map<TKey, TElement[]>} */
+	const map = new Map();
+
+	for (const element of source) {
+		const key = keySelector(element);
+		getOrCreate(map, key, () => []).push(element);
+	}
+
+	return map;
+}
+
+/**
  * Gets or creates an item in the given map.
  * @template TKey
  * @template TValue
@@ -43,13 +72,15 @@ export function getOrCreate(map, key, valueFactory) {
  * @param {Actor | string} actorOrUuid The actor instance or the UUID of the actor to add the effect to.
  * @param {string} effectId The ID of the status effect to add.
  * @param {boolean} state Whether to add (true) or remove (false) the effect.
- * @param {boolean} overlay When adding an effect, whether to set as an overlay.
- * @param {boolean} [allowDelegation] Whether this call should allow delegation to a GM user if the current user
- * does not have permission.
+ * @param {Object} [effectOptions]
+ * @param {boolean} [effectOptions.overlay] When adding an effect, whether to set as an overlay.
+ * @param {boolean} [allowDelegation] Whether this call should allow delegation to a GM user if the current user does not have permission.
  */
-export async function toggleEffect(actorOrUuid, effectId, state, overlay, allowDelegation = false) {
+export async function toggleEffect(actorOrUuid, effectId, state, effectOptions = {}, allowDelegation = false) {
 	// Disallow this is the setting is not turned on
 	if (!game.settings.get(MODULE_NAME, ENABLE_EFFECT_AUTOMATION_SETTING)) return;
+
+	const { overlay } = effectOptions;
 
 	const actor = typeof actorOrUuid === "string" ? await fromUuid(actorOrUuid) : actorOrUuid;
 	if (!actor) return;
@@ -63,7 +94,7 @@ export async function toggleEffect(actorOrUuid, effectId, state, overlay, allowD
 		const gmUserId = game.users.find(u => u.isGM && u.active)?.id;
 		if (gmUserId) {
 			log(`Delegating effect toggling to GM user '${gmUserId}'.`);
-			game.socket.emit(SOCKET_NAME, { func: TOGGLE_EFFECT_FUNC, runOn: gmUserId, actorUuid, effectId, state, overlay });
+			game.socket.emit(SOCKET_NAME, { func: TOGGLE_EFFECT_FUNC, runOn: gmUserId, actorUuid, effectId, state, effectOptions });
 		} else {
 			warn(`No GM users available. Unable to toggle effect to actor '${actor.name}'.`);
 		}

@@ -30,6 +30,24 @@ export class AuraManager {
 	#tokensInAura = new Map();
 
 	/**
+	 * Returns all active auras.
+	 * @param {Object} [filter]
+	 * @param {boolean} [filter.preview] If not undefined, excludes (when false) or only includes (when true) preview token auras.
+	 */
+	*getAllAuras({ preview } = {}) {
+		for (const [tokenCId, auraMap] of this.#tokenAuraMap) {
+			// Apply preview filter
+			if (preview !== undefined && this.#parseTokenCompositeId(tokenCId).isPreview !== preview) continue;
+
+			const parent = this.#getTokenFromCompositeId(tokenCId);
+			if (!parent) continue;
+
+			for (const aura of auraMap.values())
+				yield { parent, aura };
+		}
+	}
+
+	/**
 	 * Gets the Aura instances belonging to the given token.
 	 * @param {PartialToken} token
 	 */
@@ -53,11 +71,16 @@ export class AuraManager {
 	/**
 	 * Returns the auras that the given token is inside.
 	 * @param {PartialToken} token
+	 * @param {Object} [filter]
+	 * @param {boolean} [filter.preview] If not undefined, excludes (when false) or only includes (when true) preview token auras.
 	 */
-	getAurasContainingToken(token) {
+	getAurasContainingToken(token, { preview } = {}) {
 		const tokenCId = this.#getTokenCompositeId(token);
 		const auraCIds = [...(this.#aurasContainingToken.get(tokenCId) ?? [])];
-		return auraCIds.map(cid => this.#getAuraFromCompositeId(cid)).filter(t => !!t);
+		return auraCIds
+			.filter(cid => preview === undefined || this.#parseAuraCompositeId(cid).tokenIsPreview === preview)
+			.map(cid => this.#getAuraFromCompositeId(cid))
+			.filter(t => !!t);
 	}
 
 	/**
@@ -130,11 +153,19 @@ export class AuraManager {
 		const tokenCId = this.#getTokenCompositeId(token);
 
 		// Remove this token from the maps which hold data about which tokens are inside which auras
-		const auras = this.#tokenAuraMap.get(tokenCId);
-		if (auras) {
-			for (const auraId of auras.keys()) {
+		const aurasOwnedByToken = this.#tokenAuraMap.get(tokenCId);
+		if (aurasOwnedByToken) {
+			for (const auraId of aurasOwnedByToken.keys()) {
 				const auraCId = this.#getAuraCompositeId(token, auraId);
 				this.#deregisterAuraFromCollisions(auraCId);
+			}
+		}
+
+		// Remove the token from any sets in the tokensInAura map.
+		const aurasContainingToken = this.#aurasContainingToken.get(tokenCId);
+		if (aurasContainingToken) {
+			for (const auraId of aurasContainingToken) {
+				this.#tokensInAura.get(auraId)?.delete(tokenCId);
 			}
 		}
 
@@ -195,13 +226,21 @@ export class AuraManager {
 	}
 
 	/**
+	 * Parses a token's composite ID.
+	 * @param {string} tokenCId
+	 */
+	#parseTokenCompositeId(tokenCId) {
+		const [tokenId, isPreviewStr] = tokenCId.split(cidSeparator);
+		return { tokenId, isPreview: isPreviewStr === "true" };
+	}
+
+	/**
 	 * Attempts to get a Token from a token composite ID.
 	 * @param {string} tokenCId
 	 * @returns {Token | undefined}
 	 */
 	#getTokenFromCompositeId(tokenCId) {
-		const [tokenId, isPreviewStr] = tokenCId.split(cidSeparator);
-		const isPreview = isPreviewStr === "true";
+		const { tokenId, isPreview } = this.#parseTokenCompositeId(tokenCId);
 		const token = canvas.tokens.placeables.find(t => t.id === tokenId && t.isPreview === isPreview);
 		if (!token) warn(`getTokenFromCompositeId: A token matching composite ID '${tokenCId}' was not found.`);
 		return token;
@@ -218,11 +257,20 @@ export class AuraManager {
 	}
 
 	/**
+	 * Parses an aura's composite ID.
+	 * @param {string} auraCId
+	 */
+	#parseAuraCompositeId(auraCId) {
+		const [tokenId, tokenIsPreview, auraId] = auraCId.split(cidSeparator);
+		return { tokenId, tokenIsPreview: tokenIsPreview === "true", auraId };
+	}
+
+	/**
 	 * Attempts to get an Aura from an aura's composite ID.
 	 * @param {string} auraCId
 	 */
 	#getAuraFromCompositeId(auraCId) {
-		const [tokenId, tokenIsPreview, auraId] = auraCId.split(cidSeparator);
+		const { tokenId, tokenIsPreview, auraId } = this.#parseAuraCompositeId(auraCId);
 		const tokenCId = this.#getTokenCompositeId({ id: tokenId, isPreview: tokenIsPreview });
 		const parent = this.#getTokenFromCompositeId(tokenCId);
 		const aura = this.#tokenAuraMap.get(tokenCId)?.get(auraId);

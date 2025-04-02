@@ -43,13 +43,37 @@ In the above example, the aura is visible to a user when that user is hovering t
 
 #### Effect
 
-This automation allows adding an effect to a token when it enters the configured aura, and removes it when the token leaves. If multiple auras are applying the same effect, the token must leave all of them for the effect to be removed.
+This automation allows applying or removing effects from tokens in the aura under certain conditions.
 
 The '_Enable Effect Automation_' setting must be enabled by the GM in the settings for this feature to be available. It defaults to disabled.
 
 - _Effect_ - Select an effect that will be applied to/removed from tokens within the aura.
 - _Overlay?_ - If checked, the effect will be added as an overlay (i.e. the icon will appear over the whole token).
-- _Target Tokens_ - This is used to limit which tokens have effects applied to them. This is the token disposition as set in the token's config. For example, choosing 'Hostile' will only apply affects to tokens with the 'Hostile' disposition.
+- _Target Tokens_ - This is used to limit which tokens have effects applied to them. There are built in filters for the token's disposition (as set in the token config), or the type of actor the token represents. [GMs can also create custom filters using JavaScript](./docs/custom-aura-target-filters.md).
+- _Mode_ - Determines when the effect should be applied. See table below.
+- _Priority_ - For certain modes, determines the order that multiple of the same effect are resolved. See table below.
+
+|Mode|Description|Priority|
+|-|-|-|
+|Apply while inside (remove on leave)|Applies the selected effect on a target token when it enters the aura, and removes the effect when the token leaves the aura.|This is an "ongoing" effect, meaning that it takes priority over all other modes except _Remove while inside_. The priority value of the effect config determines only how it reacts to _Remove while inside_ effects. For example, if a token was in an aura which had a _Apply while inside_ 'Slowed' effect with priority 2 and also an aura which had a _Remove while inside_ 'Slowed' effect with priority 1, then the effect would be added because that effect takes priority.|
+|Apply on enter|Applies the effect to a target token when that token enters the aura. Does not automatically remove it. If the effect is removed, it will not be re-applied until the token has left the aura and re-entered it.|N/A|
+|Apply on leave|Applies the effect to a target token when that token leaves the aura.|N/A|
+|Apply on owner turn start|Applies the effect to all targets in an aura when the token that the aura belongs to starts a turn in combat.|N/A|
+|Apply on owner turn end|Applies the effect to all targets in an aura when the token that the aura belongs to ends a turn in combat.|N/A|
+|Apply on target turn start|Applies the effect to a target token that is in the aura when that target token starts a turn in combat.|N/A|
+|Apply on target turn end|Applies the effect to a target token that is in the aura when that target token ends a turn in combat.|N/A|
+|Apply on round start|Applies the effect to all target tokens in the aura when a new combat round starts.|Lower priority round start effects are applied first, and may get overridden by higher priority ones.|
+|Apply on round end|Applies the effect to all target tokens in the aura when a combat round ends. Occurs before the round start effects.|Lower priority round end effects are applied first, and may get overridden by higher priority ones.|
+|Remove while inside|Removes the effect from target tokens that are inside the aura. Prevents other GAA-automated effects from applying, except _Apply while inside_ effects with a higher priority.|This is an "ongoing" effect, meaning that it takes priority over all other modes except _Apply while inside_. The priority value of the effect config determines only how it reacts to _Apply while inside_ effects. For example, if a token was in an aura which had a _Apply while inside_ 'Slowed' effect with priority 2 and also an aura which had a _Remove while inside_ 'Slowed' effect with priority 1, then the effect would be added because that effect takes priority.|
+|Remove on enter|Remove the effect from a target token when that token enters the aura.|N/A|
+|Remove on leave|Remove the effect from a target token when that token leaves the aura.|N/A|
+|Remove on owner turn start|Removes the effect to all targets in an aura when the token that the aura belongs to starts a turn in combat.|N/A|
+|Remove on owner turn end|Removes the effect to all targets in an aura when the token that the aura belongs to ends a turn in combat.|N/A|
+|Remove on target turn start|Removes the effect to a target token that is in the aura when that target token starts a turn in combat.|N/A|
+|Remove on target turn end|Removes the effect to a target token that is in the aura when that target token ends a turn in combat.|N/A|
+|Remove on round start|Removes the effect to all target tokens in the aura when a new combat round starts.|Lower priority round start effects are applied first, and may get overridden by higher priority ones.|
+|Remove on round end|Removes the effect to all target tokens in the aura when a combat round ends. Occurs before the round start effects.|Lower priority round end effects are applied first, and may get overridden by higher priority ones.|
+
 
 #### Macro
 
@@ -67,7 +91,7 @@ If the Terrain Height Tools module v0.4.7 or newer is installed and activated, t
 	- _Don't show_ - Disables THT integration for this Aura.
 	- _Centre Only_ - Shows centre-to-centre rulers.
 	- _Centre and Edge_ - Shows centre-to-centre and edge-to-edge rulers.
-- _Target Tokens_ - This is used to limit which tokens have line of sight rulers drawn to them. This is the token disposition as set in the token's config. For example, choosing 'Hostile' will only draw line of sight rulers between this token and tokens with the 'Hostile' disposition.
+- _Target Tokens_ - This is used to limit which tokens have effects applied to them. There are built in filters for the token's disposition (as set in the token config), or the type of actor the token represents. [GMs can also create custom filters using JavaScript](./docs/custom-aura-target-filters.md).
 
 ### Square Grids
 

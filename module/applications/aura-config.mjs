@@ -2,9 +2,11 @@
 import "../components/tabs.mjs";
 import {
 	AURA_VISIBILITY_MODES,
+	EFFECT_APPLICATION_MODES,
 	ENABLE_EFFECT_AUTOMATION_SETTING,
 	ENABLE_MACRO_AUTOMATION_SETTING,
 	LINE_TYPES, MODULE_NAME,
+	PRIORITISABLE_EFFECT_APPLICATION_MODES,
 	THT_RULER_ON_DRAG_MODES
 } from "../consts.mjs";
 import { listAuraTargetFilters } from "../data/aura-target-filters.mjs";
@@ -317,9 +319,9 @@ export class AuraConfigApplication extends ApplicationV2 {
 				${this.#aura.effects.map((effect, idx) => html`
 					<fieldset style=${styleMap({ marginTop: idx === 0 ? "" : "1rem" })}>
 						<div class="form-group">
-							<label>Effect</label>
+							<label for=${`${this.id}_effect_${idx}_effect`}>Effect</label>
 							<div class="form-fields">
-								<select name=${`effects.${idx}.effectId`} ?disabled=${!effectsEnabled}>
+								<select id=${`${this.id}_effect_${idx}_effect`} name=${`effects.${idx}.effectId`} ?disabled=${!effectsEnabled}>
 									<option value="">-${l("None")}-</option>
 									${selectOptions(CONFIG.statusEffects, {
 										selected: effect.effectId,
@@ -332,18 +334,45 @@ export class AuraConfigApplication extends ApplicationV2 {
 						</div>
 
 						<div class="form-group">
-							<label>Overlay?</label>
+							<label for=${`${this.id}_effect_${idx}_isOverlay`}>Overlay?</label>
 							<div class="form-fields">
-								<input type="checkbox" name=${`effects.${idx}.isOverlay`} .checked=${effect.isOverlay} ?disabled=${!effectsEnabled}>
+								<input
+									type="checkbox"
+									name=${`effects.${idx}.isOverlay`}
+									id=${`${this.id}_effect_${idx}_isOverlay`}
+									.checked=${effect.isOverlay}
+									?disabled=${!effectsEnabled}>
 							</div>
 						</div>
 
 						<div class="form-group">
-							<label>Target Tokens</label>
+							<label for=${`${this.id}_effect_${idx}_targetTokens`}>Target Tokens</label>
 							<div class="form-fields">
-								<select name=${`effects.${idx}.targetTokens`} ?disabled=${!effectsEnabled}>
+								<select name=${`effects.${idx}.targetTokens`} id=${`${this.id}_effect_${idx}_targetTokens`} ?disabled=${!effectsEnabled}>
 									${selectOptions(listAuraTargetFilters(), { selected: effect.targetTokens })}
 								</select>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label for=${`${this.id}_effect_${idx}_mode`}>Mode</label>
+							<div class="form-fields">
+								<select name=${`effects.${idx}.mode`} id=${`${this.id}_effect_${idx}_mode`} ?disabled=${!effectsEnabled}>
+									${selectOptions(EFFECT_APPLICATION_MODES, { selected: effect.mode })}
+								</select>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label for=${`${this.id}_effect_${idx}_priority`}>Priority</label>
+							<div class="form-fields">
+								<input
+									type="number"
+									name=${`effects.${idx}.priority`}
+									id=${`${this.id}_effect_${idx}_priority`}
+									.value=${effect.priority}
+									step="1"
+									?disabled=${!effectsEnabled || !PRIORITISABLE_EFFECT_APPLICATION_MODES.includes(effect.mode)}>
 							</div>
 						</div>
 

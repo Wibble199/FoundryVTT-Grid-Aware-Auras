@@ -1,6 +1,7 @@
 import * as api from "./api.mjs";
 import { addAuraConfigItemHeaderButton } from "./applications/item-aura-config.mjs";
 import { tokenConfigClose, tokenConfigRenderInner } from "./applications/token-aura-config.mjs";
+import { setupAutomation } from "./automation/index.mjs";
 import { DOCUMENT_AURAS_FLAG, MODULE_NAME, SOCKET_NAME, TOGGLE_EFFECT_FUNC } from "./consts.mjs";
 import { initialiseAuraTargetFilters } from "./data/aura-target-filters.mjs";
 import { AuraLayer } from "./layers/aura-layer/aura-layer.mjs";
@@ -10,6 +11,7 @@ import { toggleEffect } from "./utils/misc-utils.mjs";
 Hooks.once("init", () => {
 	registerSettings();
 	initialiseAuraTargetFilters();
+	setupAutomation();
 
 	CONFIG.Canvas.layers.gaaAuraLayer = { group: "interface", layerClass: AuraLayer };
 
@@ -27,8 +29,8 @@ Hooks.once("ready", () => {
 
 		switch(func) {
 			case TOGGLE_EFFECT_FUNC:
-				const { actorUuid, effectId, state, overlay } = args;
-				toggleEffect(actorUuid, effectId, state, overlay, false);
+				const { actorUuid, effectId, state, effectOptions } = args;
+				toggleEffect(actorUuid, effectId, state, effectOptions, false);
 				break;
 		}
 	});

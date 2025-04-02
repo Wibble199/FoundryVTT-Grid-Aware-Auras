@@ -1,9 +1,8 @@
 /** @import { AuraConfig } from "../../data/aura.mjs"; */
-import { ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, ENTER_LEAVE_AURA_HOOK, MODULE_NAME } from "../../consts.mjs";
-import { canTargetToken } from "../../data/aura-target-filters.mjs";
+import { ENTER_LEAVE_AURA_HOOK } from "../../consts.mjs";
 import { getTokenAuras } from "../../data/aura.mjs";
 import { getSpacesUnderToken } from "../../utils/grid-utils.mjs";
-import { isTerrainHeightToolsActive, pickProperties, toggleEffect, warn } from "../../utils/misc-utils.mjs";
+import { pickProperties } from "../../utils/misc-utils.mjs";
 import { AuraManager } from "./aura-manager.mjs";
 import { Aura } from "./aura.mjs";
 
@@ -254,52 +253,5 @@ export class AuraLayer extends CanvasLayer {
 			parent,
 			aura,
 			{ hasEntered, isPreview, isInit, userId });
-
-		// Apply/remove effects
-		if (game.settings.get(MODULE_NAME, ENABLE_EFFECT_AUTOMATION_SETTING)) {
-			for (const auraEffect of aura.effects) {
-				if (!isInit && !isPreview && auraEffect.effectId?.length && userId === game.userId
-					&& canTargetToken(token, parent, aura, auraEffect.targetTokens)) {
-					// We only do this if the current user is the user that triggered the change. We only want this code to run
-					// once, regardless of how many users are on the scene when it happens. Ideally we'd limit this to just GM
-					// users so that we know we'd be able to do this, however a GM user may not have this scene loaded and
-					// therefore would not recieve this event.
-
-					// If removing the effect, check that there are no other auras that the target token is inside that would be
-					// applying the same effect.
-					// TODO: the test for other auras does not respect the other aura's target tokens
-					const shouldApplyOrRemoveEffect = hasEntered
-						|| !(this._auraManager.getAurasContainingToken(token).some(a =>
-							(a.aura.config.id !== aura.id || a.parent !== parent) &&
-							a.aura.config.effects?.some(e => e.effectId === auraEffect.effectId)));
-
-					if (shouldApplyOrRemoveEffect) {
-						toggleEffect(token.actor, auraEffect.effectId, hasEntered, auraEffect.isOverlay, true);
-					}
-				}
-			}
-		}
-
-		// Run macros
-		if (game.settings.get(MODULE_NAME, ENABLE_MACRO_AUTOMATION_SETTING)) {
-			for (const auraMacro of aura.macros) {
-				const macro = game.macros.get(auraMacro.macroId);
-				if (macro) {
-					// Foundry already wraps the execution inside a try..catch, so we do not need to worry about errors thrown in macros.
-					macro.execute({ token, parent, aura, options: { hasEntered, isPreview: token.isPreview || parent.isPreview, isInit, userId } });
-				} else {
-					warn(`Attempted to call macro with ID '${auraMacro.macroId}' due to enter/leave from aura '${aura.name}' on token '${parent.name}', but it could not be found.`);
-				}
-			}
-		}
-
-		// Terrain Height Tools integration
-		if (parent.isPreview && aura.terrainHeightTools.rulerOnDrag !== "NONE" && isTerrainHeightToolsActive()) {
-			const group = [MODULE_NAME, parent.document.uuid, aura.id, token.document.uuid].join("|");
-			if (hasEntered && canTargetToken(token, parent, aura, aura.terrainHeightTools.targetTokens))
-				terrainHeightTools.drawLineOfSightRaysBetweenTokens(parent, token, { group, drawForOthers: false, includeEdges: aura.terrainHeightTools.rulerOnDrag === "E2E" });
-			else
-				terrainHeightTools.clearLineOfSightRays({ group });
-		}
 	}
 }
