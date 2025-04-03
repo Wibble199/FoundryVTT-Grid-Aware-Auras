@@ -1,6 +1,11 @@
 /* ------------------ */
 /* Aura Config Window */
 /* ------------------ */
+.grid-aware-auras-aura-config {
+	position: relative;
+	min-height: 350px; /* Ensures we have enough height for the edit automated effect sub-window */
+}
+
 .grid-aware-auras-aura-config hr {
 	width: 100%;
 	border-top: 2px groove #FFFFFF;
@@ -63,6 +68,66 @@
 	background-color: rgba(255 175 0 / 20%);
 	border: 1px solid rgba(255 175 0 / 60%);
 	border-radius: 3px;
+}
+
+.grid-aware-auras-aura-config .effect-edit-overlay {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--background);
+	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(4px);
+	transition: all 150ms ease-out;
+}
+
+.grid-aware-auras-aura-config button.icon {
+	flex: 0 0 24px;
+	height: 24px;
+	width: 24px;
+	padding: 0;
+	font-size: var(--font-size-12);
+    line-height: 24px;
+}
+
+.grid-aware-auras-aura-config .automated-effects-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.grid-aware-auras-aura-config .automated-effects-list > li {
+	display: grid;
+	grid-template-columns: 2fr 3fr min-content min-content;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.25rem 0;
+	border-top: 2px groove transparent;
+	border-bottom: 2px groove transparent;
+}
+
+.grid-aware-auras-aura-config .automated-effects-list > li:hover {
+	border-color: var(--color-border-dark-secondary);
+}
+
+.grid-aware-auras-aura-config .automated-effects-list > li > span {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.grid-aware-auras-aura-config .effect-edit-overlay.effect-edit-overlay-hidden {
+	opacity: 0;
+	pointer-events: none;
+}
+
+.grid-aware-auras-aura-config .effect-edit-dialog {
+	background-color: var(--background);
+	width: 90%;
 }
 
 /* ---------- */
@@ -181,6 +246,10 @@
 
 .text-center {
 	text-align: center;
+}
+
+.text-right {
+	text-align: right;
 }
 
 .hr-narrow {

@@ -6,12 +6,11 @@ import {
 	ENABLE_EFFECT_AUTOMATION_SETTING,
 	ENABLE_MACRO_AUTOMATION_SETTING,
 	LINE_TYPES, MODULE_NAME,
-	PRIORITISABLE_EFFECT_APPLICATION_MODES,
 	THT_RULER_ON_DRAG_MODES
 } from "../consts.mjs";
 import { listAuraTargetFilters } from "../data/aura-target-filters.mjs";
 import { auraVisibilityModeMatrices, effectConfigDefaults, macroConfigDefaults } from "../data/aura.mjs";
-import { classMap, html, render, styleMap, when } from "../lib/lit-all.min.js";
+import { classMap, html, render, when } from "../lib/lit-all.min.js";
 import { selectOptions } from "../utils/lit-utils.mjs";
 import { isTerrainHeightToolsActive, partialEqual } from "../utils/misc-utils.mjs";
 
@@ -35,6 +34,9 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	#attachTo;
 
+	/** @type {number | undefined} */
+	#editingEffectIndex = undefined;
+
 	/**
 	 * @param {AuraConfig} aura
 	 * @param {Object} [options]
@@ -55,7 +57,6 @@ export class AuraConfigApplication extends ApplicationV2 {
 	}
 
 	static DEFAULT_OPTIONS = {
-		tag: "form",
 		window: {
 			contentClasses: ["sheet", "standard-form", "grid-aware-auras-aura-config"],
 			icon: "far fa-hexagon",
@@ -75,46 +76,50 @@ export class AuraConfigApplication extends ApplicationV2 {
 	/** @override */
 	_renderHTML() {
 		return html`
-			<div class="form-group">
-				<label>${l("Name")}</label>
-				<div class="form-fields">
-					<input type="text" name="name" .value=${this.#aura.name} required>
+			<form class="standard-form" @input=${this.#valueChange}>
+				<div class="form-group">
+					<label>${l("Name")}</label>
+					<div class="form-fields">
+						<input type="text" name="name" .value=${this.#aura.name} required>
+					</div>
 				</div>
-			</div>
 
-			<div class="form-group">
-				<label>Radius</label>
-				<div class="form-fields">
-					<input type="number" name="radius" .value=${this.#aura.radius} required min="0" step="1">
+				<div class="form-group">
+					<label>Radius</label>
+					<div class="form-fields">
+						<input type="number" name="radius" .value=${this.#aura.radius} required min="0" step="1">
+					</div>
 				</div>
-			</div>
 
-			<gaa-tabs .tabs=${[
-				{
-					name: l("DRAWING.TabLines"),
-					icon: "fas fa-paint-brush",
-					template: this.#linesTab
-				},
-				{
-					name: l("DRAWING.TabFill"),
-					icon: "fas fa-fill-drip",
-					template: this.#fillTab
-				},
-				{
-					name: "Visibility",
-					icon: "fas fa-eye-low-vision",
-					template: this.#visibilityTab
-				},
-				{
-					name: "Automation",
-					icon: "fas fa-bolt",
-					template: this.#automationTab
-				},
-			]}></gaa-tabs>
+				<gaa-tabs .tabs=${[
+					{
+						name: l("DRAWING.TabLines"),
+						icon: "fas fa-paint-brush",
+						template: this.#linesTab
+					},
+					{
+						name: l("DRAWING.TabFill"),
+						icon: "fas fa-fill-drip",
+						template: this.#fillTab
+					},
+					{
+						name: "Visibility",
+						icon: "fas fa-eye-low-vision",
+						template: this.#visibilityTab
+					},
+					{
+						name: "Automation",
+						icon: "fas fa-bolt",
+						template: this.#automationTab
+					},
+				]}></gaa-tabs>
 
-			<footer class="sheet-footer flexrow">
-				<button type="button" @click=${() => this.close()}>Close</button>
-			</footer>
+				<footer class="sheet-footer flexrow">
+					<button type="button" @click=${() => this.close()}>Close</button>
+				</footer>
+			</form>
+
+			${this.#effectEditOverlay()}
 		`;
 	}
 
@@ -315,16 +320,46 @@ export class AuraConfigApplication extends ApplicationV2 {
 				<p class="alert" role="alert">Effect automation is not turned on for this world. GMs can configure this in the settings.</p>
 			`)}
 
-			<div style="max-height: 30vh; overflow-y: auto">
+			<div class="text-right" style="margin-top: -0.5rem; margin-bottom: -0.5rem;">
+				<button type="button" class="icon fas fa-plus" @click=${this.#createEffect} ?disabled=${!effectsEnabled} style="display: inline-block">
+				</button>
+			</div>
+
+			${when(this.#aura.effects.length, () => html`<ul class="automated-effects-list">
 				${this.#aura.effects.map((effect, idx) => html`
-					<fieldset style=${styleMap({ marginTop: idx === 0 ? "" : "1rem" })}>
+					<li>
+						<span><strong>${l(CONFIG.statusEffects.find(e => e.id === effect.effectId)?.name ?? "None")}</strong></span>
+						<span><em>${l(EFFECT_APPLICATION_MODES[effect.mode] ?? "")}</em></span>
+						<button type="button" class="icon fas fa-edit" @click=${() => this.#editEffect(idx)} ?disabled=${!effectsEnabled}></button>
+						<button type="button" class="icon fas fa-trash" @click=${() => this.#deleteEffect(idx)} ?disabled=${!effectsEnabled}></button>
+					</li>
+				`)}
+			</ul>`)}
+
+			${when(effectsEnabled && this.#aura.effects.length === 0, () => html`
+				<p style="margin: 0">No automated effects configured. Click the plus above to create one.</p>
+			`)}
+		`;
+	};
+
+	#effectEditOverlay = () => {
+		const editingEffect = this.#editingEffectIndex === undefined
+			? null
+			: this.#aura.effects[this.#editingEffectIndex];
+
+		return html`
+			<div class=${classMap({ "effect-edit-overlay": true, "effect-edit-overlay-hidden": editingEffect === null })}>
+				${when(editingEffect, () => html`<form class="standard-form effect-edit-dialog" @submit=${this.#updateEffect}>
+					<fieldset>
+						<legend>Edit automated effect</legend>
+
 						<div class="form-group">
-							<label for=${`${this.id}_effect_${idx}_effect`}>Effect</label>
+							<label>Effect</label>
 							<div class="form-fields">
-								<select id=${`${this.id}_effect_${idx}_effect`} name=${`effects.${idx}.effectId`} ?disabled=${!effectsEnabled}>
+								<select name="effectId">
 									<option value="">-${l("None")}-</option>
 									${selectOptions(CONFIG.statusEffects, {
-										selected: effect.effectId,
+										selected: editingEffect.effectId,
 										labelSelector: "name",
 										valueSelector: "id",
 										sort: true
@@ -334,58 +369,55 @@ export class AuraConfigApplication extends ApplicationV2 {
 						</div>
 
 						<div class="form-group">
-							<label for=${`${this.id}_effect_${idx}_isOverlay`}>Overlay?</label>
+							<label>Overlay?</label>
 							<div class="form-fields">
 								<input
 									type="checkbox"
-									name=${`effects.${idx}.isOverlay`}
-									id=${`${this.id}_effect_${idx}_isOverlay`}
-									.checked=${effect.isOverlay}
-									?disabled=${!effectsEnabled}>
+									name="isOverlay"
+									.checked=${editingEffect.isOverlay ?? false}>
 							</div>
 						</div>
 
 						<div class="form-group">
-							<label for=${`${this.id}_effect_${idx}_targetTokens`}>Target Tokens</label>
+							<label>Target Tokens</label>
 							<div class="form-fields">
-								<select name=${`effects.${idx}.targetTokens`} id=${`${this.id}_effect_${idx}_targetTokens`} ?disabled=${!effectsEnabled}>
-									${selectOptions(listAuraTargetFilters(), { selected: effect.targetTokens })}
+								<select name="targetTokens">
+									${selectOptions(listAuraTargetFilters(), { selected: editingEffect.targetTokens })}
 								</select>
 							</div>
 						</div>
 
 						<div class="form-group">
-							<label for=${`${this.id}_effect_${idx}_mode`}>Mode</label>
+							<label>Mode</label>
 							<div class="form-fields">
-								<select name=${`effects.${idx}.mode`} id=${`${this.id}_effect_${idx}_mode`} ?disabled=${!effectsEnabled}>
-									${selectOptions(EFFECT_APPLICATION_MODES, { selected: effect.mode })}
+								<select name="mode">
+									${selectOptions(EFFECT_APPLICATION_MODES, { selected: editingEffect.mode })}
 								</select>
 							</div>
 						</div>
 
 						<div class="form-group">
-							<label for=${`${this.id}_effect_${idx}_priority`}>Priority</label>
+							<label>Priority</label>
 							<div class="form-fields">
 								<input
 									type="number"
-									name=${`effects.${idx}.priority`}
-									id=${`${this.id}_effect_${idx}_priority`}
-									.value=${effect.priority}
-									step="1"
-									?disabled=${!effectsEnabled || !PRIORITISABLE_EFFECT_APPLICATION_MODES.includes(effect.mode)}>
+									name="priority"
+									.value=${editingEffect?.priority ?? 0}
+									step="1">
 							</div>
 						</div>
 
-						<button type="button" @click=${() => this.#deleteEffect(idx)} ?disabled=${!effectsEnabled}>
-							<i class="fas fa-times"></i>
-						</button>
+						<div class="flexrow">
+							<button type="button" @click=${() => this.#deleteEffect(this.#editingEffectIndex)}>
+								<i class="fas fa-trash"></i> ${l("Delete")}
+							</button>
+							<button type="submit">
+								<i class="fas fa-check"></i> ${l("Confirm")}
+							</button>
+						</div>
 					</fieldset>
-				`)}
+				</form>`)}
 			</div>
-
-			<button type="button" @click=${this.#createEffect} ?disabled=${!effectsEnabled}>
-				<i class="fas fa-plus"></i>
-			</button>
 		`;
 	};
 
@@ -444,7 +476,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 	#valueChange = e => {
 		const name = e.target.name?.length ? e.target.name : e.target.closest("[name]")?.name;
 		if (!name?.length) return;
-		const formData = new FormDataExtended(this.element);
+		const formData = new FormDataExtended(e.currentTarget);
 		const value = foundry.utils.getProperty(formData.object, name);
 		foundry.utils.setProperty(this.#aura, name, value);
 		this.#auraUpdated();
@@ -481,12 +513,29 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	#createEffect = () => {
 		this.#aura.effects.push(foundry.utils.deepClone(effectConfigDefaults));
+		this.#editingEffectIndex = this.#aura.effects.length - 1;
 		this.#auraUpdated();
-	}
+	};
+
+	/** @param {number} effectIndex */
+	#editEffect = effectIndex => {
+		this.#editingEffectIndex = effectIndex;
+		this.render();
+	};
+
+	/** @param {Event} e */
+	#updateEffect = e => {
+		e.preventDefault();
+		const formData = new FormDataExtended(e.currentTarget);
+		Object.assign(this.#aura.effects[this.#editingEffectIndex], formData.object);
+		this.#editingEffectIndex = undefined;
+		this.#auraUpdated();
+	};
 
 	/** @param {number} effectIndex */
 	#deleteEffect = effectIndex => {
 		this.#aura.effects = this.#aura.effects.filter((_, idx) => idx !== effectIndex);
+		this.#editingEffectIndex = undefined;
 		this.#auraUpdated();
 	};
 
@@ -522,7 +571,13 @@ export class AuraConfigApplication extends ApplicationV2 {
 	#auraUpdated() {
 		this.#onChange?.(this.#aura);
 		this.render();
-		setTimeout(() => this.setPosition({ height: "auto" }))
+	}
+
+	/** @override */
+	render(...args) {
+		const promise = super.render(...args);
+		setTimeout(() => this.setPosition({ height: "auto" }));
+		return promise;
 	}
 
 	/** @override */
@@ -546,13 +601,18 @@ export class AuraConfigApplication extends ApplicationV2 {
 		render(templateResult, container);
 
 		if (isFirstRender) {
-			container.addEventListener("input", this.#valueChange);
 			container.addEventListener("tabchange", () => setTimeout(() => this.setPosition({ height: "auto" })));
 		}
 	}
 
 	/** @override */
 	async close(options) {
+		if (this.#editingEffectIndex !== undefined) {
+			this.#editingEffectIndex = undefined;
+			this.render();
+			return;
+		}
+
 		if (options?.callOnClose !== false)
 			this.#onClose?.();
 		await super.close(options);
