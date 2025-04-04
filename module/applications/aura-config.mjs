@@ -339,7 +339,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 			</ul>`)}
 
 			${when(effectsEnabled && this.#aura.effects.length === 0, () => html`
-				<p style="margin: 0">No automated effects configured. Click the plus above to create one.</p>
+				<p class="hint text-center">No automated effects configured. Click the plus above to create one.</p>
 			`)}
 		`;
 	};
@@ -357,7 +357,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 						<label>Effect</label>
 						<div class="form-fields">
 							<select name="effectId">
-								<option value="">-${l("None")}-</option>
+								<option value="" hidden>-${l("None")}-</option>
 								${selectOptions(CONFIG.statusEffects, {
 									selected: editingEffect.effectId,
 									labelSelector: "name",
@@ -445,7 +445,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 			</ul>`)}
 
 			${when(macrosEnabled && this.#aura.macros.length === 0, () => html`
-				<p style="margin: 0">No macros configured. Click the plus above to create one.</p>
+				<p class="hint text-center">No macros configured. Click the plus above to create one.</p>
 			`)}
 		`;
 	};

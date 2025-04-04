@@ -18,7 +18,7 @@ The '_Enable Effect Automation_' setting must be enabled by the GM in the world 
 |-|-|
 |Effect|Select an effect that will be applied to/removed from tokens within the aura.|
 |Overlay|If checked, the effect will be added as an overlay (i.e. the icon will appear over the whole token).|
-|Target Tokens|This is used to filter which tokens have the effect applied to them. There are built in filters for the token's disposition (as set in the token config), or the type of actor the token represents. [GMs can also create custom filters using JavaScript](./docs/custom-aura-target-filters.md).|
+|Target Tokens|This is used to filter which tokens have the effect applied to them. There are built in filters for the token's disposition (as set in the token config), or the type of actor the token represents. [GMs can also create custom filters using JavaScript](./custom-aura-target-filters.md).|
 |Trigger|Determines when the effect should be applied. See 'Effect Triggers' table below for details.|
 |Priority|For certain triggers, determines the priority order against other auras that apply/remove the same effect. Not every trigger utilises the priority - see 'Effect Triggers' table below for details. Generally you won't need to change this, but it's recommended to do so if you have some auras that are applying and removing the same effect.|
 
@@ -65,7 +65,7 @@ All macros are called with the following parameters:
 |Name|Description|
 |-|-|
 |Macro ID|Enter the ID of a macro, or click and drag it from the hotbar/directory. Do **NOT** use the name of a macro.|
-|Target Tokens|This is used to filter which tokens will cause a macro to fire. There are built in filters for the token's disposition (as set in the token config), or the type of actor the token represents. [GMs can also create custom filters using JavaScript](./docs/custom-aura-target-filters.md).|
+|Target Tokens|This is used to filter which tokens will cause a macro to fire. There are built in filters for the token's disposition (as set in the token config), or the type of actor the token represents. [GMs can also create custom filters using JavaScript](./custom-aura-target-filters.md).|
 |Trigger|Determines when the macro should be fired. See 'Macro Triggers' table below for details.|
 
 <details>
@@ -125,8 +125,6 @@ These three triggers are called with the following data in their `options` objec
 |`userId`|`string`|The ID of the user that changed the round in the combat tracker.|
 </details>
 
-### Example
-
 ## Terrain Height Tools
 
 If the Terrain Height Tools module v0.4.7 or newer is installed and activated, this config will be available. It allows for drawing line of sight rulers between the token that owns the aura and any tokens that are inside the aura while the token owning the aura is being dragged.
@@ -136,4 +134,4 @@ If the Terrain Height Tools module v0.4.7 or newer is installed and activated, t
 |Name|Description|
 |-|-|
 |Token Ruler on Drag|This determines what type of ruler to draw (if any):<ul><li>_Don't show_ - Disables THT integration for this Aura.</li><li>_Centre Only_ - Shows centre-to-centre rulers.</li><li>_Centre and Edge_ - Shows centre-to-centre and edge-to-edge rulers.</li></ul>|
-|Target Tokens|This is used to limit which tokens have effects applied to them. There are built in filters for the token's disposition (as set in the token config), or the type of actor the token represents. [GMs can also create custom filters using JavaScript](./docs/custom-aura-target-filters.md).|
+|Target Tokens|This is used to limit which tokens have effects applied to them. There are built in filters for the token's disposition (as set in the token config), or the type of actor the token represents. [GMs can also create custom filters using JavaScript](./custom-aura-target-filters.md).|
