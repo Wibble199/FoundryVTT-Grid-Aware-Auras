@@ -12,27 +12,40 @@ export function setupAutomation() {
 		terrainHeightTools.onEnterLeaveAura(...args);
 	});
 
-	// Note that this ONLY runs on the client that triggers the combat change.
-	// For now this is fine because we're only dealing with effects - which should only run once.
-	// In future, if this is needed for other automations that should run on all clients, need to either change the hook
-	// or broadcast that it's happened over the socket.
-	Hooks.on("combatTurnChange", (_combat, /** @type {CombatState} */ previous, /** @type {CombatState} */ current) => {
+	Hooks.on("updateCombat", (/** @type {Combat} */ combat, _delta, _options, /** @type {string} */ userId) => {
+		if (!combat.previous || combat.scene.id !== game.canvas.scene.id) return;
+
 		// Handle token's turn end
-		if (previous.combatantId !== current.combatantId && previous.tokenId?.length) {
-			const token = game.canvas.tokens.get(previous.tokenId);
-			if (token) effects.onTokenCombatTurnEnd(token);
+		if (combat.previous.combatantId !== combat.current.combatantId && combat.previous.tokenId?.length) {
+			const token = game.canvas.tokens.get(combat.previous.tokenId);
+			if (token) {
+				effects.onTokenCombatTurnEnd(token, userId);
+				macros.onTokenCombatTurnEnd(token, userId);
+			}
 		}
 
 		// Handle the round change
-		if (previous.round !== current.round) {
-			const isFirstRound = previous.round === 0;
-			effects.onCombatRoundChange(isFirstRound);
+		if (combat.previous.round !== combat.current.round) {
+			const isFirstRound = combat.previous.round === 0;
+			effects.onCombatRoundChange(isFirstRound, false, userId);
+			macros.onCombatRoundChange(isFirstRound, false, userId);
 		}
 
 		// Handle token's turn start
-		if (previous.combatantId !== current.combatantId && current.tokenId?.length) {
-			const token = game.canvas.tokens.get(current.tokenId);
-			if (token) effects.onTokenCombatTurnStart(token);
+		if (combat.previous.combatantId !== combat.current.combatantId && combat.current.tokenId?.length) {
+			const token = game.canvas.tokens.get(combat.current.tokenId);
+			if (token) {
+				effects.onTokenCombatTurnStart(token, userId);
+				macros.onTokenCombatTurnStart(token, userId);
+			}
+		}
+	});
+
+	// Handle end turn events on combat deletion, so long as the combat had been started (round > 0)
+	Hooks.on("deleteCombat", (/** @type {Combat} */ combat, _options, userId) => {
+		if (combat.round > 0) {
+			effects.onCombatRoundChange(false, true, userId);
+			macros.onCombatRoundChange(false, true, userId);
 		}
 	});
 }

@@ -2,15 +2,15 @@
 import "../components/tabs.mjs";
 import {
 	AURA_VISIBILITY_MODES,
-	EFFECT_APPLICATION_MODES,
+	EFFECT_MODES,
 	ENABLE_EFFECT_AUTOMATION_SETTING,
 	ENABLE_MACRO_AUTOMATION_SETTING,
-	LINE_TYPES, MODULE_NAME,
+	LINE_TYPES, MACRO_MODES, MODULE_NAME,
 	THT_RULER_ON_DRAG_MODES
 } from "../consts.mjs";
 import { listAuraTargetFilters } from "../data/aura-target-filters.mjs";
 import { auraVisibilityModeMatrices, effectConfigDefaults, macroConfigDefaults } from "../data/aura.mjs";
-import { classMap, html, render, when } from "../lib/lit-all.min.js";
+import { classMap, createRef, html, nothing, ref, render, when } from "../lib/lit-all.min.js";
 import { selectOptions } from "../utils/lit-utils.mjs";
 import { isTerrainHeightToolsActive, partialEqual } from "../utils/misc-utils.mjs";
 
@@ -34,8 +34,8 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	#attachTo;
 
-	/** @type {number | undefined} */
-	#editingEffectIndex = undefined;
+	/** @type {ReturnType<html> | null} */
+	#nestedDialogContent = null;
 
 	/**
 	 * @param {AuraConfig} aura
@@ -119,7 +119,9 @@ export class AuraConfigApplication extends ApplicationV2 {
 				</footer>
 			</form>
 
-			${this.#effectEditOverlay()}
+			<div class=${classMap({ "nested-dialog-overlay": true, "nested-dialog-overlay-hidden": !this.#nestedDialogContent })}>
+				${this.#nestedDialogContent ?? nothing}
+			</div>
 		`;
 	}
 
@@ -325,11 +327,11 @@ export class AuraConfigApplication extends ApplicationV2 {
 				</button>
 			</div>
 
-			${when(this.#aura.effects.length, () => html`<ul class="automated-effects-list">
+			${when(this.#aura.effects.length, () => html`<ul class="automated-item-list">
 				${this.#aura.effects.map((effect, idx) => html`
 					<li>
 						<span><strong>${l(CONFIG.statusEffects.find(e => e.id === effect.effectId)?.name ?? "None")}</strong></span>
-						<span><em>${l(EFFECT_APPLICATION_MODES[effect.mode] ?? "")}</em></span>
+						<span><em>${l(EFFECT_MODES[effect.mode] ?? "")}</em></span>
 						<button type="button" class="icon fas fa-edit" @click=${() => this.#editEffect(idx)} ?disabled=${!effectsEnabled}></button>
 						<button type="button" class="icon fas fa-trash" @click=${() => this.#deleteEffect(idx)} ?disabled=${!effectsEnabled}></button>
 					</li>
@@ -342,82 +344,79 @@ export class AuraConfigApplication extends ApplicationV2 {
 		`;
 	};
 
-	#effectEditOverlay = () => {
-		const editingEffect = this.#editingEffectIndex === undefined
-			? null
-			: this.#aura.effects[this.#editingEffectIndex];
+	/** @param {number} editingEffectIndex */
+	#effectEditNestedDialog = editingEffectIndex => {
+		const editingEffect = this.#aura.effects[editingEffectIndex];
 
 		return html`
-			<div class=${classMap({ "effect-edit-overlay": true, "effect-edit-overlay-hidden": editingEffect === null })}>
-				${when(editingEffect, () => html`<form class="standard-form effect-edit-dialog" @submit=${this.#updateEffect}>
-					<fieldset>
-						<legend>Edit automated effect</legend>
+			<form class="standard-form nested-dialog" @submit=${e => this.#updateArrayItem(e, this.#aura.effects, editingEffectIndex)}>
+				<fieldset>
+					<legend>Edit automated effect</legend>
 
-						<div class="form-group">
-							<label>Effect</label>
-							<div class="form-fields">
-								<select name="effectId">
-									<option value="">-${l("None")}-</option>
-									${selectOptions(CONFIG.statusEffects, {
-										selected: editingEffect.effectId,
-										labelSelector: "name",
-										valueSelector: "id",
-										sort: true
-									})}
-								</select>
-							</div>
+					<div class="form-group">
+						<label>Effect</label>
+						<div class="form-fields">
+							<select name="effectId">
+								<option value="">-${l("None")}-</option>
+								${selectOptions(CONFIG.statusEffects, {
+									selected: editingEffect.effectId,
+									labelSelector: "name",
+									valueSelector: "id",
+									sort: true
+								})}
+							</select>
 						</div>
+					</div>
 
-						<div class="form-group">
-							<label>Overlay?</label>
-							<div class="form-fields">
-								<input
-									type="checkbox"
-									name="isOverlay"
-									.checked=${editingEffect.isOverlay ?? false}>
-							</div>
+					<div class="form-group">
+						<label>Overlay?</label>
+						<div class="form-fields">
+							<input
+								type="checkbox"
+								name="isOverlay"
+								.checked=${editingEffect.isOverlay ?? false}>
 						</div>
+					</div>
 
-						<div class="form-group">
-							<label>Target Tokens</label>
-							<div class="form-fields">
-								<select name="targetTokens">
-									${selectOptions(listAuraTargetFilters(), { selected: editingEffect.targetTokens })}
-								</select>
-							</div>
+					<div class="form-group">
+						<label>Target Tokens</label>
+						<div class="form-fields">
+							<select name="targetTokens">
+								${selectOptions(listAuraTargetFilters(), { selected: editingEffect.targetTokens })}
+							</select>
 						</div>
+					</div>
 
-						<div class="form-group">
-							<label>Mode</label>
-							<div class="form-fields">
-								<select name="mode">
-									${selectOptions(EFFECT_APPLICATION_MODES, { selected: editingEffect.mode })}
-								</select>
-							</div>
+					<div class="form-group">
+						<label>Mode</label>
+						<div class="form-fields">
+							<select name="mode">
+								${selectOptions(EFFECT_MODES, { selected: editingEffect.mode })}
+							</select>
 						</div>
+					</div>
 
-						<div class="form-group">
-							<label>Priority</label>
-							<div class="form-fields">
-								<input
-									type="number"
-									name="priority"
-									.value=${editingEffect?.priority ?? 0}
-									step="1">
-							</div>
+					<div class="form-group">
+						<label>Priority</label>
+						<div class="form-fields">
+							<input
+								type="number"
+								name="priority"
+								.value=${editingEffect?.priority ?? 0}
+								step="1">
 						</div>
+					</div>
 
-						<div class="flexrow">
-							<button type="button" @click=${() => this.#deleteEffect(this.#editingEffectIndex)}>
-								<i class="fas fa-trash"></i> ${l("Delete")}
-							</button>
-							<button type="submit">
-								<i class="fas fa-check"></i> ${l("Confirm")}
-							</button>
-						</div>
-					</fieldset>
-				</form>`)}
-			</div>
+					<div class="flexrow">
+						<button type="button" @click=${() => this.#deleteEffect(editingEffectIndex)}>
+							<i class="fas fa-trash"></i> ${l("Delete")}
+						</button>
+						<button type="submit">
+							<i class="fas fa-check"></i> ${l("Confirm")}
+						</button>
+					</div>
+				</fieldset>
+			</form>
 		`;
 	};
 
@@ -429,27 +428,76 @@ export class AuraConfigApplication extends ApplicationV2 {
 				<p class="alert" role="alert">Macro automation is not turned on for this world. GMs can configure this in the settings.</p>
 			`)}
 
-			${this.#aura.macros.map((macro, idx) => html`
-				<div class="form-group" @dragover=${this.#onMacroDragOver} @drop=${e => this.#onMacroDrop(e, idx)}>
-					<label>Enter/Leave Macro</label>
-					<div class="form-fields">
-						<input type="text" name=${`macros.${idx}.macroId`} .value=${macro.macroId} ?disabled=${!macrosEnabled}>
-					</div>
-				</div>
-
-				<button type="button" @click=${() => this.#deleteMacro(idx)} ?disabled=${!macrosEnabled}>
-					<i class="fas fa-times"></i>
+			<div class="text-right" style="margin-top: -0.5rem; margin-bottom: -0.5rem;">
+				<button type="button" class="icon fas fa-plus" @click=${this.#createMacro} ?disabled=${!macrosEnabled} style="display: inline-block">
 				</button>
-			`)}
+			</div>
 
-			${when(macrosEnabled && this.#aura.macros?.length > 0, () => html`
-				<p class="hint">Enter a macro's ID, or drag and drop it onto the textbox.</p>
-			`)}
+			${when(this.#aura.macros.length, () => html`<ul class="automated-item-list">
+				${this.#aura.macros.map((macro, idx) => html`
+					<li>
+						<span><strong>${game.macros.get(macro.macroId)?.name ?? l("None")}</strong></span>
+						<span><em>${l(MACRO_MODES[macro.mode] ?? "")}</em></span>
+						<button type="button" class="icon fas fa-edit" @click=${() => this.#editMacro(idx)} ?disabled=${!macrosEnabled}></button>
+						<button type="button" class="icon fas fa-trash" @click=${() => this.#deleteMacro(idx)} ?disabled=${!macrosEnabled}></button>
+					</li>
+				`)}
+			</ul>`)}
 
-			<button type="button" @click=${this.#createMacro} ?disabled=${!macrosEnabled}>
-				<i class="fas fa-plus"></i>
-			</button>
+			${when(macrosEnabled && this.#aura.macros.length === 0, () => html`
+				<p style="margin: 0">No macros configured. Click the plus above to create one.</p>
+			`)}
 		`;
+	};
+
+	/** @param {number} macroIndex */
+	#macroEditNestedDialog = macroIndex => {
+		const editingMacro = this.#aura.macros[macroIndex];
+
+		const macroInputRef = createRef();
+
+		return html`
+			<form class="standard-form nested-dialog" @submit=${e => this.#updateArrayItem(e, this.#aura.macros, macroIndex)}>
+				<fieldset @dragover=${this.#onMacroDragOver} @drop=${e => this.#onMacroDrop(e, macroInputRef)}>
+					<legend>Edit macro</legend>
+
+					<div class="form-group">
+						<label>Macro ID</label>
+						<div class="form-fields flexcol">
+							<input type="text" name="macroId" value=${editingMacro.macroId} ${ref(macroInputRef)}>
+							<p class="hint">Enter a macro's ID, or drag and drop it onto the textbox.</p>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Target Tokens</label>
+						<div class="form-fields">
+							<select name="targetTokens">
+								${selectOptions(listAuraTargetFilters(), { selected: editingMacro.targetTokens })}
+							</select>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Trigger</label>
+						<div class="form-fields">
+							<select name="mode">
+								${selectOptions(MACRO_MODES, { selected: editingMacro.mode })}
+							</select>
+						</div>
+					</div>
+
+					<div class="flexrow">
+						<button type="button" @click=${() => this.#deleteMacro(macroIndex)}>
+							<i class="fas fa-trash"></i> ${l("Delete")}
+						</button>
+						<button type="submit">
+							<i class="fas fa-check"></i> ${l("Confirm")}
+						</button>
+					</div>
+				</fieldset>
+			</form>
+		`
 	};
 
 	#automationThtTab = () => html`
@@ -511,42 +559,50 @@ export class AuraConfigApplication extends ApplicationV2 {
 		return "CUSTOM";
 	}
 
+	/** @type {(e: Event, array: any[], index: number) => void} */
+	#updateArrayItem = (e, array, index) => {
+		e.preventDefault();
+		const formData = new FormDataExtended(e.currentTarget);
+		Object.assign(array[index], formData.object);
+		this.#nestedDialogContent = null;
+		this.#auraUpdated();
+	};
+
 	#createEffect = () => {
 		this.#aura.effects.push(foundry.utils.deepClone(effectConfigDefaults));
-		this.#editingEffectIndex = this.#aura.effects.length - 1;
+		this.#nestedDialogContent = this.#effectEditNestedDialog(this.#aura.effects.length - 1);
 		this.#auraUpdated();
 	};
 
 	/** @param {number} effectIndex */
 	#editEffect = effectIndex => {
-		this.#editingEffectIndex = effectIndex;
+		this.#nestedDialogContent = this.#effectEditNestedDialog(effectIndex);
 		this.render();
-	};
-
-	/** @param {Event} e */
-	#updateEffect = e => {
-		e.preventDefault();
-		const formData = new FormDataExtended(e.currentTarget);
-		Object.assign(this.#aura.effects[this.#editingEffectIndex], formData.object);
-		this.#editingEffectIndex = undefined;
-		this.#auraUpdated();
 	};
 
 	/** @param {number} effectIndex */
 	#deleteEffect = effectIndex => {
 		this.#aura.effects = this.#aura.effects.filter((_, idx) => idx !== effectIndex);
-		this.#editingEffectIndex = undefined;
+		this.#nestedDialogContent = null;
 		this.#auraUpdated();
 	};
 
 	#createMacro = () => {
 		this.#aura.macros.push(foundry.utils.deepClone(macroConfigDefaults));
+		this.#nestedDialogContent = this.#macroEditNestedDialog(this.#aura.macros.length - 1);
 		this.#auraUpdated();
+	};
+
+	/** @param {number} macroIndex */
+	#editMacro = macroIndex => {
+		this.#nestedDialogContent = this.#macroEditNestedDialog(macroIndex);
+		this.render();
 	};
 
 	/** @param {number} macroIndex */
 	#deleteMacro = macroIndex => {
 		this.#aura.macros = this.#aura.macros.filter((_, idx) => idx !== macroIndex);
+		this.#nestedDialogContent = null;
 		this.#auraUpdated();
 	};
 
@@ -558,13 +614,12 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	/**
 	 * @param {DragEvent} event
-	 * @param {number} macroIndex
+	 * @param {({ value?: HTMLInputElement })} inputRef
 	 */
-	#onMacroDrop = async (event, macroIndex) => {
+	#onMacroDrop = async (event, inputRef) => {
 		const macro = await this.#getMacroFromDragData(event);
-		if (macro) {
-			this.#aura.macros[macroIndex].macroId = macro.id;
-			this.#auraUpdated();
+		if (macro && inputRef.value) {
+			inputRef.value.value = macro.id;
 		}
 	};
 
@@ -607,8 +662,8 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	/** @override */
 	async close(options) {
-		if (this.#editingEffectIndex !== undefined) {
-			this.#editingEffectIndex = undefined;
+		if (this.#nestedDialogContent !== null) {
+			this.#nestedDialogContent = null;
 			this.render();
 			return;
 		}

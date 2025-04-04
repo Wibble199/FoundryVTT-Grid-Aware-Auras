@@ -1,5 +1,5 @@
 /** @import { AuraConfig, EffectConfig } from "../data/aura.mjs" */
-import { ENABLE_EFFECT_AUTOMATION_SETTING, MODULE_NAME, ONGOING_EFFECT_APPLICATION_MODES } from "../consts.mjs";
+import { ENABLE_EFFECT_AUTOMATION_SETTING, MODULE_NAME, ONGOING_EFFECT_MODES } from "../consts.mjs";
 import { canTargetToken } from "../data/aura-target-filters.mjs";
 import { AuraLayer } from "../layers/aura-layer/aura-layer.mjs";
 import { getOrCreate, groupBy, toggleEffect } from "../utils/misc-utils.mjs";
@@ -82,29 +82,36 @@ export function onEnterLeaveAura(token, parent, aura, { hasEntered, isInit, isPr
 
 /**
  * @param {Token} token
+ * @param {string} userId
  */
-export function onTokenCombatTurnStart(token) {
-	handleTokenCombatTurnStartEnd(token, "START");
+export function onTokenCombatTurnStart(token, userId) {
+	handleTokenCombatTurnStartEnd(token, userId, true);
 }
 
 /**
  * @param {Token} token
+ * @param {string} userId
  */
-export function onTokenCombatTurnEnd(token) {
-	handleTokenCombatTurnStartEnd(token, "END");
+export function onTokenCombatTurnEnd(token, userId) {
+	handleTokenCombatTurnStartEnd(token, userId, false);
 }
 
 /**
  * Implementation for handling effects that are applied at the start or end of token's turn.
  * @param {Token} token The token that owns effects
- * @param {"START" | "END"} event Is this being called at the start or end of the token's turn.
+ * @param {string} userId
+ * @param {boolean} #isStart Is this being called at the start or end of the token's turn.
  */
-function handleTokenCombatTurnStartEnd(token, event) {
+function handleTokenCombatTurnStartEnd(token, userId, isStart) {
 	// Do nothing if effect automation is not enabled
 	if (!game.settings.get(MODULE_NAME, ENABLE_EFFECT_AUTOMATION_SETTING)) return;
 
+	// Do nothing if this wasn't the user that caused the change
+	if (userId !== game.userId) return;
+
 	// 1. Handle any of the token's aura effects that apply/remove on owner turn start
-	const applyOwnerMode = `APPLY_ON_OWNER_TURN_${event}`, removeOwnerMode = `REMOVE_ON_OWNER_TURN_${event}`;
+	const applyOwnerMode = `APPLY_ON_OWNER_TURN_${isStart ? "START" : "END"}`;
+	const removeOwnerMode = `REMOVE_ON_OWNER_TURN_${isStart ? "START" : "END"}`;
 
 	for (const aura of AuraLayer.current._auraManager.getTokenAuras(token)) {
 		// Get all effects that are applied or removed at turn start
@@ -133,7 +140,8 @@ function handleTokenCombatTurnStartEnd(token, event) {
 	}
 
 	// 2. Check all the auras the token is in to see if any of them apply/remove effects on target turn start
-	const applyTargetMode = `APPLY_ON_TARGET_TURN_${event}`, removeTargetMode = `REMOVE_ON_TARGET_TURN_${event}`;
+	const applyTargetMode = `APPLY_ON_TARGET_TURN_${isStart ? "START" : "END"}`;
+	const removeTargetMode = `REMOVE_ON_TARGET_TURN_${isStart ? "START" : "END"}`;
 
 	/** @type {Map<string, EffectConfig[]> | undefined} */
 	let ongoingEffectTargetingToken;
@@ -161,10 +169,16 @@ function handleTokenCombatTurnStartEnd(token, event) {
 
 /**
  * @param {boolean} isFirstRound True when combat is on the first round; means round end effects aren't applied/removed.
+ * @param {boolean} isLastRound True when the last combat turn has ended; means round start effects aren't applied/removed.
+ * @param {string} userId The user ID that triggered the change. Will only run logic if this is the current user.
  */
-export function onCombatRoundChange(isFirstRound) {
+export function onCombatRoundChange(isFirstRound, isLastRound, userId) {
 	// Do nothing if effect automation is not enabled
 	if (!game.settings.get(MODULE_NAME, ENABLE_EFFECT_AUTOMATION_SETTING)) return;
+
+	// Do nothing if this wasn't the user that trigged the combat round change.
+	// It is assumed current user is a GM if they are changing the combat.
+	if (userId !== game.userId) return;
 
 	// 1. Find all relevant effects to apply, then order them by round end effects first, then round start effects; then
 	// order by priority (lowest to highest). We do priority in reverse order, because that is the order we loop over
@@ -180,8 +194,8 @@ export function onCombatRoundChange(isFirstRound) {
 
 		allRelevantEffects.push(...aura.config.effects
 			.filter(e =>
-				e.mode === "APPLY_ON_ROUND_START" ||
-				e.mode === "REMOVE_ON_ROUND_START" ||
+				(!isLastRound && e.mode === "APPLY_ON_ROUND_START") ||
+				(!isLastRound && e.mode === "REMOVE_ON_ROUND_START") ||
 				(!isFirstRound && e.mode === "APPLY_ON_ROUND_END") ||
 				(!isFirstRound && e.mode === "REMOVE_ON_ROUND_END")
 			)
@@ -204,19 +218,20 @@ export function onCombatRoundChange(isFirstRound) {
 	const ongoingEffectsByToken = new Map();
 
 	// 2. Loop over all round start/end effects and apply them
-	for (const { parent, aura, effect, targetTokens } of allRelevantEffects)
-	for (const target of targetTokens) {
-		// Ignore tokens that cannot be targetted
-		if (!canTargetToken(target, parent, aura.config, effect.targetTokens)) continue;
+	for (const { parent, aura, effect, targetTokens } of allRelevantEffects) {
+		for (const target of targetTokens) {
+			// Ignore tokens that cannot be targetted
+			if (!canTargetToken(target, parent, aura.config, effect.targetTokens)) continue;
 
-		// Check to see if there are any ongoing effects applying to this token for this effect type. If so, ignore
-		// this aura's effect.
-		const ongoingEffects = getOrCreate(ongoingEffectsByToken, target, () => getOngoingAuraEffectsOnToken(target));
-		if (ongoingEffects.has(effect.effectId)) continue;
+			// Check to see if there are any ongoing effects applying to this token for this effect type. If so, ignore
+			// this aura's effect.
+			const ongoingEffects = getOrCreate(ongoingEffectsByToken, target, () => getOngoingAuraEffectsOnToken(target));
+			if (ongoingEffects.has(effect.effectId)) continue;
 
-		// Apply/remove effect
-		const isApplyMode = effect.mode === "APPLY_ON_ROUND_START" || effect.mode === "APPLY_ON_ROUND_END";
-		toggleEffect(target.actor, effect.effectId, isApplyMode, { overlay: effect.isOverlay }, true);
+			// Apply/remove effect
+			const isApplyMode = effect.mode === "APPLY_ON_ROUND_START" || effect.mode === "APPLY_ON_ROUND_END";
+			toggleEffect(target.actor, effect.effectId, isApplyMode, { overlay: effect.isOverlay }, true);
+		}
 	}
 }
 
@@ -231,7 +246,7 @@ function getOngoingAuraEffectsOnToken(token, ignoreAuraOwner, ignoreAuraId) {
 	const ongoingEffects = AuraLayer.current._auraManager.getAurasContainingToken(token, { preview: false })
 		.filter(({ parent, aura }) => parent !== ignoreAuraOwner || aura.config.id !== ignoreAuraId)
 		.flatMap(({ parent, aura }) => aura.config.effects
-			.filter(effect => ONGOING_EFFECT_APPLICATION_MODES.includes(effect.mode)
+			.filter(effect => ONGOING_EFFECT_MODES.includes(effect.mode)
 				&& canTargetToken(token, parent, aura, effect.targetTokens)))
 		.sort((a, b) => b.priority - a.priority);
 

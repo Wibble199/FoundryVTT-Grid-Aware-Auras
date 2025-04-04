@@ -1,4 +1,4 @@
-/** @import { EFFECT_APPLICATION_MODES, THT_RULER_ON_DRAG_MODES } from "../consts.mjs" */
+/** @import { EFFECT_MODES, MACRO_MODES, THT_RULER_ON_DRAG_MODES } from "../consts.mjs" */
 import { DOCUMENT_AURAS_FLAG, LINE_TYPES, MODULE_NAME } from "../consts.mjs";
 
 export const latestAuraConfigVersion = 1;
@@ -44,12 +44,14 @@ export const latestAuraConfigVersion = 1;
  * @property {string} effectId
  * @property {boolean} isOverlay
  * @property {string} targetTokens ID of the filter to use to specify targetable tokens.
- * @property {EFFECT_APPLICATION_MODES} mode
+ * @property {EFFECT_MODES} mode
  * @property {number} priority For ongoing effect modes, determines which one takes priority. For non-ongoing effects, determines which order they apply/remove (if applicable). However, ongoing effects ALWAYS take priority over non-ongoing ones.
  */
 /**
  * @typedef {Object} MacroConfig
  * @property {string} macroId
+ * @property {string} targetTokens ID of the filter to use to specify targetable tokens.
+ * @property {MACRO_MODES} mode
  */
 
 /**
@@ -138,7 +140,9 @@ export const effectConfigDefaults = {
 
 /** @type {MacroConfig} */
 export const macroConfigDefaults = {
-	macroId: null
+	macroId: null,
+	targetTokens: "ALL",
+	mode: "ENTER_LEAVE"
 };
 
 /**

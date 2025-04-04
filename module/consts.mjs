@@ -47,33 +47,52 @@ export const AURA_VISIBILITY_MODES = /** @type {const} */ ({
 	CUSTOM: "GRIDAWAREAURAS.AuraDisplayCustom"
 });
 
-/** @enum {keyof typeof EFFECT_APPLICATION_MODES} */
-export const EFFECT_APPLICATION_MODES = /** @type {const} */ ({
-	APPLY_WHILE_INSIDE: "GRIDAWAREAURAS.EffectApplicationModeApplyWhileInside",
-	APPLY_ON_ENTER: "GRIDAWAREAURAS.EffectApplicationModeApplyOnEnter",
-	APPLY_ON_LEAVE: "GRIDAWAREAURAS.EffectApplicationModeApplyOnLeave",
-	APPLY_ON_OWNER_TURN_START: "GRIDAWAREAURAS.EffectApplicationModeApplyOnOwnerTurnStart",
-	APPLY_ON_OWNER_TURN_END: "GRIDAWAREAURAS.EffectApplicationModeApplyOnOwnerTurnEnd",
-	APPLY_ON_TARGET_TURN_START: "GRIDAWAREAURAS.EffectApplicationModeApplyOnTargetTurnStart",
-	APPLY_ON_TARGET_TURN_END: "GRIDAWAREAURAS.EffectApplicationModeApplyOnTargetTurnEnd",
-	APPLY_ON_ROUND_START: "GRIDAWAREAURAS.EffectApplicationModeApplyOnRoundStart",
-	APPLY_ON_ROUND_END: "GRIDAWAREAURAS.EffectApplicationModeApplyOnRoundEnd",
-	REMOVE_WHILE_INSIDE: "GRIDAWAREAURAS.EffectApplicationModeRemoveWhileInside",
-	REMOVE_ON_ENTER: "GRIDAWAREAURAS.EffectApplicationModeRemoveOnEnter",
-	REMOVE_ON_LEAVE: "GRIDAWAREAURAS.EffectApplicationModeRemoveOnLeave",
-	REMOVE_ON_OWNER_TURN_START: "GRIDAWAREAURAS.EffectApplicationModeRemoveOnOwnerTurnStart",
-	REMOVE_ON_OWNER_TURN_END: "GRIDAWAREAURAS.EffectApplicationModeRemoveOnOwnerTurnEnd",
-	REMOVE_ON_TARGET_TURN_START: "GRIDAWAREAURAS.EffectApplicationModeRemoveOnTargetTurnStart",
-	REMOVE_ON_TARGET_TURN_END: "GRIDAWAREAURAS.EffectApplicationModeRemoveOnTargetTurnEnd",
-	REMOVE_ON_ROUND_START: "GRIDAWAREAURAS.EffectApplicationModeRemoveOnRoundStart",
-	REMOVE_ON_ROUND_END: "GRIDAWAREAURAS.EffectApplicationModeRemoveOnRoundEnd"
+/** @enum {keyof typeof EFFECT_MODES} */
+export const EFFECT_MODES = /** @type {const} */ ({
+	APPLY_WHILE_INSIDE: "GRIDAWAREAURAS.EffectModeApplyWhileInside",
+	APPLY_ON_ENTER: "GRIDAWAREAURAS.EffectModeApplyOnEnter",
+	APPLY_ON_LEAVE: "GRIDAWAREAURAS.EffectModeApplyOnLeave",
+	APPLY_ON_OWNER_TURN_START: "GRIDAWAREAURAS.EffectModeApplyOnOwnerTurnStart",
+	APPLY_ON_OWNER_TURN_END: "GRIDAWAREAURAS.EffectModeApplyOnOwnerTurnEnd",
+	APPLY_ON_TARGET_TURN_START: "GRIDAWAREAURAS.EffectModeApplyOnTargetTurnStart",
+	APPLY_ON_TARGET_TURN_END: "GRIDAWAREAURAS.EffectModeApplyOnTargetTurnEnd",
+	APPLY_ON_ROUND_START: "GRIDAWAREAURAS.EffectModeApplyOnRoundStart",
+	APPLY_ON_ROUND_END: "GRIDAWAREAURAS.EffectModeApplyOnRoundEnd",
+	REMOVE_WHILE_INSIDE: "GRIDAWAREAURAS.EffectModeRemoveWhileInside",
+	REMOVE_ON_ENTER: "GRIDAWAREAURAS.EffectModeRemoveOnEnter",
+	REMOVE_ON_LEAVE: "GRIDAWAREAURAS.EffectModeRemoveOnLeave",
+	REMOVE_ON_OWNER_TURN_START: "GRIDAWAREAURAS.EffectModeRemoveOnOwnerTurnStart",
+	REMOVE_ON_OWNER_TURN_END: "GRIDAWAREAURAS.EffectModeRemoveOnOwnerTurnEnd",
+	REMOVE_ON_TARGET_TURN_START: "GRIDAWAREAURAS.EffectModeRemoveOnTargetTurnStart",
+	REMOVE_ON_TARGET_TURN_END: "GRIDAWAREAURAS.EffectModeRemoveOnTargetTurnEnd",
+	REMOVE_ON_ROUND_START: "GRIDAWAREAURAS.EffectModeRemoveOnRoundStart",
+	REMOVE_ON_ROUND_END: "GRIDAWAREAURAS.EffectModeRemoveOnRoundEnd"
 });
 
-/** @type {EFFECT_APPLICATION_MODES[]} */
-export const ONGOING_EFFECT_APPLICATION_MODES = [
+/** @type {EFFECT_MODES[]} */
+export const ONGOING_EFFECT_MODES = [
 	"APPLY_WHILE_INSIDE",
 	"REMOVE_WHILE_INSIDE"
 ];
+
+/** @enum {keyof typeof MACRO_MODES} */
+export const MACRO_MODES = /** @type {const} */ ({
+	ENTER_LEAVE: "GRIDAWAREAURAS.MacroModeEnterLeave",
+	ENTER: "GRIDAWAREAURAS.MacroModeEnter",
+	LEAVE: "GRIDAWAREAURAS.MacroModeLeave",
+	PREVIEW_ENTER_LEAVE: "GRIDAWAREAURAS.MacroModePreviewEnterLeave",
+	PREVIEW_ENTER: "GRIDAWAREAURAS.MacroModePreviewEnter",
+	PREVIEW_LEAVE: "GRIDAWAREAURAS.MacroModePreviewLeave",
+	OWNER_TURN_START_END: "GRIDAWAREAURAS.MacroModeOwnerTurnStartEnd",
+	OWNER_TURN_START: "GRIDAWAREAURAS.MacroModeOwnerTurnStart",
+	OWNER_TURN_END: "GRIDAWAREAURAS.MacroModeOwnerTurnEnd",
+	TARGET_TURN_START_END: "GRIDAWAREAURAS.MacroModeTargetTurnStartEnd",
+	TARGET_TURN_START: "GRIDAWAREAURAS.MacroModeTargetTurnStart",
+	TARGET_TURN_END: "GRIDAWAREAURAS.MacroModeTargetTurnEnd",
+	ROUND_START_END: "GRIDAWAREAURAS.MacroModeRoundStartEnd",
+	ROUND_START: "GRIDAWAREAURAS.MacroModeRoundStart",
+	ROUND_END: "GRIDAWAREAURAS.MacroModeRoundEnd"
+});
 
 /** @enum {keyof typeof THT_RULER_ON_DRAG_MODES} */
 export const THT_RULER_ON_DRAG_MODES = /** @type {const} */ ({

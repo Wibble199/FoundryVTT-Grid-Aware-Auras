@@ -70,7 +70,7 @@
 	border-radius: 3px;
 }
 
-.grid-aware-auras-aura-config .effect-edit-overlay {
+.grid-aware-auras-aura-config .nested-dialog-overlay {
 	position: absolute;
 	top: 0;
 	right: 0;
@@ -85,6 +85,16 @@
 	transition: all 150ms ease-out;
 }
 
+.grid-aware-auras-aura-config .nested-dialog-overlay.nested-dialog-overlay-hidden {
+	opacity: 0;
+	pointer-events: none;
+}
+
+.grid-aware-auras-aura-config .nested-dialog {
+	background-color: var(--background);
+	width: 90%;
+}
+
 .grid-aware-auras-aura-config button.icon {
 	flex: 0 0 24px;
 	height: 24px;
@@ -94,13 +104,13 @@
     line-height: 24px;
 }
 
-.grid-aware-auras-aura-config .automated-effects-list {
+.grid-aware-auras-aura-config .automated-item-list {
 	list-style: none;
 	margin: 0;
 	padding: 0;
 }
 
-.grid-aware-auras-aura-config .automated-effects-list > li {
+.grid-aware-auras-aura-config .automated-item-list > li {
 	display: grid;
 	grid-template-columns: 2fr 3fr min-content min-content;
 	align-items: center;
@@ -110,24 +120,14 @@
 	border-bottom: 2px groove transparent;
 }
 
-.grid-aware-auras-aura-config .automated-effects-list > li:hover {
+.grid-aware-auras-aura-config .automated-item-list > li:hover {
 	border-color: var(--color-border-dark-secondary);
 }
 
-.grid-aware-auras-aura-config .automated-effects-list > li > span {
+.grid-aware-auras-aura-config .automated-item-list > li > span {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-}
-
-.grid-aware-auras-aura-config .effect-edit-overlay.effect-edit-overlay-hidden {
-	opacity: 0;
-	pointer-events: none;
-}
-
-.grid-aware-auras-aura-config .effect-edit-dialog {
-	background-color: var(--background);
-	width: 90%;
 }
 
 /* ---------- */
