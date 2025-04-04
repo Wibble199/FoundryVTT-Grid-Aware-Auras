@@ -19,7 +19,7 @@ In addition to the built-in filters, it is possible to use JavaScript to define 
 Within the window that opened, you can click "Create New Filter" to create a new blank filter. First, give it a useful name (this will appear in the _Target Tokens_ dropdown). Then, you need to write the JavaScript function. The function takes three parameters that you can use in your filter logic: `targetToken`, which is a reference the to Token that has entered or left the aura; `sourceToken`, which is a reference to the Token that owns the aura; and `aura` which is the actual configuration for the aura. If the value returned from the function is truthy, then the automation will run.
 
 > [!IMPORTANT]
-> One important thing to note about filters is that they only run when a token enters or leaves an aura. They do not run when a token within an aura is updated.
+> One important thing to note about filters is that they only run when their associated trigger happens (e.g. when entering or leaving an aura). They do not run when a token within an aura is updated.
 >
 > For example, lets say you create a custom filter that will trigger automation if the health of a token's actor is less than 10 and set up an aura to apply a "Slowed" effect to tokens that match this filter. If the token entered with a health of 15, but was then lowered to 10 while, inside the aura, the "Slowed" effect would NOT be applied.
 

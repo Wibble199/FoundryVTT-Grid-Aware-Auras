@@ -369,7 +369,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 					</div>
 
 					<div class="form-group">
-						<label>Overlay?</label>
+						<label>Overlay</label>
 						<div class="form-fields">
 							<input
 								type="checkbox"
@@ -388,7 +388,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 					</div>
 
 					<div class="form-group">
-						<label>Mode</label>
+						<label>Trigger</label>
 						<div class="form-fields">
 							<select name="mode">
 								${selectOptions(EFFECT_MODES, { selected: editingEffect.mode })}

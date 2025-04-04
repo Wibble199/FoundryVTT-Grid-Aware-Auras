@@ -231,12 +231,8 @@ Defines metadata about an aura.
 |`fillTextureScale`|`{ x: number; y: number; }`|When `fillType` is _Pattern_, a scale (in percent) for the texture. A value of 100 is the default and means no scaling. A value of 50 would mean to shrink the texture by half in that axis.|
 |`ownerVisibility`|[`VisibilityConfig`](#visibilityconfig)|The booleans that determine when the aura is visible to owners of the token.|
 |`nonOwnerVisibility`|[`VisibilityConfig`](#visibilityconfig)|The booleans that determine when the aura is visible to non-owners of the token.|
-|`effect`|`Object`|An object containing effect automation config.|
-|`effect.effectId`|`string`|The ID of the effect to be added/removed by this aura. May be null or empty.|
-|`effect.isOverlay`|`boolean`|Whether the effect should be applied as an overlay.|
-|`effect.targetTokens`|`"ALL" \| "FRIENDLY" \| "NEUTRAL" \| "HOSTILE"`|What token dispositions can have the effect applied/removed.|
-|`macro`|`Object`|An object containing macro automation config.|
-|`macro.macroId`|`string`|The ID of a macro to execute when a token enters/leaves this aura. May be null or empty.|
+|`effects`|[`EffectConfig[]`](#effect-config)|An array containing all the effects defined on the aura.|
+|`macro`|[`MacroConfig[]`](#macro-config)|An object containing macro automation config.|
 |`terrainHeightTools`|`Object`|An object containing Terrain Height Tools automation config.|
 |`terrainHeightTools.rulerOnDrag`|`"NONE" \| "C2C" \| "E2E"`|The type of ruler to draw to tokens in range of this aura on drag. C2C = Centre-to-Centre. E2E = Edge-to-Edge and Centre-to-Centre.|
 |`terrainHeightTools.targetTokens`|`"ALL" \| "FRIENDLY" \| "NEUTRAL" \| "HOSTILE"`|The types of token that line of sight rulers should be drawn to.|
@@ -245,9 +241,31 @@ Defines metadata about an aura.
 
 |Name|Type|Description|
 |-|-|-|
-|default|`boolean`|Whether the aura should be visible when no other states are applicable.|
-|hovered|`boolean`|Whether the aura should be visible when hovered.|
-|controlled|`boolean`|Whether the aura should be visible when controlled.|
-|dragging|`boolean`|Whether the aura should be visible when being dragged.|
-|targeted|`boolean`|Whether the aura should be visible when targeted.|
-|turn|`boolean`|Whether the aura should be visible when it is that token's turn in a combat encounter.|
+|`default`|`boolean`|Whether the aura should be visible when no other states are applicable.|
+|`hovered`|`boolean`|Whether the aura should be visible when hovered.|
+|`controlled`|`boolean`|Whether the aura should be visible when controlled.|
+|`dragging`|`boolean`|Whether the aura should be visible when being dragged.|
+|`targeted`|`boolean`|Whether the aura should be visible when targeted.|
+|`turn`|`boolean`|Whether the aura should be visible when it is that token's turn in a combat encounter.|
+
+## Effect Config
+
+Defines metadata about an automated effect.
+
+|Name|Type|Description|
+|-|-|-|
+|`effectId`|`string`|The ID of the effect to be applied/removed by this aura.|
+|`isOverlay`|`boolean`|Whether the effect should be applied as an overlay.|
+|`targetTokens`|`string`|The name of the filter that will be used to determine if a token is applicable or not.|
+|`mode`|`string`|The name of the trigger that the effect will be applied/removed on.|
+|`priority`|`number`|The priority of the effect automation.|
+
+## Macro Config
+
+Defines metadata about a macro.
+
+|Name|Type|Description|
+|-|-|-|
+|`macroId`|`string`|The ID of a macro to execute when a token enters/leaves this aura.|
+|`targetTokens`|`string`|The name of the filter that will be used to determine if a token is applicable or not.|
+|`mode`|`string`|The name of the trigger that the macro will fire on.|
