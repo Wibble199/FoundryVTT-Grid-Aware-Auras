@@ -32,7 +32,7 @@ class TokenConfigGridAwareAurasElement extends LitElement {
 		const tokenAuras = getDocumentOwnAuras(this.tokenConfig.preview ?? this.tokenConfig.document);
 
 		/** @type {Item[]} */
-		const items = this.tokenConfig.document.actor.items;
+		const items = this.tokenConfig.document.actor?.items ?? [];
 		const itemsWithAuras = items
 			.map(item => ({ item, auras: getDocumentOwnAuras(item) }))
 			.filter(({ auras }) => auras.length > 0);
@@ -69,15 +69,23 @@ class TokenConfigGridAwareAurasElement extends LitElement {
 		super.connectedCallback();
 
 		// When the token's actor redraws (which happens when Items change), redraw this element
-		this.tokenConfig.document.actor.apps[this.appId] = {
-			render: () => this.requestUpdate(),
-			close: () => {}
-		};
+		// Actor may not always be present (e.g. if the actor was deleted but token was not)
+		if (this.tokenConfig.document.actor) {
+			this.tokenConfig.document.actor.apps[this.appId] = {
+				render: () => this.requestUpdate(),
+				close: () => {}
+			};
+		}
 	}
 
 	disconnectedCallback() {
 		super.disconnectedCallback();
-		delete this.tokenConfig.document.actor.apps[this.appId];
+
+		// Remove the function that redraws this element when the actor changes.
+		// Actor may not always be present (e.g. if the actor was deleted but token was not)
+		if (this.tokenConfig.document.actor) {
+			delete this.tokenConfig.document.actor.apps[this.appId];
+		}
 	}
 
 	/**

@@ -65,7 +65,7 @@ export function initialiseAuraTargetFilters() {
 			id: `ACTORTYPE_${a}`,
 			name: game.i18n.localize(`TYPES.Actor.${a}`),
 			group: game.i18n.localize("Type"),
-			f: t => t.actor.type === a
+			f: t => t.actor?.type === a
 		}))
 	];
 

@@ -65,7 +65,7 @@ export function getTokenAuras(token) {
 	const auras = getDocumentOwnAuras(tokenDoc);
 	const auraIds = new Set(auras.map(a => a.id));
 
-	for (const item of tokenDoc.actor.items) {
+	for (const item of tokenDoc.actor?.items ?? []) {
 		for (const aura of getDocumentOwnAuras(item)) {
 			// If there are multiple auras with the same ID, only use one of them.
 			// This prevents multiple of the same item with the same aura from having multiple identical auras, and
