@@ -9,7 +9,7 @@ export const latestAuraConfigVersion = 1;
  * @property {string} id
  * @property {string} name
  * @property {boolean} enabled
- * @property {number} radius
+ * @property {number | string} radius A numeric value or a property name on the actor pointing to a numeric value.
  * @property {LINE_TYPES} lineType
  * @property {number} lineWidth
  * @property {string} lineColor
@@ -30,6 +30,7 @@ export const latestAuraConfigVersion = 1;
  * @property {THT_RULER_ON_DRAG_MODES} terrainHeightTools.rulerOnDrag
  * @property {string} terrainHeightTools.targetTokens ID of the filter to use to specify targetable tokens.
  */
+/** @typedef {AuraConfig & { radiusCalculated: number | undefined; }} AuraConfigWithRadius */
 /**
  * @typedef {Object} VisibilityConfig
  * @property {boolean} default
@@ -57,16 +58,16 @@ export const latestAuraConfigVersion = 1;
 /**
  * Gets the auras that are present on the given token.
  * @param {Token | TokenDocument} token
- * @returns {AuraConfig[]}
+ * @returns {AuraConfigWithRadius[]}
  */
 export function getTokenAuras(token) {
 	const tokenDoc = token instanceof Token ? token.document : token;
 
-	const auras = getDocumentOwnAuras(tokenDoc);
+	const auras = getDocumentOwnAuras(tokenDoc, { calculateRadius: true });
 	const auraIds = new Set(auras.map(a => a.id));
 
 	for (const item of tokenDoc.actor?.items ?? []) {
-		for (const aura of getDocumentOwnAuras(item)) {
+		for (const aura of getDocumentOwnAuras(item, { calculateRadius: true })) {
 			// If there are multiple auras with the same ID, only use one of them.
 			// This prevents multiple of the same item with the same aura from having multiple identical auras, and
 			// prevents issues with the enter/leave detection (which works off the aura ID, and requires each aura to
@@ -84,11 +85,40 @@ export function getTokenAuras(token) {
 /**
  * Gets the auras defined on a document.
  * @param {Document} document
- * @returns {AuraConfig[]}
+ * @param {Object} [options]
+ * @param {boolean} [options.calculateRadius] If true, calculates the actual radius (resolving property paths).
+ * @returns {(AuraConfig & { radiusCalculated?: number; })[]}
  */
-export function getDocumentOwnAuras(document) {
-	const auras = document.getFlag(MODULE_NAME, DOCUMENT_AURAS_FLAG) ?? [];
-	return auras.map(getAura);
+export function getDocumentOwnAuras(document, { calculateRadius = false } = {}) {
+	/** @type {Partial<AuraConfig>[]} */
+	const auraData = document.getFlag(MODULE_NAME, DOCUMENT_AURAS_FLAG) ?? [];
+	let auras = auraData.map(getAura);
+
+	if (calculateRadius) {
+		const actor = document instanceof TokenDocument ? document.actor : document instanceof Item ? document.parent : undefined;
+		const item = document instanceof Item ? document : undefined;
+		const context = { actor, item };
+		auras = auras.map(a => ({ ...a, radiusCalculated: calculateAuraRadius(a.radius, context) }));
+	}
+
+	return auras;
+}
+
+/**
+ * Calculates the actual aura radius from a radius expression.
+ * @param {string | number} expression A radius value or the name of a property on the actor or item documents.
+ * @param {{ actor: Actor | undefined; item: Item | undefined; }} context The context used to resolve properties from.
+ */
+export function calculateAuraRadius(expression, context) {
+	// If it's a literal number, use that number.
+	let parsed = parseInt(expression);
+	if (typeof parsed === "number" && !isNaN(parsed))
+		return parsed;
+
+	// Evaluate the property name against the context
+	const property = foundry.utils.getProperty(context, expression);
+	parsed = parseInt(property);
+	return typeof parsed === "number" && !isNaN(parsed) ? parsed : undefined;
 }
 
 /** @type {VisibilityConfig} */

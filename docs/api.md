@@ -64,12 +64,12 @@ An array of [`AuraConfig`s](#auraconfig).
 
 ```js
 const { api } = game.modules.get("grid-aware-auras");
-const item = game.items.get("Some Item");
+const item = game.items.getName("Some Item");
 
-const auras = api.geDocumentAuras(item);
+const auras = api.getDocumentOwnAuras(item);
 console.log(`Item ${item.name} has the following auras:`);
 for (const aura of auras) {
-	console.log(` - ${aura.name} (radius: ${aura.radius})`);
+	console.log(` - ${aura.name} (radius: ${aura.radiusCalculated})`);
 }
 ```
 
@@ -216,7 +216,8 @@ Defines metadata about an aura.
 |`id`|`string`|Unique ID for the aura.|
 |`name`|`string`|Name of the aura.|
 |`enabled`|`boolean`|Whether this aura is enabled or not. Disabled auras do not trigger hooks.|
-|`radius`|`number`|Radius of the aura measured in grid cells.|
+|`radius`|`number \| string`|Expression that resolves to the radius of the aura. May be a property path on the actor or item.|
+|`radiusCalculated`|`number \| undefined`|When reading the auras, this will get populated with the calculated numeric value of the radius.|
 |`lineType`|`number`|Type of line used for the border of the aura. 0 = None, 1 = Solid, 2 = Dashed.|
 |`lineWidth`|`number`|Width of the line used for the border of the aura.|
 |`lineColor`|`string`|Color of the line used for the border of the aura.|

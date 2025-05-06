@@ -1,4 +1,4 @@
-/** @import { AuraConfig } from "../../data/aura.mjs" */
+/** @import { AuraConfig, AuraConfigWithRadius } from "../../data/aura.mjs" */
 import { LINE_TYPES } from "../../consts.mjs";
 import { auraDefaults, auraVisibilityDefaults } from "../../data/aura.mjs";
 import { getTokenAura } from "../../utils/grid-utils.mjs";
@@ -15,6 +15,9 @@ export class Aura {
 
 	/** @type {AuraConfig} */
 	#config;
+
+	/** @type {number | undefined} */
+	#radius;
 
 	#isVisible = false;
 
@@ -45,7 +48,7 @@ export class Aura {
 
 	/**
 	 * Updates this aura graphic, and redraws it if required.
-	 * @param {AuraConfig} config
+	 * @param {AuraConfigWithRadius} config
 	 * @param {Object} [options]
 	 * @param {Record<string, any>} [options.tokenDelta] If provided, uses the properties from this instead of the token
 	 * @param {boolean} [options.force] Force a redraw, even if no aura properties have changed.
@@ -54,7 +57,8 @@ export class Aura {
 		this.updatePosition({ tokenDelta });
 
 		const shouldRedraw = force ||
-			this.#config != config ||
+			this.#config !== config ||
+			this.#radius !== config.radiusCalculated ||
 			(tokenDelta && (
 				"width" in tokenDelta ||
 				"height" in tokenDelta ||
@@ -62,10 +66,12 @@ export class Aura {
 			));
 
 		this.#config = config;
+		this.#radius = config.radiusCalculated;
 
 		// If a relevant property has changed, do a redraw
 		if (shouldRedraw || force) {
-			this.#redraw(pickProperties(["width", "height", "hexagonalShape"], tokenDelta, this.#token.document));
+			const { width, height, hexagonalShape } = pickProperties(["width", "height", "hexagonalShape"], tokenDelta, this.#token.document);
+			this.#redraw(width, height, config.radiusCalculated, hexagonalShape);
 		}
 
 		this.updateVisibility();
@@ -108,7 +114,13 @@ export class Aura {
 		this.#graphics.destroy();
 	}
 
-	async #redraw({ width, height, hexagonalShape } = {}) {
+	/**
+	 * @param {number} width
+	 * @param {number} height
+	 * @param {number} radius
+	 * @param {number} hexagonalShape
+	 */
+	async #redraw(width, height, radius, hexagonalShape) {
 		const auraConfig = { ...auraDefaults, ...this.#config };
 
 		width ??= this.#token.document.width;
@@ -116,13 +128,13 @@ export class Aura {
 		hexagonalShape ??= this.#token.document.hexagonalShape;
 
 		// Negative radii are not supported
-		if (auraConfig.radius < 0) {
+		if (typeof radius !== "number" || radius < 0) {
 			this.#graphics.clear();
 			return;
 		}
 
 		// Generate polygon points. If there are none, early exit
-		const points = getTokenAura(width, height, auraConfig.radius, canvas.grid, hexagonalShape)
+		const points = getTokenAura(width, height, radius, canvas.grid, hexagonalShape)
 			.flatMap(({ x, y }) => [x, y]);
 
 		if (points.length === 0) {

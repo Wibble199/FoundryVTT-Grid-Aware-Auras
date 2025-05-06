@@ -55,6 +55,7 @@ export class ItemAuraConfigApplication extends ApplicationV2 {
 				name="auras"
 				.value=${getDocumentOwnAuras(this.#item)}
 				.parentId=${this.#item.id}
+				.radiusContext=${{ actor: this.#item.parent, item: this.#item }}
 				${ref(this.#auraTableRef)}>
 			</gaa-aura-table>
 

@@ -1,7 +1,7 @@
 /** @import { AuraConfig } from "../data/aura.mjs" */
 import { AuraConfigApplication } from "../applications/aura-config.mjs";
 import { ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, LINE_TYPES, MODULE_NAME } from "../consts.mjs";
-import { createAura } from "../data/aura.mjs";
+import { calculateAuraRadius, createAura } from "../data/aura.mjs";
 import { html, LitElement, when } from "../lib/lit-all.min.js";
 import { ContextMenuGaa } from "./context-menu-gaa.mjs";
 
@@ -15,7 +15,8 @@ export class AuraTable extends LitElement {
 		showHeader: { type: Boolean },
 		subHeadingText: { type: String },
 		parentId: { type: String },
-		attachConfigsTo: { attribute: false }
+		attachConfigsTo: { attribute: false },
+		radiusContext: { attribute: false }
 	};
 
 	static formAssociated = true;
@@ -50,6 +51,9 @@ export class AuraTable extends LitElement {
 
 		/** @type {Record<string, any> | undefined} */
 		this.attachConfigsTo = undefined;
+
+		/** @type {{ actor: Actor | undefined; item: Item | undefined; }} */
+		this.radiusContext = { actor: undefined, item: undefined };
 
 		this.#setupContextMenu();
 	}
@@ -114,6 +118,9 @@ export class AuraTable extends LitElement {
 	 * @param {boolean} macrosEnabled
 	 */
 	#renderAura(aura, effectsEnabled, macrosEnabled) {
+		const isCalculateRadius = typeof aura.radius !== "number" && isNaN(parseInt(aura.radius)) && aura.radius.length;
+		const calculatedRadius = calculateAuraRadius(aura.radius, this.radiusContext);
+
 		return html`
 			<tr data-aura-id="${aura.id}">
 				<td style="width: 24px">
@@ -132,7 +139,9 @@ export class AuraTable extends LitElement {
 						() => html`<i class="fas fa-bolt" data-tooltip="This aura applies effects or calls macros"></i>`)}
 				</td>
 				<td class="text-center" style="width: 58px">
-					${aura.radius}
+					${calculatedRadius}
+					${when(isCalculateRadius && typeof calculatedRadius !== "number", () => html`<i class="fas fa-warning cursor-help" data-tooltip=${game.i18n.format("GRIDAWAREAURAS.UnresolvedRadiusTableWarning", { path: `<code>${aura.radius}</code>` })}></i>`)}
+					${when(isCalculateRadius && typeof calculatedRadius === "number", () => html`<i class="fas fa-link cursor-help" data-tooltip=${aura.radius}></i>`)}
 				</td>
 				<td class="text-center" style="width: 58px">
 					${when(aura.lineType !== LINE_TYPES.NONE,
@@ -244,7 +253,8 @@ export class AuraTable extends LitElement {
 			},
 			onClose: () => this.#openAuraConfigApps.delete(aura.id),
 			parentId: this.parentId,
-			attachTo: this.attachConfigsTo
+			attachTo: this.attachConfigsTo,
+			radiusContext: this.radiusContext
 		});
 
 		this.#openAuraConfigApps.set(aura.id, app);

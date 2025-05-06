@@ -1,3 +1,4 @@
+/** @import { AuraConfigWithRadius } from "./data/aura.mjs" */
 import { getDocumentOwnAuras as getDocumentOwnAurasImpl } from "./data/aura.mjs";
 import { AuraLayer } from "./layers/aura-layer/aura-layer.mjs";
 import { toggleEffect as toggleEffectImpl } from "./utils/misc-utils.mjs";
@@ -5,15 +6,16 @@ import { toggleEffect as toggleEffectImpl } from "./utils/misc-utils.mjs";
 /**
  * For the given document, returns the auras defined on that document.
  * @param {Document} document
+ * @returns {AuraConfigWithRadius}
  */
 export function getDocumentOwnAuras(document) {
-	return getDocumentOwnAurasImpl(document);
+	return getDocumentOwnAurasImpl(document, { calculateRadius: true });
 }
 
 /**
  * For the given token, returns the auras defined on that token and any items owned by the token's actor.
  * @param {Token | TokenDocument} token
- * @returns {{ aura: AuraConfig; owner: Document; }[]}
+ * @returns {{ aura: AuraConfigWithRadius; owner: Document; }[]}
  */
 export function getTokenAuras(token) {
 	const tokenDoc = token instanceof Token ? token.document : token;

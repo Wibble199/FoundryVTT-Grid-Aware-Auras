@@ -29,10 +29,12 @@ class TokenConfigGridAwareAurasElement extends LitElement {
 	}
 
 	render() {
+		/** @type {Actor | undefined} */
+		const actor = this.tokenConfig.document.actor;
 		const tokenAuras = getDocumentOwnAuras(this.tokenConfig.preview ?? this.tokenConfig.document);
 
 		/** @type {Item[]} */
-		const items = this.tokenConfig.document.actor?.items ?? [];
+		const items = actor?.items ?? [];
 		const itemsWithAuras = items
 			.map(item => ({ item, auras: getDocumentOwnAuras(item) }))
 			.filter(({ auras }) => auras.length > 0);
@@ -43,6 +45,7 @@ class TokenConfigGridAwareAurasElement extends LitElement {
 				.value=${tokenAuras}
 				subHeadingText="Token"
 				@change=${e => { this.tokenConfig._onChangeInput(e); this.#requestResize(); }}
+				.radiusContext=${{ actor }}
 				${ref(this.#tokenAurasTableRef)}
 				style=${styleMap({ display: "block", marginTop: "0.5rem", marginBottom: itemsWithAuras.length ? "0" : "0.5rem" })}
 			></gaa-aura-table>
@@ -54,6 +57,7 @@ class TokenConfigGridAwareAurasElement extends LitElement {
 					.showHeader=${false}
 					.subHeadingText=${item.name}
 					.attachConfigsTo=${item}
+					.radiusContext=${{ actor, item }}
 					@change=${e => this.#updateItemAura(item, e.target.value)}
 				></gaa-aura-table>
 			`)}

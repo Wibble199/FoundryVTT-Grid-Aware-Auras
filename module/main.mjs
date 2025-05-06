@@ -80,6 +80,11 @@ Hooks.on("targetToken", (_user, token) => {
 	AuraLayer.current?._updateAuraGraphics({ token });
 });
 
+// When an actor is updated, update any tokens for that actor as it this might affect auras that have expression radii
+Hooks.on("updateActor", (actor, _delta, _options, userId) => {
+	AuraLayer.current?._updateActorAuras(actor, { userId });
+});
+
 // When an item is created, if it has auras and belongs to an actor, update auras on any of that actor's tokens
 Hooks.on("createItem", (item, _options, userId) => {
 	if (!!item.actor && item.flags?.[MODULE_NAME]?.[DOCUMENT_AURAS_FLAG]?.length > 0) {
@@ -87,9 +92,10 @@ Hooks.on("createItem", (item, _options, userId) => {
 	}
 });
 
-// When an item's auras are updated, update auras on any of that actor's tokens
-Hooks.on("updateItem", (item, delta, _options, userId) => {
-	if (!!item.actor && delta.flags?.[MODULE_NAME]?.[DOCUMENT_AURAS_FLAG] !== undefined) {
+// When an item is updated, update auras on any of that actor's tokens. We don't restrict it to just when the the item's
+// auras flag is updated, as there may be a property referenced in one of the auras' radii expressions that has updated.
+Hooks.on("updateItem", (item, _delta, _options, userId) => {
+	if (!!item.actor) {
 		AuraLayer.current?._updateActorAuras(item.actor, { userId });
 	}
 });

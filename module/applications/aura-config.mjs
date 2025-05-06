@@ -9,7 +9,7 @@ import {
 	THT_RULER_ON_DRAG_MODES
 } from "../consts.mjs";
 import { listAuraTargetFilters } from "../data/aura-target-filters.mjs";
-import { auraVisibilityModeMatrices, effectConfigDefaults, macroConfigDefaults } from "../data/aura.mjs";
+import { auraVisibilityModeMatrices, calculateAuraRadius, effectConfigDefaults, macroConfigDefaults } from "../data/aura.mjs";
 import { classMap, createRef, html, nothing, ref, render, when } from "../lib/lit-all.min.js";
 import { selectOptions } from "../utils/lit-utils.mjs";
 import { isTerrainHeightToolsActive, partialEqual } from "../utils/misc-utils.mjs";
@@ -34,6 +34,8 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	#attachTo;
 
+	#radiusContext;
+
 	/** @type {ReturnType<html> | null} */
 	#nestedDialogContent = null;
 
@@ -44,8 +46,9 @@ export class AuraConfigApplication extends ApplicationV2 {
 	 * @param {() => void} [options.onClose]
 	 * @param {string} [options.parentId]
 	 * @param {Record<string, any>} [options.attachTo]
+	 * @param {{ actor?: Actor | undefined; item?: Item | undefined; }} [options.radiusContext]
 	 */
-	constructor(aura, { onChange, onClose, parentId, attachTo, ...options } = {}) {
+	constructor(aura, { onChange, onClose, parentId, attachTo, radiusContext, ...options } = {}) {
 		super(options);
 
 		this.#aura = foundry.utils.deepClone(aura);
@@ -54,6 +57,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 		this.#onClose = onClose;
 		this.#parentId = parentId;
 		this.#attachTo = attachTo;
+		this.#radiusContext = radiusContext ?? {};
 	}
 
 	static DEFAULT_OPTIONS = {
@@ -75,6 +79,11 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	/** @override */
 	_renderHTML() {
+		const radiusIsInvalidPath = typeof this.#aura.radius !== "number"
+			&& this.#aura.radius?.length > 0
+			&& isNaN(parseInt(this.#aura.radius))
+			&& typeof calculateAuraRadius(this.#aura.radius, this.#radiusContext) !== "number";
+
 		return html`
 			<form class="standard-form" @input=${this.#valueChange}>
 				<div class="form-group">
@@ -87,8 +96,14 @@ export class AuraConfigApplication extends ApplicationV2 {
 				<div class="form-group">
 					<label>Radius</label>
 					<div class="form-fields">
-						<input type="number" name="radius" .value=${this.#aura.radius} required min="0" step="1">
+						<input type="text" name="radius" value=${this.#aura.radius} required>
+						<span style="flex: 0; margin-left: 0.5rem; cursor: help;">
+							<i class="fas fa-question-circle" data-tooltip=${l("GRIDAWAREAURAS.Radius.Hint")}></i>
+						</span>
 					</div>
+					${when(radiusIsInvalidPath, () => html`
+						<div class="hint" style="text-align: right; color: var(--color-level-error);">${l("GRIDAWAREAURAS.UnresolvedRadiusConfigDialogWarning")}</div>
+					`)}
 				</div>
 
 				<gaa-tabs .tabs=${[

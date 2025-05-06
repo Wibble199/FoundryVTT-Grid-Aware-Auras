@@ -43,13 +43,16 @@
 		"MacroModeTargetTurnEnd": "Target Turn End",
 		"MacroModeTargetTurnStart": "Target Turn Start",
 		"MacroModeTargetTurnStartEnd": "Target Turn Start/End",
+		"Radius.Hint": "<p>This can either be a number, or the name of a field on the actor or item.</p><p>For fields on the actor, prefix it with <code>actor.</code> - for example if you were using the Lancer system you could use <code>actor.system.sensor_range</code> to have a radius equal to the mech's sensor range.</p><p>For auras on items, the aforementioned 'actor' will point to the actor that owns the item. There is also <code>item</code> available in the context. E.G. if you were using Lancer, you could set the radius of an aura on a weapon to <code>item.system.profiles.0.range.0.val</code> to match the weapon's range.</p>",
 		"SquareGridModeAlternating": "Alternating (1/2/1)",
 		"SquareGridModeEquidistant": "Equidistant (1/1/1)",
 		"SquareGridModeExact": "Exact (√2/√2/√2)",
 		"SquareGridModeManhattan": "Manhattan (2/2/2)",
 		"ThtRulerOnDragModeC2C": "Centre Only",
 		"ThtRulerOnDragModeE2E": "Centre and Edge",
-		"ThtRulerOnDragModeNone": "Don't show"
+		"ThtRulerOnDragModeNone": "Don't show",
+		"UnresolvedRadiusConfigDialogWarning": "The path provided does not result in a number.",
+		"UnresolvedRadiusTableWarning": "<p>The property referenced by this aura ({path}) does not result in a number.</p><p>Please check the path and ensure you are using 'actor.' or 'item.' prefixes as appropriate.</p>"
 	},
 	"SETTINGS": {
 		"CustomAuraTargetFilters.Name": "Custom Aura Target Filters",
