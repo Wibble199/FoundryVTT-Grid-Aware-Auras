@@ -165,6 +165,15 @@
 	align-self: center;
 }
 
+.grid-aware-auras-import-export-dialog .dialog-form,
+.grid-aware-auras-import-export-dialog textarea {
+	height: 100%;
+}
+
+.grid-aware-auras-import-export-dialog .dialog-content {
+	flex: 1 1 0;
+}
+
 /* -------------------------------- */
 /* Aura Target Custom Filter Config */
 /* -------------------------------- */

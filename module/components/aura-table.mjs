@@ -1,11 +1,13 @@
 /** @import { AuraConfig } from "../data/aura.mjs" */
 import { AuraConfigApplication } from "../applications/aura-config.mjs";
 import { ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, LINE_TYPES, MODULE_NAME } from "../consts.mjs";
-import { calculateAuraRadius, createAura } from "../data/aura.mjs";
+import { calculateAuraRadius, createAura, getAura } from "../data/aura.mjs";
 import { html, LitElement, when } from "../lib/lit-all.min.js";
 import { ContextMenuGaa } from "./context-menu-gaa.mjs";
 
 export const elementName = "gaa-aura-table";
+
+const { DialogV2 } = foundry.applications.api;
 
 export class AuraTable extends LitElement {
 
@@ -25,7 +27,10 @@ export class AuraTable extends LitElement {
 	#internals;
 
 	/** @type {ContextMenuGaa | undefined} */
-	#contextMenu;
+	#createAuraContextMenu;
+
+	/** @type {ContextMenuGaa | undefined} */
+	#aurasContextMenu;
 
 	/** @type {Map<string, AuraConfigApplication>} */
 	#openAuraConfigApps = new Map();
@@ -86,7 +91,7 @@ export class AuraTable extends LitElement {
 							<th class="text-center" style="width: 58px">Fill</th>
 							<th class="text-center" style="width: 24px">
 								${when(!this.disabled, () => html`
-									<a @click="${this.#createAura}">
+									<a data-action="create-aura">
 										<i class="fas fa-plus"></i>
 									</a>
 								`)}
@@ -177,7 +182,20 @@ export class AuraTable extends LitElement {
 			};
 		}
 
-		this.#contextMenu = new ContextMenuGaa(this, "[data-aura-id]", [
+		this.#createAuraContextMenu = new ContextMenuGaa(this, "[data-action='create-aura']", [
+			{
+				name: "New",
+				icon: "<i class='fas fa-file'></i>",
+				callback: () => this.#createNewAura()
+			},
+			{
+				name: "Import JSON",
+				icon: "<i class='fas fa-upload'></i>",
+				callback: () => this.#importJson()
+			}
+		], { eventName: "click" });
+
+		this.#aurasContextMenu = new ContextMenuGaa(this, "[data-aura-id]", [
 			{
 				name: "Edit",
 				icon: "<i class='fas fa-edit'></i>",
@@ -206,6 +224,11 @@ export class AuraTable extends LitElement {
 				})
 			},
 			{
+				name: "Export JSON",
+				icon: "<i class='fas fa-download'></i>",
+				callback: withAura(({ aura }) => this.#exportJson(aura))
+			},
+			{
 				name: "Delete",
 				icon: "<i class='fas fa-trash'></i>",
 				callback: withAura(({ auraId }) => {
@@ -215,7 +238,7 @@ export class AuraTable extends LitElement {
 			}
 		]);
 
-		this.#contextMenu.disabled = this.disabled;
+		this.#aurasContextMenu.disabled = this.disabled;
 	}
 
 	/** @param {Map<string, any>} changedProperties */
@@ -224,19 +247,80 @@ export class AuraTable extends LitElement {
 			this.#internals.setFormValue(JSON.stringify(this.value));
 		}
 
-		if (this.#contextMenu) {
-			this.#contextMenu.disabled = this.disabled;
+		if (this.#aurasContextMenu) {
+			this.#aurasContextMenu.disabled = this.disabled;
 		}
 	}
 
 	/**
 	 * Creates a new aura and opens the edit dialog for it.
 	 */
-	#createAura() {
+	#createNewAura() {
 		const aura = createAura();
 		this.#editAura(aura);
 		this.value = [...this.value, aura];
 		this.#dispatchChangeEvent();
+	}
+
+	/**
+	 * Shows a dialog to the user and asks them to provide JSON for a new aura.
+	 */
+	#importJson() {
+		new DialogV2({
+			window: {
+				title: "Import",
+				icon: "fas fa-upload",
+				resizable: true
+			},
+			classes: ["grid-aware-auras-import-export-dialog"],
+			content: `<textarea></textarea>`,
+			buttons: [
+				{
+					icon: "<i class=''></i>",
+					label: "Import",
+					callback: (_event, _target, dialog) => {
+						const json = dialog.querySelector("textarea").value;
+						try {
+							this.#importAuraFromJson(json);
+						} catch (error) {
+							ui.notifications.error(error.message);
+							throw error; // Rethrow to prevent dialog from closing
+						}
+					}
+				},
+				{
+					icon: "<i class='fas fa-times'></i>",
+					label: game.i18n.localize("Close"),
+					action: "close"
+				}
+			],
+			position: {
+				width: 530,
+				height: 320
+			}
+		}).render(true);
+	}
+
+	/**
+	 * Attempts to import an Aura from a JSON.
+	 * @param {string} json
+	 */
+	#importAuraFromJson(json) {
+		let parsed;
+		try {
+			parsed = JSON.parse(json);
+		} catch (ex) {
+			throw new Error(`Failed to import aura: Invalid JSON provided (${ex.message}).`);
+		}
+
+		if (Array.isArray(parsed) || typeof parsed !== "object")
+			throw new Error("Failed to import aura: Expected JSON to be an object.");
+
+		const aura = getAura(parsed);
+		aura.id = foundry.utils.randomID(); // Ensure it gets a new ID
+		this.value = [...this.value, aura];
+		this.#dispatchChangeEvent();
+		this.#editAura(aura);
 	}
 
 	/**
@@ -260,6 +344,34 @@ export class AuraTable extends LitElement {
 		this.#openAuraConfigApps.set(aura.id, app);
 
 		app.render(true);
+	}
+
+	/**
+	 * Shows a dialog with the JSON for the given aura.
+	 * @param {AuraConfig} aura
+	 */
+	#exportJson(aura) {
+		const { id, ...auraWithoutId } = aura;
+		new DialogV2({
+			window: {
+				title: "Export",
+				icon: "fas fa-download",
+				resizable: true
+			},
+			classes: ["grid-aware-auras-import-export-dialog"],
+			content: `<textarea>${JSON.stringify(auraWithoutId)}</textarea>`,
+			buttons: [
+				{
+					icon: "<i class='fas fa-times'></i>",
+					label: game.i18n.localize("Close"),
+					action: "close"
+				}
+			],
+			position: {
+				width: 530,
+				height: 320
+			}
+		}).render(true);
 	}
 
 	/**
