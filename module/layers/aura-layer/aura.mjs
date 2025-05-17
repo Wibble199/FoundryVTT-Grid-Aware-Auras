@@ -188,7 +188,8 @@ export class Aura {
 		const visibility = foundry.utils.mergeObject(
 			auraVisibilityDefaults,
 			this.#token.isOwner ? this.#config.ownerVisibility : this.#config.nonOwnerVisibility,
-			{ inplace: false });
+			{ inplace: false }
+		);
 
 		let hasRelevantNonDefaultState = false;
 
@@ -302,7 +303,7 @@ export class AuraGeometry {
 
 			// If the test point lies within the y range of this edge, work out what the x point of the line is at the
 			// exact y test point. If this is less than the test x point then collision occured.
-			const edgeX = (y - p1.y) / slope + p1.x;
+			const edgeX = ((y - p1.y) / slope) + p1.x;
 
 			if (edgeX < x)
 				collisionCount++;
@@ -334,7 +335,7 @@ export class AuraGeometry {
 
 			// p1 should be top-left most, p2 should be bottom-right most; so may need to swap p1 and p2 around
 			if (p2.y < p1.y || (p2.y === p1.y && p2.x < p1.x))
-				([p1, p2] = [p2, p1]);
+				[p1, p2] = [p2, p1];
 
 			const slope = p1.x === p2.x
 				? Infinity

@@ -120,10 +120,10 @@ export class CustomAuraTargetFilterConfig extends ApplicationV2 {
 		await game.settings.set(MODULE_NAME, CUSTOM_AURA_TARGET_FILTERS_SETTING, settingsValue);
 
 		await this.close();
-	}
+	};
 
 	/** @override */
-	_replaceHTML(templateResult, container, _options) {
+	_replaceHTML(templateResult, container) {
 		render(templateResult, container);
 	}
 }

@@ -27,11 +27,12 @@ Hooks.once("ready", () => {
 		if (runOn?.length > 0 && runOn !== game.userId)
 			return;
 
-		switch(func) {
-			case TOGGLE_EFFECT_FUNC:
+		switch (func) {
+			case TOGGLE_EFFECT_FUNC: {
 				const { actorUuid, effectId, state, effectOptions } = args;
 				toggleEffect(actorUuid, effectId, state, effectOptions, false);
 				break;
+			}
 		}
 	});
 });
@@ -95,7 +96,7 @@ Hooks.on("createItem", (item, _options, userId) => {
 // When an item is updated, update auras on any of that actor's tokens. We don't restrict it to just when the the item's
 // auras flag is updated, as there may be a property referenced in one of the auras' radii expressions that has updated.
 Hooks.on("updateItem", (item, _delta, _options, userId) => {
-	if (!!item.actor) {
+	if (item.actor) {
 		AuraLayer.current?._updateActorAuras(item.actor, { userId });
 	}
 });

@@ -8,7 +8,7 @@ class Tabs extends LitElement {
 		tabs: { attribute: false },
 		navClasses: { type: String },
 		navStyle: { type: String },
-		_selectedTabIndex: { state: true },
+		_selectedTabIndex: { state: true }
 	};
 
 	constructor() {

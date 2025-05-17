@@ -145,7 +145,7 @@ export function cacheReturn(func, keyFunc = undefined) {
 		const result = func(...args);
 		cache.set(key, result);
 		return result;
-	}
+	};
 }
 
 /**

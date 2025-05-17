@@ -77,10 +77,11 @@ export class AuraLayer extends CanvasLayer {
 
 		const tokens = token ? [token] : canvas.tokens.placeables;
 
-		for (const token of tokens)
-		for (const aura of this._auraManager.getTokenAuras(token)) {
-			aura.updatePosition();
-			aura.updateVisibility();
+		for (const token of tokens) {
+			for (const aura of this._auraManager.getTokenAuras(token)) {
+				aura.updatePosition();
+				aura.updateVisibility();
+			}
 		}
 	}
 
@@ -187,14 +188,14 @@ export class AuraLayer extends CanvasLayer {
 
 		// Array of the auras to test and their owner tokens
 		const aurasToTest = (sourceToken
-				? [sourceToken]
-				: [...game.canvas.tokens.placeables])
-			.flatMap(t => (this._auraManager.getTokenAuras(t)).map(aura => ({ parent: t, aura })));
+			? [sourceToken]
+			: [...game.canvas.tokens.placeables]
+		).flatMap(t => this._auraManager.getTokenAuras(t).map(aura => ({ parent: t, aura })));
 
 		// Array of the tokens to test
-		const tokensToTest = (targetToken
+		const tokensToTest = targetToken
 			? [targetToken]
-			: [...game.canvas.tokens.placeables]);
+			: [...game.canvas.tokens.placeables];
 
 		// Perform collision tests
 		for (const token of tokensToTest) {
@@ -252,6 +253,7 @@ export class AuraLayer extends CanvasLayer {
 			token,
 			parent,
 			aura,
-			{ hasEntered, isPreview, isInit, userId });
+			{ hasEntered, isPreview, isInit, userId }
+		);
 	}
 }

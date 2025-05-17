@@ -1,4 +1,4 @@
-import { MODULE_NAME, SQUARE_GRID_MODE, SQUARE_GRID_MODE_SETTING } from "../consts.mjs";
+import { MODULE_NAME, SQUARE_GRID_MODE_SETTING } from "../consts.mjs";
 import { getHexAuraBorder, getSpacesUnderHexToken } from "./hex-utils.mjs";
 import { getSpacesUnderSquareToken, getSquareAuraBorder } from "./square-utils.mjs";
 
@@ -57,5 +57,5 @@ export function getSpacesUnderToken(token, grid, altPosition = undefined) {
 	// If the points were not valid (e.g. unsupported hex size), just return a single point at the centre of the token
 	return points?.length > 0
 		? points
-		: [{ x: x + width * grid.size / 2, y: y + height * grid.size / 2 }];
+		: [{ x: x + (width * grid.size / 2), y: y + (height * grid.size / 2) }];
 }

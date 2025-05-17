@@ -45,7 +45,7 @@ export function selectOptions(options, { selected, labelSelector, valueSelector,
 
 	return [
 		// Place non-grouped items first
-		...(groupedOptions[noGroup] ?? []),
+		...groupedOptions[noGroup] ?? [],
 
 		// Then place grouped items in an optgroup each
 		...Object.entries(groupedOptions)

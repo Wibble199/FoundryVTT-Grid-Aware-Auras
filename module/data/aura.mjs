@@ -189,15 +189,15 @@ const migrations = [
 		// Because the inner property names (effectId, isOverlay, targetTokens) are the same, can just place the
 		// existing object into the array. Any any additional default values (such as mode) will be set in `getAura`.
 		if (effect?.effectId?.length)
-			config.effects = [effect, ...(config.effects ?? [])];
+			config.effects = [effect, ...config.effects ?? []];
 		delete config.effect;
 
 		if (macro?.macroId?.length)
-			config.macros = [macro, ...(config.macros ?? [])];
+			config.macros = [macro, ...config.macros ?? []];
 		delete config.macro;
 
 		return config;
-	},
+	}
 ];
 
 /** @returns {AuraConfig} */

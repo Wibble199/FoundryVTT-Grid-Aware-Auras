@@ -26,7 +26,7 @@ export class ItemAuraConfigApplication extends ApplicationV2 {
 		tag: "form",
 		window: {
 			contentClasses: ["sheet", "standard-form"],
-			icon: "far fa-hexagon",
+			icon: "far fa-hexagon"
 		},
 		position: {
 			width: 500,

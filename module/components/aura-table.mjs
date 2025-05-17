@@ -27,9 +27,6 @@ export class AuraTable extends LitElement {
 	#internals;
 
 	/** @type {ContextMenuGaa | undefined} */
-	#createAuraContextMenu;
-
-	/** @type {ContextMenuGaa | undefined} */
 	#aurasContextMenu;
 
 	/** @type {Map<string, AuraConfigApplication>} */
@@ -130,11 +127,13 @@ export class AuraTable extends LitElement {
 			<tr data-aura-id="${aura.id}">
 				<td style="width: 24px">
 					${this.disabled
+						// eslint-disable-next-line @stylistic/js/indent
 						? html`<p style="width: 18px">
-							<i class=${`fas fa-toggle-${aura.enabled ? 'on' : 'off'}`}></i>
+							<i class=${`fas fa-toggle-${aura.enabled ? "on" : "off"}`}></i>
 						</p>`
+						// eslint-disable-next-line @stylistic/js/indent
 						: html`<a data-tooltip="Enable/disable aura" style="width: 18px" @click=${() => !this.disabled && this.#setAuraEnabled(aura.id, !aura.enabled)}>
-							<i class=${`fas fa-toggle-${aura.enabled ? 'on' : 'off'}`}></i>
+							<i class=${`fas fa-toggle-${aura.enabled ? "on" : "off"}`}></i>
 						</a>`
 					}
 				</td>
@@ -180,9 +179,9 @@ export class AuraTable extends LitElement {
 				const aura = this.value.find(a => a.id === auraId);
 				return callback({ el, auraId, aura });
 			};
-		}
+		};
 
-		this.#createAuraContextMenu = new ContextMenuGaa(this, "[data-action='create-aura']", [
+		new ContextMenuGaa(this, "[data-action='create-aura']", [
 			{
 				name: "New",
 				icon: "<i class='fas fa-file'></i>",
@@ -273,7 +272,7 @@ export class AuraTable extends LitElement {
 				resizable: true
 			},
 			classes: ["grid-aware-auras-import-export-dialog"],
-			content: `<textarea></textarea>`,
+			content: "<textarea></textarea>",
 			buttons: [
 				{
 					icon: "<i class=''></i>",
@@ -332,7 +331,7 @@ export class AuraTable extends LitElement {
 
 		const app = new AuraConfigApplication(aura, {
 			onChange: newAura => {
-				this.value = this.value.map(a => a.id === aura.id ? ({ ...a, ...newAura }) : a);
+				this.value = this.value.map(a => a.id === aura.id ? { ...a, ...newAura } : a);
 				this.#dispatchChangeEvent();
 			},
 			onClose: () => this.#openAuraConfigApps.delete(aura.id),

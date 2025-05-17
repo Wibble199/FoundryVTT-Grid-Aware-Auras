@@ -31,7 +31,7 @@ export function listAuraTargetFilters() {
 	return [
 		...standardFilters.map(({ id, name, group }) => ({ value: id, label: name, group })),
 		...customFilters.map(({ id, name }) => ({ value: id, label: name, group: game.i18n.localize("GRIDAWAREAURAS.AuraDisplayCustom") }))
-	]
+	];
 }
 
 export function initialiseAuraTargetFilters() {
@@ -47,19 +47,19 @@ export function initialiseAuraTargetFilters() {
 			id: "FRIENDLY",
 			name: game.i18n.localize("TOKEN.DISPOSITION.FRIENDLY"),
 			group: game.i18n.localize("TOKEN.Disposition"),
-			f: t => t.document.disposition === CONST.TOKEN_DISPOSITIONS.FRIENDLY,
+			f: t => t.document.disposition === CONST.TOKEN_DISPOSITIONS.FRIENDLY
 		},
 		{
 			id: "NEUTRAL",
 			name: game.i18n.localize("TOKEN.DISPOSITION.NEUTRAL"),
 			group: game.i18n.localize("TOKEN.Disposition"),
-			f: t => t.document.disposition === CONST.TOKEN_DISPOSITIONS.NEUTRAL,
+			f: t => t.document.disposition === CONST.TOKEN_DISPOSITIONS.NEUTRAL
 		},
 		{
 			id: "HOSTILE",
 			name: game.i18n.localize("TOKEN.DISPOSITION.HOSTILE"),
 			group: game.i18n.localize("TOKEN.Disposition"),
-			f: t => t.document.disposition === CONST.TOKEN_DISPOSITIONS.HOSTILE,
+			f: t => t.document.disposition === CONST.TOKEN_DISPOSITIONS.HOSTILE
 		},
 		...Object.keys(game.model.Actor).filter(a => a !== "base").map(a => ({
 			id: `ACTORTYPE_${a}`,

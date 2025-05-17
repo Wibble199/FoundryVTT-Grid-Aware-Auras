@@ -49,8 +49,8 @@ export function drawDashedPath(graphics, points, { closed = false, dashSize = 20
 			dashGapRemaining -= distToDraw;
 
 			if (dash) {
-				graphics.moveTo(x1 + cos * totalDrawn, y1 + sin * totalDrawn);
-				graphics.lineTo(x1 + cos * (totalDrawn + distToDraw), y1 + sin * (totalDrawn + distToDraw));
+				graphics.moveTo(x1 + (cos * totalDrawn), y1 + (sin * totalDrawn));
+				graphics.lineTo(x1 + (cos * (totalDrawn + distToDraw)), y1 + (sin * (totalDrawn + distToDraw)));
 			}
 		}
 	}

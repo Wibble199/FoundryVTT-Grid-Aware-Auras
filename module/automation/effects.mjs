@@ -197,8 +197,7 @@ export function onCombatRoundChange(isFirstRound, isLastRound, userId) {
 				(!isLastRound && e.mode === "APPLY_ON_ROUND_START") ||
 				(!isLastRound && e.mode === "REMOVE_ON_ROUND_START") ||
 				(!isFirstRound && e.mode === "APPLY_ON_ROUND_END") ||
-				(!isFirstRound && e.mode === "REMOVE_ON_ROUND_END")
-			)
+				(!isFirstRound && e.mode === "REMOVE_ON_ROUND_END"))
 			.map(effect => ({
 				parent, aura, effect,
 				targetTokens: tokensInAura ?? (tokensInAura = AuraLayer.current._auraManager.getTokensInsideAura(parent, aura.config.id))

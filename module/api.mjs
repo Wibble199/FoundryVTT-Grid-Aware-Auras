@@ -22,7 +22,7 @@ export function getTokenAuras(token) {
 
 	return [
 		...getDocumentOwnAuras(tokenDoc).map(aura => ({ aura, owner: tokenDoc })),
-		...(tokenDoc.actor?.items?.map(item => getDocumentOwnAuras(item).map(aura => ({ aura, owner: item })))?.flat() ?? [])
+		...tokenDoc.actor?.items?.map(item => getDocumentOwnAuras(item).map(aura => ({ aura, owner: item })))?.flat() ?? []
 	];
 }
 

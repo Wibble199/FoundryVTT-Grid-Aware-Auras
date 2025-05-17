@@ -1,3 +1,5 @@
+/* eslint-disable @stylistic/js/no-extra-parens */
+
 export const MODULE_NAME = "grid-aware-auras";
 
 export const SOCKET_NAME = `module.${MODULE_NAME}`;

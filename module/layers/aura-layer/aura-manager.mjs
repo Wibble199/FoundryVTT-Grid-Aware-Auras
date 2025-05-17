@@ -64,7 +64,7 @@ export class AuraManager {
 	 */
 	getTokensInsideAura(parentToken, auraId) {
 		const auraCId = this.#getAuraCompositeId(parentToken, auraId);
-		const tokenCIds = [...(this.#tokensInAura.get(auraCId) ?? [])];
+		const tokenCIds = [...this.#tokensInAura.get(auraCId) ?? []];
 		return tokenCIds.map(cid => this.#getTokenFromCompositeId(cid)).filter(t => !!t);
 	}
 
@@ -76,7 +76,7 @@ export class AuraManager {
 	 */
 	getAurasContainingToken(token, { preview } = {}) {
 		const tokenCId = this.#getTokenCompositeId(token);
-		const auraCIds = [...(this.#aurasContainingToken.get(tokenCId) ?? [])];
+		const auraCIds = [...this.#aurasContainingToken.get(tokenCId) ?? []];
 		return auraCIds
 			.filter(cid => preview === undefined || this.#parseAuraCompositeId(cid).tokenIsPreview === preview)
 			.map(cid => this.#getAuraFromCompositeId(cid))

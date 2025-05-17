@@ -6,7 +6,7 @@ const costFuncs = new Map([
 	[SQUARE_GRID_MODE.EQUIDISTANT, (x, y, r) => Math.max(x, y) <= r],
 	[SQUARE_GRID_MODE.ALTERNATING, (x, y, r) => Math.max(x, y) + Math.floor(Math.min(x, y) / 2) <= r],
 	[SQUARE_GRID_MODE.MANHATTAN, (x, y, r) => x + y <= r],
-	[SQUARE_GRID_MODE.EXACT, (x, y, r) => x * x + y * y <= r * r]
+	[SQUARE_GRID_MODE.EXACT, (x, y, r) => (x * x) + (y * y) <= r * r]
 ]);
 
 const generateSquareHexTokenSpaces = cacheReturn(
@@ -19,9 +19,10 @@ const generateSquareHexTokenSpaces = cacheReturn(
 		/** @type {{ x: number; y: number; }[]} */
 		const spaces = [];
 
-		for (let y = 0; y < height; y++)
-		for (let x = 0; x < width; x++) {
-			spaces.push({ x: x + 0.5, y: y + 0.5 });
+		for (let y = 0; y < height; y++) {
+			for (let x = 0; x < width; x++) {
+				spaces.push({ x: x + 0.5, y: y + 0.5 });
+			}
 		}
 
 		return spaces;
@@ -129,5 +130,5 @@ export function getSquareAuraBorder(width, height, radius, mode, gridSize) {
  * @param {number} gridSize Size of the grid to generate.
  */
 export function getSpacesUnderSquareToken(x, y, width, height, gridSize) {
-	return generateSquareHexTokenSpaces(width, height).map(p => ({ x: x + p.x * gridSize, y: y + p.y * gridSize }));
+	return generateSquareHexTokenSpaces(width, height).map(p => ({ x: x + (p.x * gridSize), y: y + (p.y * gridSize) }));
 }

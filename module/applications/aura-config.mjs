@@ -126,7 +126,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 						name: "Automation",
 						icon: "fas fa-bolt",
 						template: this.#automationTab
-					},
+					}
 				]}></gaa-tabs>
 
 				<footer class="sheet-footer flexrow">
@@ -512,7 +512,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 					</div>
 				</fieldset>
 			</form>
-		`
+		`;
 	};
 
 	#automationThtTab = () => html`

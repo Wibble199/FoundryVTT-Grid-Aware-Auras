@@ -25,7 +25,7 @@ const getEllipseHexTokenSpaces = cacheReturn(
 			return [];
 		}
 
-		const secondaryAxisOffset = Math[isVariant2 ? "ceil" : "floor"]((secondaryAxisSize - 1) / 2) * UNIT_SIDE_LENGTH * 1.5 + UNIT_SIDE_LENGTH;
+		const secondaryAxisOffset = Math[isVariant2 ? "ceil" : "floor"](((secondaryAxisSize - 1) / 2) * UNIT_SIDE_LENGTH * 1.5) + UNIT_SIDE_LENGTH;
 
 		/** @type {{ x: number; y: number; }[]} */
 		const spaces = [];
@@ -37,7 +37,7 @@ const getEllipseHexTokenSpaces = cacheReturn(
 
 		for (let i = 0; i < secondaryAxisSize; i++) {
 			const primaryAxisOffset = (offsetDist + 1) / 2;
-			const secondaryPosition = offsetDist * offsetSign * UNIT_SIDE_LENGTH * 1.5 + secondaryAxisOffset;
+			const secondaryPosition = (offsetDist * offsetSign * UNIT_SIDE_LENGTH * 1.5) + secondaryAxisOffset;
 
 			// The number of spaces in this primary axis decreases by 1 each time the offsetDist increases by 1: at the
 			// 0 (the largest part of the shape), we have the full primary size number of cells. Either side of this, we
@@ -72,7 +72,7 @@ const getEllipseHexAuraBorder = cacheReturn(
 	 * @param {boolean} isColumnar true for hex columns, false for hex rows.
 	 * @param {boolean} isVariant2 false for ELLIPSE_1, true for ELLIPSE_2.
 	 */
-	function (primaryAxisSize, secondaryAxisSize, radius, isColumnar, isVariant2) {
+	function(primaryAxisSize, secondaryAxisSize, radius, isColumnar, isVariant2) {
 		// Columnar ellipses require the primary axis size to be at least as big as `floor(secondaryAxisSize / 2) + 1`.
 		// E.G. on a columnar grid, for a width of 5, the height must be 3 or higher. For a width of 6, height must be
 		// at least 4 or higher. Same is true for rows, but in the opposite axis.
@@ -108,7 +108,7 @@ const getTrapezoidHexTokenSpaces = cacheReturn(
 			return [];
 		}
 
-		const secondaryAxisOffset = isVariant2 ? UNIT_SIDE_LENGTH + (secondaryAxisSize - 1) * UNIT_SIDE_LENGTH * 1.5 : UNIT_SIDE_LENGTH;
+		const secondaryAxisOffset = isVariant2 ? UNIT_SIDE_LENGTH + ((secondaryAxisSize - 1) * UNIT_SIDE_LENGTH * 1.5) : UNIT_SIDE_LENGTH;
 
 		/** @type {{ x: number; y: number; }[]} */
 		const spaces = [];
@@ -118,7 +118,7 @@ const getTrapezoidHexTokenSpaces = cacheReturn(
 		// If we are doing variant1 we offset in the secondary by one direction, for variant2 we go the other direction.
 		for (let i = 0; i < secondaryAxisSize; i++) {
 			const primaryAxisOffset = (i + 1) / 2;
-			const secondaryPosition = i * (isVariant2 ? -1 : 1) * UNIT_SIDE_LENGTH * 1.5 + secondaryAxisOffset;
+			const secondaryPosition = (i * (isVariant2 ? -1 : 1) * UNIT_SIDE_LENGTH * 1.5) + secondaryAxisOffset;
 
 			for (let j = 0; j < primaryAxisSize - i; j++) {
 				spaces.push(coordinate(j + primaryAxisOffset, secondaryPosition));
@@ -146,7 +146,7 @@ const getTrapezoidHexAuraBorder = cacheReturn(
 	 * @param {boolean} isColumnar true for hex columns, false for hex rows.
 	 * @param {boolean} isVariant2 false for TRAPEZOID_1, true for TRAPEZOID_2.
 	 */
-	function (primaryAxisSize, secondaryAxisSize, radius, isColumnar, isVariant2) {
+	function(primaryAxisSize, secondaryAxisSize, radius, isColumnar, isVariant2) {
 		// Columnar trapezoids require the primary axis size to be equal to or larger than the secondary size.
 		if (primaryAxisSize < secondaryAxisSize) {
 			return [];
@@ -190,7 +190,8 @@ const getRectangleHexTokenSpaces = cacheReturn(
 			for (let j = 0; j < primaryAxisSize - (isLarge ? 0 : 1); j++) {
 				spaces.push(coordinate(
 					j + (isLarge ? 0.5 : 1),
-					i * UNIT_SIDE_LENGTH * 1.5 + UNIT_SIDE_LENGTH));
+					(i * UNIT_SIDE_LENGTH * 1.5) + UNIT_SIDE_LENGTH
+				));
 			}
 		}
 
@@ -215,7 +216,7 @@ const getRectangleHexAuraBorder = cacheReturn(
 	 * @param {boolean} isColumnar true for hex columns, false for hex rows.
 	 * @param {boolean} isVariant2 false for RECTANGLE_1, true for RECTANGLE_2.
 	 */
-	function (primaryAxisSize, secondaryAxisSize, radius, isColumnar, isVariant2) {
+	function(primaryAxisSize, secondaryAxisSize, radius, isColumnar, isVariant2) {
 		// If the size in the primary direction is 1, the size in the secondary direction must be no more than one.
 		// For primary size >= 2, any size secondary is acceptable.
 		if (primaryAxisSize === 1 && secondaryAxisSize > 1) {
@@ -245,7 +246,7 @@ const getRectangleHexAuraBorder = cacheReturn(
 			...generateSide(primaryAxisSize + radius - +lastIsSmall, 90),
 			...generateSide(radius + +lastIsSmall, 150),
 			...generateFlatSide(secondaryAxisSize - +lastIsSmall, 180, true),
-			...generateSide(radius + 1, 210),
+			...generateSide(radius + 1, 210)
 		];
 
 		return points.map(({ x, y }) => ({ x: x - minX - xOffset, y: y - minY - yOffset }));
@@ -277,13 +278,13 @@ const getRectangleHexAuraBorder = cacheReturn(
 			angle = angle / 180 * Math.PI; // convert to radians
 			const dx0 = Math.cos(angle) * UNIT_SIDE_LENGTH;
 			const dy0 = Math.sin(angle) * UNIT_SIDE_LENGTH;
-			const dx1 = Math.cos(angle + RADIANS_60 * (startSmall ? -1 : 1)) * UNIT_SIDE_LENGTH;
-			const dy1 = Math.sin(angle + RADIANS_60 * (startSmall ? -1 : 1)) * UNIT_SIDE_LENGTH;
-			const dx2 = Math.cos(angle + RADIANS_60 * (startSmall ? 1 : -1)) * UNIT_SIDE_LENGTH;
-			const dy2 = Math.sin(angle + RADIANS_60 * (startSmall ? 1 : -1)) * UNIT_SIDE_LENGTH;
+			const dx1 = Math.cos(angle + (RADIANS_60 * (startSmall ? -1 : 1))) * UNIT_SIDE_LENGTH;
+			const dy1 = Math.sin(angle + (RADIANS_60 * (startSmall ? -1 : 1))) * UNIT_SIDE_LENGTH;
+			const dx2 = Math.cos(angle + (RADIANS_60 * (startSmall ? 1 : -1))) * UNIT_SIDE_LENGTH;
+			const dy2 = Math.sin(angle + (RADIANS_60 * (startSmall ? 1 : -1))) * UNIT_SIDE_LENGTH;
 
 			for (let i = 0; i < sideLength; i++) {
-				yield coordinate(x += (i % 2 === 0 ? dx1 : dx2), y += (i % 2 === 0 ? dy1 : dy2));
+				yield coordinate(x += i % 2 === 0 ? dx1 : dx2, y += i % 2 === 0 ? dy1 : dy2);
 				yield coordinate(x += dx0, y += dy0);
 			}
 		}
@@ -294,7 +295,7 @@ const getRectangleHexAuraBorder = cacheReturn(
 		 * @param {number} y
 		 */
 		function coordinate(x, y) {
-			if (!isColumnar) ([x, y] = [y, x]);
+			if (!isColumnar) [x, y] = [y, x];
 
 			minX = Math.min(minX, x);
 			minY = Math.min(minY, y);
@@ -313,7 +314,7 @@ const generateHexBorder = cacheReturn(
 	 * @param {number} [primaryAxisOffset] The offset (in grid cells) in the Y direction (or X if rotated).
 	 * @param {number} [secondaryAxisOffset] The offset (in grid cells) in the X direction (or Y if rotated).
 	 */
-	function (sideLengths, mirror, rotate, primaryAxisOffset = 0, secondaryAxisOffset = 0) {
+	function(sideLengths, mirror, rotate, primaryAxisOffset = 0, secondaryAxisOffset = 0) {
 		let x = 0;
 		let y = 0;
 
@@ -326,7 +327,7 @@ const generateHexBorder = cacheReturn(
 			...generateSide(sideLengths[2], 30),
 			...generateSide(sideLengths[3], 90),
 			...generateSide(sideLengths[4], 150),
-			...generateSide(sideLengths[5], 210),
+			...generateSide(sideLengths[5], 210)
 		];
 
 		const [xOffset, yOffset] = rotate ? [primaryAxisOffset, secondaryAxisOffset] : [secondaryAxisOffset, primaryAxisOffset];
@@ -357,7 +358,7 @@ const generateHexBorder = cacheReturn(
 		 * @param {number} y
 		 */
 		function coordinate(x, y) {
-			if (rotate) ([x, y] = [y, x]);
+			if (rotate) [x, y] = [y, x];
 
 			minX = Math.min(minX, x);
 			minY = Math.min(minY, y);
@@ -418,17 +419,17 @@ export function getSpacesUnderHexToken(x, y, width, height, shape, isColumnar, g
 		case CONST.TOKEN_HEXAGONAL_SHAPES.ELLIPSE_1:
 		case CONST.TOKEN_HEXAGONAL_SHAPES.ELLIPSE_2:
 			return getEllipseHexTokenSpaces(primaryAxisSize, secondaryAxisSize, isColumnar, shape === CONST.TOKEN_HEXAGONAL_SHAPES.ELLIPSE_2)
-				.map(p => ({ x: x + p.x * gridSize, y: y + p.y * gridSize }));
+				.map(p => ({ x: x + (p.x * gridSize), y: y + (p.y * gridSize) }));
 
 		case CONST.TOKEN_HEXAGONAL_SHAPES.TRAPEZOID_1:
 		case CONST.TOKEN_HEXAGONAL_SHAPES.TRAPEZOID_2:
 			return getTrapezoidHexTokenSpaces(primaryAxisSize, secondaryAxisSize, isColumnar, shape === CONST.TOKEN_HEXAGONAL_SHAPES.TRAPEZOID_2)
-				.map(p => ({ x: x + p.x * gridSize, y: y + p.y * gridSize }));
+				.map(p => ({ x: x + (p.x * gridSize), y: y + (p.y * gridSize) }));
 
 		case CONST.TOKEN_HEXAGONAL_SHAPES.RECTANGLE_1:
 		case CONST.TOKEN_HEXAGONAL_SHAPES.RECTANGLE_2:
 			return getRectangleHexTokenSpaces(primaryAxisSize, secondaryAxisSize, isColumnar, shape === CONST.TOKEN_HEXAGONAL_SHAPES.RECTANGLE_2)
-				.map(p => ({ x: x + p.x * gridSize, y: y + p.y * gridSize }));
+				.map(p => ({ x: x + (p.x * gridSize), y: y + (p.y * gridSize) }));
 
 		default:
 			throw new Error("Unknown hex grid type.");
