@@ -113,12 +113,12 @@ export function calculateAuraRadius(expression, context) {
 	// If it's a literal number, use that number.
 	let parsed = parseInt(expression);
 	if (typeof parsed === "number" && !isNaN(parsed))
-		return parsed;
+		return Math.round(parsed);
 
 	// Evaluate the property name against the context
 	const property = foundry.utils.getProperty(context, expression);
 	parsed = parseInt(property);
-	return typeof parsed === "number" && !isNaN(parsed) ? parsed : undefined;
+	return typeof parsed === "number" && !isNaN(parsed) ? Math.round(parsed) : undefined;
 }
 
 /** @type {VisibilityConfig} */

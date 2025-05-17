@@ -1,5 +1,7 @@
-import { SQUARE_GRID_MODE } from "../consts.mjs";
-import { cacheReturn } from "./misc-utils.mjs";
+/** @import { AuraGeometry } from "./index.mjs" */
+/** @import { PathCommand } from "../../../utils/pixi-utils.mjs"; */
+import { SQUARE_GRID_MODE } from "../../../consts.mjs";
+import { cacheReturn } from "../../../utils/misc-utils.mjs";
 
 /** @type {Map<SQUARE_GRID_MODE, (xOffset: number, yOffset: number, radius: number) => boolean>} */
 const costFuncs = new Map([
@@ -9,25 +11,55 @@ const costFuncs = new Map([
 	[SQUARE_GRID_MODE.EXACT, (x, y, r) => (x * x) + (y * y) <= r * r]
 ]);
 
-const generateSquareHexTokenSpaces = cacheReturn(
+/**
+ * Geometry for square grids.
+ * @implements {AuraGeometry}
+ */
+export class SquareAuraGeometry {
+
+	#config;
+
+	#points;
+
 	/**
-	 * Calculates the coordinates of all spaces occupied by an trapezoid token with the given width/height.
-	 * @param {number} width The width of the token (in grid spaces).
-	 * @param {number} height The height of the token (in grid spaces).
+	 * @param {number} width
+	 * @param {number} height
+	 * @param {number} radius
+	 * @param {SQUARE_GRID_MODE} mode
+	 * @param {number} gridSize
 	 */
-	function(width, height) {
-		/** @type {{ x: number; y: number; }[]} */
-		const spaces = [];
-
-		for (let y = 0; y < height; y++) {
-			for (let x = 0; x < width; x++) {
-				spaces.push({ x: x + 0.5, y: y + 0.5 });
-			}
-		}
-
-		return spaces;
+	constructor(width, height, radius, mode, gridSize) {
+		this.#config = { width, height, radius, mode, gridSize };
+		this.#points = generateSquareAuraBorder(width, height, radius, mode).map(({ x, y }) => ({ x: x * gridSize, y: y * gridSize }));
 	}
-);
+
+	/**
+	 * @param {number} x
+	 * @param {number} y
+	 */
+	isInside(x, y) {
+		const { width, height, radius, mode, gridSize } = this.#config;
+
+		// Convert X and Y pixels to grid cells, using the furthest-out value (i.e. round up for > 0 and down for < 0)
+		const gx = x < 0 ? Math.floor(x / gridSize) : Math.ceil(x / gridSize);
+		const gy = y < 0 ? Math.floor(y / gridSize) : Math.ceil(y / gridSize);
+
+		// Work out the closest point on the edge of the token
+		const tx = Math.max(0, Math.min(width, gx));
+		const ty = Math.max(0, Math.min(height, gy));
+
+		// Determine if the point is in range based on the cost function
+		const costFunc = costFuncs.get(mode);
+		return costFunc(Math.abs(gx - tx), Math.abs(gy - ty), radius);
+	}
+
+	/** @returns {Generator<import("../../../utils/pixi-utils.mjs").PathCommand, void, never>} */
+	*getPath() {
+		for (let i = 0; i < this.#points.length; i++)
+			yield { type: i === 0 ? "m" : "l", x: this.#points[i].x, y: this.#points[i].y };
+		yield { type: "l", x: this.#points[0].x, y: this.#points[0].y };
+	}
+}
 
 const generateSquareAuraBorder = cacheReturn(
 	/**
@@ -108,27 +140,3 @@ const generateSquareAuraBorder = cacheReturn(
 		];
 	}
 );
-
-/**
- * Returns a square aura polygon for the given radius.
- * @param {number} width The width of the centre, in grid cells.
- * @param {number} height The height of the centre, in grid cells.
- * @param {number} radius The radius of the polygon, measured in grid cells. Must be positive.
- * @param {SQUARE_GRID_MODE} mode The algorithm used to generate the aura.
- * @param {number} gridSize Size of the grid to generate.
- */
-export function getSquareAuraBorder(width, height, radius, mode, gridSize) {
-	return generateSquareAuraBorder(width, height, radius, mode).map(({ x, y }) => ({ x: x * gridSize, y: y * gridSize }));
-}
-
-/**
- * Returns the centre of the cells occupied by the token.
- * @param {number} x The X position of the token.
- * @param {number} y The Y position of the token.
- * @param {number} width The width of the token (in grid cells).
- * @param {number} height The height of the token (in grid cells).
- * @param {number} gridSize Size of the grid to generate.
- */
-export function getSpacesUnderSquareToken(x, y, width, height, gridSize) {
-	return generateSquareHexTokenSpaces(width, height).map(p => ({ x: x + (p.x * gridSize), y: y + (p.y * gridSize) }));
-}

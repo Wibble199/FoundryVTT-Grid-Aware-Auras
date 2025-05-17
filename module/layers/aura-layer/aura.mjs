@@ -1,9 +1,10 @@
 /** @import { AuraConfig, AuraConfigWithRadius } from "../../data/aura.mjs" */
-import { LINE_TYPES } from "../../consts.mjs";
+/** @import { AuraGeometry } from "./geometry/index.mjs" */
+import { LINE_TYPES, MODULE_NAME, SQUARE_GRID_MODE_SETTING } from "../../consts.mjs";
 import { auraDefaults, auraVisibilityDefaults } from "../../data/aura.mjs";
-import { getTokenAura } from "../../utils/grid-utils.mjs";
 import { pickProperties } from "../../utils/misc-utils.mjs";
-import { drawDashedPath } from "../../utils/pixi-utils.mjs";
+import { drawComplexPath, drawDashedComplexPath } from "../../utils/pixi-utils.mjs";
+import { HexagonalAuraGeometry, SquareAuraGeometry } from "./geometry/index.mjs";
 
 /**
  * Class that manages a single aura.
@@ -29,7 +30,7 @@ export class Aura {
 	 * Will be null if there is no valid geometry (e.g. gridless or uneven hex size).
 	 * @type {AuraGeometry | null}
 	 */
-	#geometry;
+	#geometry = null;
 
 	/** @param {Token} token */
 	constructor(token) {
@@ -130,20 +131,40 @@ export class Aura {
 		// Negative radii are not supported
 		if (typeof radius !== "number" || radius < 0) {
 			this.#graphics.clear();
-			return;
-		}
-
-		// Generate polygon points. If there are none, early exit
-		const points = getTokenAura(width, height, radius, canvas.grid, hexagonalShape)
-			.flatMap(({ x, y }) => [x, y]);
-
-		if (points.length === 0) {
-			this.#graphics.clear();
 			this.#geometry = null;
 			return;
 		}
 
-		this.#geometry = new AuraGeometry(points);
+		switch (canvas.grid.type) {
+			case CONST.GRID_TYPES.GRIDLESS:
+				this.#geometry = null; // Not supported
+				break;
+
+			case CONST.GRID_TYPES.SQUARE:
+				this.#geometry = new SquareAuraGeometry(
+					width,
+					height,
+					radius,
+					game.settings.get(MODULE_NAME, SQUARE_GRID_MODE_SETTING),
+					canvas.grid.size
+				);
+				break;
+
+			default: // hexagonal
+				this.#geometry = new HexagonalAuraGeometry(
+					width,
+					height,
+					radius,
+					hexagonalShape,
+					[CONST.GRID_TYPES.HEXEVENQ, CONST.GRID_TYPES.HEXODDQ].includes(canvas.grid.type),
+					canvas.grid.size
+				);
+		}
+
+		if (!this.#geometry) {
+			this.#graphics.clear();
+			return;
+		}
 
 		// Load the texture BEFORE clearing, otherwise there's a noticable flash every time something is chaned.
 		const texture = auraConfig.fillType === CONST.DRAWING_FILL_TYPES.PATTERN
@@ -158,13 +179,16 @@ export class Aura {
 		// from the stroke.
 		if (auraConfig.lineType === LINE_TYPES.DASHED) {
 			this.#configureLineStyle({ lineType: LINE_TYPES.NONE });
-			this.#graphics.drawPolygon(points);
+			drawComplexPath(this.#graphics, this.#geometry.getPath());
 			this.#graphics.endFill();
+
 			this.#configureLineStyle(auraConfig);
-			drawDashedPath(this.#graphics, points, { closed: true, dashSize: auraConfig.lineDashSize, gapSize: auraConfig.lineGapSize });
+			drawDashedComplexPath(this.#graphics, this.#geometry.getPath(), { dashSize: auraConfig.lineDashSize, gapSize: auraConfig.lineGapSize });
+
 		} else {
 			this.#configureLineStyle(auraConfig);
-			this.#graphics.drawPolygon(points);
+			drawComplexPath(this.#graphics, this.#geometry.getPath());
+			this.#graphics.endFill();
 		}
 	}
 
@@ -256,103 +280,5 @@ export class Aura {
 		} else { // NONE
 			this.#graphics.beginFill(0x000000, 0);
 		}
-	}
-}
-
-export class AuraGeometry {
-
-	/**
-	 * Edges sorted by their Y values, so that it is quicker to find relevant ones when doing hit testing.
-	 * `p1` is always the top-left most point, and `p2` is always the bottom-right most point.
-	 */
-	#ySortedEdges;
-
-	#boundingBox;
-
-	/** @param {number[]} points */
-	constructor(points) {
-		({ sortedEdges: this.#ySortedEdges, boundingBox: this.#boundingBox } = AuraGeometry.#getYSortedEdges(points));
-	}
-
-	/**
-	 * Determines whether the given point is inside this aura's geometry or not using the ray cast algorithm.
-	 * @param {number} x
-	 * @param {number} y
-	 */
-	isInside(x, y) {
-		// If the x or y is out of bounds, then it is definately not inside so we can skip looking for edges
-		if (y < this.#boundingBox.top || y > this.#boundingBox.bottom || x < this.#boundingBox.left || x > this.#boundingBox.right)
-			return false;
-
-		let collisionCount = 0;
-
-		for (let { p1, p2, slope } of this.#ySortedEdges) {
-			// If edge is horizontal, then it should be ignored as it will either at the wrong Y or will intersect an
-			// infinite number of times (as it lies on the test ray)
-			if (p1.y === p2.y)
-				continue;
-
-			// Since the edges are sorted, once we find one that has a top (p1) Y higher than the test y point, we can
-			// stop searching
-			if (y <= p1.y)
-				break;
-
-			// If the bottom point of the line is lower than Y, then it can't collide.
-			if (y > p2.y)
-				continue;
-
-			// If the test point lies within the y range of this edge, work out what the x point of the line is at the
-			// exact y test point. If this is less than the test x point then collision occured.
-			const edgeX = ((y - p1.y) / slope) + p1.x;
-
-			if (edgeX < x)
-				collisionCount++;
-		}
-
-		return collisionCount % 2 === 1;
-	}
-
-	/** @param {number[]} points */
-	static #getYSortedEdges(points) {
-		/** @type {{ p1: { x: number; y: number; }; p2: { x: number; y: number }; slope: number; }[]} */
-		const edges = [];
-
-		const bb = {
-			top: Infinity,
-			right: -Infinity,
-			bottom: -Infinity,
-			left: Infinity
-		};
-
-		for (let i = 0; i < points.length; i += 2) {
-			const x1 = points[i];
-			const y1 = points[i + 1];
-			const x2 = points[(i + 2) % points.length];
-			const y2 = points[(i + 3) % points.length];
-
-			let p1 = { x: x1, y: y1 };
-			let p2 = { x: x2, y: y2 };
-
-			// p1 should be top-left most, p2 should be bottom-right most; so may need to swap p1 and p2 around
-			if (p2.y < p1.y || (p2.y === p1.y && p2.x < p1.x))
-				[p1, p2] = [p2, p1];
-
-			const slope = p1.x === p2.x
-				? Infinity
-				: (p2.y - p1.y) / (p2.x - p1.x);
-
-			edges.push({ p1, p2, slope });
-
-			bb.top = Math.min(bb.top, y1, y2);
-			bb.right = Math.max(bb.right, x1, x2);
-			bb.bottom = Math.max(bb.bottom, y1, y2);
-			bb.left = Math.min(bb.left, x1, x2);
-		}
-
-		edges.sort((a, b) => a.p1.y === b.p1.y
-			? a.p1.x - b.p1.x
-			: a.p1.y - b.p1.y);
-
-		return { sortedEdges: edges, boundingBox: bb };
 	}
 }
