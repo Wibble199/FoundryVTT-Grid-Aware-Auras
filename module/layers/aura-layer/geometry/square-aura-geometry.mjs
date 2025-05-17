@@ -1,5 +1,4 @@
-/** @import { AuraGeometry } from "./index.mjs" */
-/** @import { PathCommand } from "../../../utils/pixi-utils.mjs"; */
+/** @import { AuraGeometry, AuraGeometryIsInsideOptions } from "./index.mjs" */
 import { SQUARE_GRID_MODE } from "../../../consts.mjs";
 import { cacheReturn } from "../../../utils/misc-utils.mjs";
 
@@ -34,10 +33,22 @@ export class SquareAuraGeometry {
 	}
 
 	/**
+	 * @param {Token} token
+	 * @param {AuraGeometryIsInsideOptions} options
+	 */
+	isInside(token, { auraOffset = { x: 0, y: 0 }, tokenAltPosition } = {}) {
+		const { width, height } = token.document;
+		const { x, y } = tokenAltPosition ?? token;
+		const points = generateSquareTokenSpaces(width, height)
+			.map(p => ({ x: x + (p.x * this.#config.gridSize), y: y + (p.y * this.#config.gridSize) }));
+		return points.some(p => this._isPointInside(p.x - auraOffset.x, p.y - auraOffset.y));
+	}
+
+	/**
 	 * @param {number} x
 	 * @param {number} y
 	 */
-	isInside(x, y) {
+	_isPointInside(x, y) {
 		const { width, height, radius, mode, gridSize } = this.#config;
 
 		// Convert X and Y pixels to grid cells, using the furthest-out value (i.e. round up for > 0 and down for < 0)
@@ -61,6 +72,7 @@ export class SquareAuraGeometry {
 	}
 }
 
+// #region Border functions
 const generateSquareAuraBorder = cacheReturn(
 	/**
 	 * Generates a square aura polygon for the given radius.
@@ -140,3 +152,26 @@ const generateSquareAuraBorder = cacheReturn(
 		];
 	}
 );
+// #endregion
+
+// #region Spaces-under-token functions
+const generateSquareTokenSpaces = cacheReturn(
+	/**
+	 * Calculates the coordinates of all spaces occupied by an trapezoid token with the given width/height.
+	 * @param {number} width The width of the token (in grid spaces).
+	 * @param {number} height The height of the token (in grid spaces).
+	 */
+	function(width, height) {
+		/** @type {{ x: number; y: number; }[]} */
+		const spaces = [];
+
+		for (let y = 0; y < height; y++) {
+			for (let x = 0; x < width; x++) {
+				spaces.push({ x: x + 0.5, y: y + 0.5 });
+			}
+		}
+
+		return spaces;
+	}
+);
+// #endregion

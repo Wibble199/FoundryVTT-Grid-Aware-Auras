@@ -1,4 +1,4 @@
-/** @import { AuraGeometry } from "./index.mjs" */
+/** @import { AuraGeometry, AuraGeometryIsInsideOptions } from "./index.mjs" */
 
 /**
  * Geometry for gridless scenes.
@@ -18,24 +18,46 @@ export class GridlessAuraGeometry {
 		this.#config = { width, height, radius, gridSize };
 	}
 
-	isInside(x, y) {
-		const { width: w, height: h, radius: r, gridSize: s } = this.#config;
-		const gx = x / s, gy = y / s; // x and y in grid units
+	/**
+	 * @param {Token} token
+	 * @param {AuraGeometryIsInsideOptions} options
+	 */
+	isInside(token, { auraOffset = { x: 0, y: 0 }, tokenAltPosition } = {}) {
+		const { width: aWidth, height: aHeight, gridSize } = this.#config;
+		let { radius } = this.#config;
+		let { x: aX, y: aY } = auraOffset;
+		aX = (aX / gridSize) + (aWidth / 2);
+		aY = (aY / gridSize) + (aHeight / 2);
 
-		if (w === h) {
-			// If the token has equal width and height, the aura is a circle, so we can just use simple trigonometry
-			const totalRadius = (w / 2) + r;
-			const distSq = ((gx - w) * (gx - w)) + ((gy - h) * (gy - h));
-			return distSq <= totalRadius * totalRadius;
+		// Work out the test point of the target token
+		const { width: tWidth, height: tHeight } = token.document;
+		let { x: tX, y: tY } = tokenAltPosition ?? token;
+		tX = (tX / gridSize) + (tWidth / 2);
+		tY = (tY / gridSize) + (tHeight / 2);
+
+		if (tWidth === tHeight) {
+			// If the width and height are the same, then the test token is circular, so we just add half of it's size
+			// to the allowable radius range.
+			radius += tWidth / 2;
 
 		} else {
-			// If the token has unequal width and height the aura is a rounded rectangle, so work out the closest point
-			// on the edge of the token's border and check if the difference is within the radius
-			const tx = Math.max(0, Math.min(w, gx));
-			const ty = Math.max(0, Math.min(h, gy));
-			const distSq = ((gx - tx) * (gx - tx)) + ((gy - ty) * (gy - ty));
-			return distSq <= r * r;
+			// If the width and height aren't the same, then the test token is rectangular. The test point for the token
+			// should be the point that is closest to this aura.
+			tX = Math.max(tX - (tWidth / 2), Math.min(aX, tX + (tWidth / 2)));
+			tY = Math.max(tY - (tHeight / 2), Math.min(aY, tY + (tHeight / 2)));
 		}
+
+		// Work out the test point of the aura's token (same logic as for the target token above)
+		if (aWidth === aHeight) {
+			radius += aWidth / 2;
+		} else {
+			aX = Math.max(aX - (aWidth / 2), Math.min(tX, aX + (aWidth / 2)));
+			aY = Math.max(aY - (aHeight / 2), Math.min(tY, aY + (aHeight / 2)));
+		}
+
+		// Work out the difference between test points and check if they're within aura range
+		const distSq = ((tX - aX) ** 2) + ((tY - aY) ** 2);
+		return distSq < radius ** 2;
 	}
 
 	/** @returns {Generator<import("../../../utils/pixi-utils.mjs").PathCommand, void, never>} */

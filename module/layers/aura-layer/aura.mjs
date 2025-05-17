@@ -4,8 +4,7 @@ import { LINE_TYPES, MODULE_NAME, SQUARE_GRID_MODE_SETTING } from "../../consts.
 import { auraDefaults, auraVisibilityDefaults } from "../../data/aura.mjs";
 import { pickProperties } from "../../utils/misc-utils.mjs";
 import { drawComplexPath, drawDashedComplexPath } from "../../utils/pixi-utils.mjs";
-import { GridlessAuraGeometry } from "./geometry/gridless-aura-geometry.mjs";
-import { HexagonalAuraGeometry, SquareAuraGeometry } from "./geometry/index.mjs";
+import { GridlessAuraGeometry, HexagonalAuraGeometry, SquareAuraGeometry } from "./geometry/index.mjs";
 
 /**
  * Class that manages a single aura.
@@ -97,19 +96,20 @@ export class Aura {
 
 	/**
 	 * Determines whether the given coordinate is inside this aura or not.
-	 * @param {number} x
-	 * @param {number} y
+	 * @param {Token} targetToken
 	 * @param {Object} [options]
-	 * @param {{ x?: number; y?: number; }} [options.tokenPosition] If provided, treats the token that owns the aura as
-	 * being at this position. If not provided, falls back to the Token or TokenDocument position.
-	 * @param {boolean} [options.useActualPosition] If false (default), uses the position of the token document. If true,
-	 * uses the actual position of the token on the canvas.
+	 * @param {{ x?: number; y?: number; }} [options.sourceTokenPosition] If provided, treats the token that owns the
+	 * aura as being at this position. If not provided, falls back to the Token or TokenDocument position.
+	 * @param {boolean} [options.useActualSourcePosition] If false (default), uses the position of the token document.
+	 * If true, uses the actual position of the token on the canvas.
+	 * @param {{ x: number; y: number }} [options.targetTokenPosition] If provided, treats the target token as if it
+	 * were at these coordinates instead.
 	 */
-	isInside(x, y, { tokenPosition, useActualPosition = false } = {}) {
+	isInside(targetToken, { sourceTokenPosition, useActualSourcePosition = false, targetTokenPosition } = {}) {
 		// Need to offset by token position, as the geometry is relative to token position, not relative to canvas pos
-		const { x: xOffset, y: yOffset } = pickProperties(["x", "y"], tokenPosition, useActualPosition ? this.#token : this.#token.document);
+		const auraOffset = pickProperties(["x", "y"], sourceTokenPosition, useActualSourcePosition ? this.#token : this.#token.document);
 
-		return this.#geometry?.isInside(x - xOffset, y - yOffset) ?? false;
+		return this.#geometry?.isInside(targetToken, { auraOffset, tokenAltPosition: targetTokenPosition }) ?? false;
 	}
 
 	destroy() {

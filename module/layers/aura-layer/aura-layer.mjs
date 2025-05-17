@@ -1,7 +1,6 @@
 /** @import { AuraConfig } from "../../data/aura.mjs"; */
 import { ENTER_LEAVE_AURA_HOOK } from "../../consts.mjs";
 import { getTokenAuras } from "../../data/aura.mjs";
-import { getSpacesUnderToken } from "../../utils/grid-utils.mjs";
 import { pickProperties } from "../../utils/misc-utils.mjs";
 import { AuraManager } from "./aura-manager.mjs";
 import { Aura } from "./aura.mjs";
@@ -201,7 +200,6 @@ export class AuraLayer extends CanvasLayer {
 			// Prefer values from the delta if provided, if not use the token's x/y or the document's x/y depending on
 			// if we want the displayed position of the token or the persisted position.
 			const position = pickProperties(["x", "y"], targetTokenDelta, useActualPosition ? token : token.document);
-			const pointsUnderToken = getSpacesUnderToken(token, canvas.grid, position);
 
 			for (const { parent, aura } of aurasToTest) {
 				if (parent.id === token.id) // token cannot enter it's own aura
@@ -209,7 +207,11 @@ export class AuraLayer extends CanvasLayer {
 
 				const isInAura = aura.config.enabled
 					&& parent !== destroyToken && token !== destroyToken
-					&& pointsUnderToken.some(p => aura.isInside(p.x, p.y, { tokenPosition: sourceTokenDelta, useActualPosition }));
+					&& aura.isInside(token, {
+						sourceTokenPosition: sourceTokenDelta,
+						useActualSourcePosition: useActualPosition,
+						targetTokenPosition: position
+					});
 
 				if (this._auraManager.setIsInside(token, parent, aura.config.id, isInAura)) {
 					this.#handleTokenEnterLeaveAura(token, parent, aura.config, isInAura, userId ?? game.userId, isInit);
