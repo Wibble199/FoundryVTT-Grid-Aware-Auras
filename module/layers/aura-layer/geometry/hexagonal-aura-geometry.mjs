@@ -51,7 +51,7 @@ export class HexagonalAuraGeometry {
 
 		let collisionCount = 0;
 
-		for (let { p1, p2, slope } of this.#collidableEdges) {
+		for (const { p1, p2, slope } of this.#collidableEdges) {
 			// Since the edges are sorted, once we find one that has a top (p1) Y higher than the test y point, we can
 			// stop searching since the points are Y-sorted
 			if (y <= p1.y)

@@ -84,13 +84,13 @@ export function drawDashedComplexPath(graphics, commands, { dashSize = 20, gapSi
 
 			case "l": {
 				// Find the angle from the previous point to this one
-				let x1 = curX, y1 = curY;
-				let { x: x2, y: y2 } = command;
+				const x1 = curX, y1 = curY;
+				const { x: x2, y: y2 } = command;
 
 				const angle = Math.atan2(y2 - y1, x2 - x1);
 				const cos = Math.cos(angle);
 				const sin = Math.sin(angle);
-				const totalLength = Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2));
+				const totalLength = Math.sqrt(((y2 - y1) ** 2) + ((x2 - x1) ** 2));
 
 				let remainingLength = totalLength;
 
@@ -112,12 +112,50 @@ export function drawDashedComplexPath(graphics, commands, { dashSize = 20, gapSi
 					}
 				}
 
-				({ x: curX, y: curY } = command);
+				graphics.moveTo(x2, y2); // if we end on a gap, ensure we move to where the line should end.
+				curX = x2;
+				curY = y2;
 				break;
 			}
 
 			case "a": {
-				// TODO:
+				const x1 = curX, y1 = curY;
+				const { x: x2, y: y2, r } = command;
+
+				// Calculate the center of the arc's circle
+				const { x: cx, y: cy } = calculateCircleCentreFromArc(x1, y1, x2, y2, r);
+
+				// Work out the angle of start and end positions
+				const angle1 = Math.atan2(y1 - cy, x1 - cx);
+				const angle2 = Math.atan2(y2 - cy, x2 - cx);
+
+				let angle = angle1;
+				let remainingAngle = (angle2 - angle1 + (Math.PI * 2)) % (Math.PI * 2);
+
+				while (remainingAngle > Number.EPSILON) {
+					if (dashGapRemaining <= 0) {
+						dash = !dash;
+						dashGapRemaining = dash ? dashSize : gapSize;
+					}
+
+					const dashGapAngleRemaining = dashGapRemaining / r;
+					const angleToDraw = Math.min(remainingAngle, dashGapAngleRemaining);
+					remainingAngle -= angleToDraw;
+					dashGapRemaining -= angleToDraw * r;
+
+					if (dash) {
+						// Need to move it each time because arc draws a line from the cursor to the start point which
+						// we don't want because we need to leave a gap
+						graphics.moveTo((Math.cos(angle) * r) + cx, (Math.sin(angle) * r) + cy);
+						graphics.arc(cx, cy, r, angle, angle + angleToDraw);
+					}
+
+					angle += angleToDraw;
+				}
+
+				graphics.moveTo(x2, y2); // if we end on a gap, ensure we move to where the line should end.
+				curX = x2;
+				curY = y2;
 				break;
 			}
 
@@ -125,4 +163,34 @@ export function drawDashedComplexPath(graphics, commands, { dashSize = 20, gapSi
 				throw new Error("Unknown command");
 		}
 	}
+}
+
+/**
+ * Given start and end points of an arc and a radius, calculates the center of the arc's circle.
+ * @param {number} x1
+ * @param {number} y1
+ * @param {number} x2
+ * @param {number} y2
+ * @param {number} r
+ */
+function calculateCircleCentreFromArc(x1, y1, x2, y2, r) {
+	const dx = x2 - x1, dy = y2 - y1;
+
+	// Mid point of the chord (line between points 1 and 2)
+	const chordMidX = (x1 + x2) / 2, chordMidY = (y1 + y2) / 2;
+
+	// Length and unit X/Y of the chord
+	const chordLen = Math.sqrt((dx ** 2) + (dy ** 2));
+	const chordUnitX = dx / chordLen, chordUnitY = dy / chordLen;
+
+	// Can derive the length from the mid point of the chord to the centre, and we know that vector is perpendicular to
+	// the chord itself
+	const chordMidToCentreLen = Math.sqrt((r ** 2) - ((chordLen / 2) ** 2));
+	const chordMidToCentreUnitX = -chordUnitY, chordMidToCentreUnitY = chordUnitX;
+
+	// Finally, work out the centre of the circle
+	return {
+		x: chordMidX + (chordMidToCentreLen * chordMidToCentreUnitX),
+		y: chordMidY + (chordMidToCentreLen * chordMidToCentreUnitY)
+	};
 }

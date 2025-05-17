@@ -253,14 +253,55 @@ function getSpacesUnderHexToken(x, y, width, height, shape, isColumnar, gridSize
 // -------- //
 // Gridless //
 // -------- //
+const getCircularTokenSpaces = cacheReturn(
+	/**
+	 * Generates some approximate coordinates for a circular token, similar to if it were a square token but with the
+	 * points fitting better within a circle.
+	 * @param {number} size Size of the token, measured in cells.
+	 */
+	function(size) {
+		if (size === 1)
+			return [{ x: 0.5, y: 0.5 }];
+
+		const c = size / 2;
+
+		/** @type {{ x: number; y: number; }[]} */
+		const points = [];
+
+		for (let i = 0; i < size / 2; i++) {
+			const nPoints = (8 * i) + (size % 2 && i === 0 ? 1 : 0) + (size % 2 ? 0 : 4);
+			const angle = Math.PI * 2 / nPoints;
+			for (let j = 0; j < nPoints; j++) {
+				points.push({
+					x: (Math.cos(angle * j) * (i + (((size + 1) % 2) / 2))) + c,
+					y: (Math.sin(angle * j) * (i + (((size + 1) % 2) / 2))) + c
+				});
+			}
+		}
+
+		return points;
+	}
+);
+
 /**
- * @param {number} x
- * @param {number} y
- * @param {number} width
- * @param {number} height
- * @param {number} gridSize
+ * Returns some approximate points that are underneath the token on a gridless scene.
+ * @param {number} x The X position of the token.
+ * @param {number} y The Y position of the token.
+ * @param {number} width The width of the token (in grid cells).
+ * @param {number} height The height of the token (in grid cells).
+ * @param {number} gridSize Size of the grid to generate.
  */
 function getSpacesUnderGridlessToken(x, y, width, height, gridSize) {
-	// TODO:
-	return [];
+	if (width === height) {
+		// Foundry draws gridless tokens with equal width and height as a circle. In this case we'll use size^2 points
+		// (as if it was a square token on a square grid), but generate the points by rotating them in bands of varying
+		// radii. Trying to use square or hex grid implementation as an approximate for this gives worse results for
+		// larger tokens.
+		return getCircularTokenSpaces(width).map(p => ({ x: x + (p.x * gridSize), y: y + (p.y * gridSize) }));
+
+	} else {
+		// For tokens with unequal width and height, they are rendered as a rectangle, so we'll just re-use the square
+		// grid implementation in this case
+		return getSpacesUnderSquareToken(x, y, width, height, gridSize);
+	}
 }

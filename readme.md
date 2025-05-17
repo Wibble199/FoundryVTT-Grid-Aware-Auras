@@ -62,7 +62,9 @@ _(Numbers are for illustrative purposes only)_
 
 ### Collision Detection
 
-A quick note on collision detection: the collisions to test if a token is inside an aura is done by checking the centre of each cell under the token. For example, on a 3x3 token, the points tested would be here on hex and square grids (shown in red):
+A quick note on collision detection: the collisions to test if a token is inside an aura is done by checking the centre of each cell under the token. For example, on a 3x3 token, the points tested would be here on hex and square grids (shown in red).
+
+For gridless scenes, the exact behaviour depends on whether the token has equal width and height. If it does not, it is treated as an ordinary rectangular token (as if it were on a square grid). If it does, then the same number of points are tested as it would be on a square grid, but the points are scaled inwards to be more circular. See below (shown in cyan).
 
 ![Test points for a 3x3 token](./docs/img/collision-detection.png)
 

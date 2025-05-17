@@ -57,7 +57,8 @@ export default defineConfig([
 			"@stylistic/js/template-curly-spacing": "error",
 			"@stylistic/js/template-tag-spacing": "error",
 			"no-undef": "off",
-			"no-unused-vars": ["warn", { "ignoreRestSiblings": true }]
+			"no-unused-vars": ["warn", { "ignoreRestSiblings": true }],
+			"prefer-const": "error"
 		}
 	}
 ]);
