@@ -11,7 +11,16 @@
  * @property {number} y
  */
 /**
- * @typedef {MoveCommand | LineCommand} PathCommand
+ * @typedef {Object} ArcCommand
+ * @property {"a"} type
+ * @property {number} x X coordinate of the end of the arc.
+ * @property {number} y Y coordinate of the end of the arc.
+ * @property {number} tx X coordinate of the tangent point of the arc.
+ * @property {number} ty Y coordinate of the tangent point of the arc.
+ * @property {number} r Radius
+ */
+/**
+ * @typedef {MoveCommand | LineCommand | ArcCommand} PathCommand
  */
 
 /**
@@ -31,6 +40,10 @@ export function drawComplexPath(graphics, commands) {
 
 			case "l":
 				graphics.lineTo(command.x, command.y);
+				break;
+
+			case "a":
+				graphics.arcTo(command.tx, command.ty, command.x, command.y, command.r);
 				break;
 
 			default:
@@ -100,6 +113,11 @@ export function drawDashedComplexPath(graphics, commands, { dashSize = 20, gapSi
 				}
 
 				({ x: curX, y: curY } = command);
+				break;
+			}
+
+			case "a": {
+				// TODO:
 				break;
 			}
 

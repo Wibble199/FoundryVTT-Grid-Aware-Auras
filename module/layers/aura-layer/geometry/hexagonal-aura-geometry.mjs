@@ -1,4 +1,4 @@
-/** @import { AuraGeometry, AuraGraphicsAdapter } from "./index.mjs" */
+/** @import { AuraGeometry } from "./index.mjs" */
 
 import { cacheReturn } from "../../../utils/misc-utils.mjs";
 

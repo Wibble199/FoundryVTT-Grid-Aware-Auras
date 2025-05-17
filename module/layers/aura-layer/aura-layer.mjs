@@ -105,9 +105,7 @@ export class AuraLayer extends CanvasLayer {
 		const tokens = token ? [token] : canvas.tokens.placeables;
 
 		for (const token of tokens) {
-			const auras = canvas.grid.type === CONST.GRID_TYPES.GRIDLESS
-				? []
-				: getTokenAuras(token);
+			const auras = getTokenAuras(token);
 
 			const previousAuras = this._auraManager.getTokenAuras(token);
 

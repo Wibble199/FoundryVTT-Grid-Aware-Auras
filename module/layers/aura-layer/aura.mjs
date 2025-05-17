@@ -4,6 +4,7 @@ import { LINE_TYPES, MODULE_NAME, SQUARE_GRID_MODE_SETTING } from "../../consts.
 import { auraDefaults, auraVisibilityDefaults } from "../../data/aura.mjs";
 import { pickProperties } from "../../utils/misc-utils.mjs";
 import { drawComplexPath, drawDashedComplexPath } from "../../utils/pixi-utils.mjs";
+import { GridlessAuraGeometry } from "./geometry/gridless-aura-geometry.mjs";
 import { HexagonalAuraGeometry, SquareAuraGeometry } from "./geometry/index.mjs";
 
 /**
@@ -27,7 +28,7 @@ export class Aura {
 
 	/**
 	 * The geometry of the aura, relative to the token position.
-	 * Will be null if there is no valid geometry (e.g. gridless or uneven hex size).
+	 * Will be null if there is no valid geometry.
 	 * @type {AuraGeometry | null}
 	 */
 	#geometry = null;
@@ -137,7 +138,7 @@ export class Aura {
 
 		switch (canvas.grid.type) {
 			case CONST.GRID_TYPES.GRIDLESS:
-				this.#geometry = null; // Not supported
+				this.#geometry = new GridlessAuraGeometry(width, height, radius, canvas.grid.size);
 				break;
 
 			case CONST.GRID_TYPES.SQUARE:

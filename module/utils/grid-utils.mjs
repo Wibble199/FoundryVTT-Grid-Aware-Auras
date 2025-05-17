@@ -16,9 +16,12 @@ export function getSpacesUnderToken(token, grid, altPosition = undefined) {
 	/** @type {{ x: number; y: number; }[]} */
 	let points;
 
-	// Gridless and non-integer token sizes are not supported
-	if (grid.type === CONST.GRID_TYPES.GRIDLESS || width % 1 !== 0 || height % 1 !== 0 || width < 1 || height < 1) {
-		return points = [];
+	// Non-integer token sizes are not supported
+	if (width % 1 !== 0 || height % 1 !== 0 || width < 1 || height < 1) {
+		points = [];
+
+	} else if (grid.type === CONST.GRID_TYPES.GRIDLESS) {
+		points = getSpacesUnderGridlessToken(x, y, width, height, grid.size);
 
 	} else if (grid.isHexagonal) {
 		points = getSpacesUnderHexToken(x, y, width, height, hexagonalShape, [CONST.GRID_TYPES.HEXEVENQ, CONST.GRID_TYPES.HEXODDQ].includes(grid.type), grid.size);
@@ -36,7 +39,6 @@ export function getSpacesUnderToken(token, grid, altPosition = undefined) {
 // ------ //
 // Square //
 // ------ //
-
 const generateSquareHexTokenSpaces = cacheReturn(
 	/**
 	 * Calculates the coordinates of all spaces occupied by an trapezoid token with the given width/height.
@@ -65,7 +67,7 @@ const generateSquareHexTokenSpaces = cacheReturn(
  * @param {number} height The height of the token (in grid cells).
  * @param {number} gridSize Size of the grid to generate.
  */
-export function getSpacesUnderSquareToken(x, y, width, height, gridSize) {
+function getSpacesUnderSquareToken(x, y, width, height, gridSize) {
 	return generateSquareHexTokenSpaces(width, height).map(p => ({ x: x + (p.x * gridSize), y: y + (p.y * gridSize) }));
 }
 
@@ -73,7 +75,6 @@ export function getSpacesUnderSquareToken(x, y, width, height, gridSize) {
 // --------- //
 // Hexagonal //
 // --------- //
-
 const getEllipseHexTokenSpaces = cacheReturn(
 	/**
 	 * Calculates the coordinates of all spaces occupied by an ellipse token with the given width/height.
@@ -224,7 +225,7 @@ const getRectangleHexTokenSpaces = cacheReturn(
  * @param {boolean} isColumnar
  * @param {number} gridSize
  */
-export function getSpacesUnderHexToken(x, y, width, height, shape, isColumnar, gridSize) {
+function getSpacesUnderHexToken(x, y, width, height, shape, isColumnar, gridSize) {
 	const primaryAxisSize = isColumnar ? height : width;
 	const secondaryAxisSize = isColumnar ? width : height;
 
@@ -247,4 +248,19 @@ export function getSpacesUnderHexToken(x, y, width, height, shape, isColumnar, g
 		default:
 			throw new Error("Unknown hex grid type.");
 	}
+}
+
+// -------- //
+// Gridless //
+// -------- //
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {number} width
+ * @param {number} height
+ * @param {number} gridSize
+ */
+function getSpacesUnderGridlessToken(x, y, width, height, gridSize) {
+	// TODO:
+	return [];
 }
