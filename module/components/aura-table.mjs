@@ -124,7 +124,7 @@ export class AuraTable extends LitElement {
 		const calculatedRadius = calculateAuraRadius(aura.radius, this.radiusContext);
 
 		return html`
-			<tr data-aura-id="${aura.id}">
+			<tr data-aura-id=${aura.id}>
 				<td style="width: 24px">
 					${this.disabled
 						// eslint-disable-next-line @stylistic/js/indent
@@ -175,7 +175,7 @@ export class AuraTable extends LitElement {
 		 */
 		const withAura = callback => {
 			return el => {
-				const auraId = el.data("auraId");
+				const auraId = el.get(0).dataset.auraId;
 				const aura = this.value.find(a => a.id === auraId);
 				return callback({ el, auraId, aura });
 			};
