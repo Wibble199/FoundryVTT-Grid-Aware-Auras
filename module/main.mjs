@@ -8,6 +8,16 @@ import { AuraLayer } from "./layers/aura-layer/aura-layer.mjs";
 import { registerSettings } from "./settings.mjs";
 import { toggleEffect } from "./utils/misc-utils.mjs";
 
+// Token properties (flattened) to trigger an aura check on
+const watchedTokenProperties = [
+	"x",
+	"y",
+	"width",
+	"height",
+	"hexagonalShape",
+	"flags.grid-aware-auras.auras"
+];
+
 Hooks.once("init", () => {
 	registerSettings();
 	initialiseAuraTargetFilters();
@@ -44,9 +54,12 @@ Hooks.on("createToken", (tokenDocument, _options, userId) => {
 	}
 });
 
+// If the token has moved, or changed shape/size then update the auras.
+// Do not always run this, because some modules (such as token FX) trigger an updateToken, which if it happens while
+// the token is already moving causes problems.
 Hooks.on("updateToken", (tokenDocument, delta, _options, userId) => {
 	const token = game.canvas.tokens.get(tokenDocument.id);
-	if (token && AuraLayer.current) {
+	if (Object.keys(foundry.utils.flattenObject(delta)).some(k => watchedTokenProperties.includes(k)) && token && AuraLayer.current) {
 		AuraLayer.current._updateAuras({ token, tokenDelta: delta, userId });
 	}
 });
