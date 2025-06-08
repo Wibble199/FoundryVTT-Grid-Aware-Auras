@@ -91,6 +91,7 @@ export class HexagonalAuraGeometry {
 
 	/** @returns {Generator<import("../../../utils/pixi-utils.mjs").PathCommand, void, never>} */
 	*getPath() {
+		if (!this.#points.length) return;
 		for (let i = 0; i < this.#points.length; i++)
 			yield { type: i === 0 ? "m" : "l", x: this.#points[i].x, y: this.#points[i].y };
 		yield { type: "l", x: this.#points[0].x, y: this.#points[0].y };
@@ -240,7 +241,7 @@ const getTrapezoidHexAuraBorder = cacheReturn(
 			secondaryAxisSize + radius,
 			primaryAxisSize - secondaryAxisSize + radius + 1,
 			secondaryAxisSize + radius,
-			radius + 1
+			radius
 		], isVariant2, !isColumnar, radius, radius * UNIT_SIDE_LENGTH * 1.5);
 	}
 );
