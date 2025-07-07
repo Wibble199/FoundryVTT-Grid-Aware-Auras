@@ -108,22 +108,22 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 				<gaa-tabs .tabs=${[
 					{
-						name: l("DRAWING.TabLines"),
+						name: l("GRIDAWAREAURAS.TabLines"),
 						icon: "fas fa-paint-brush",
 						template: this.#linesTab
 					},
 					{
-						name: l("DRAWING.TabFill"),
+						name: l("GRIDAWAREAURAS.TabFill"),
 						icon: "fas fa-fill-drip",
 						template: this.#fillTab
 					},
 					{
-						name: "Visibility",
+						name: l("GRIDAWAREAURAS.TabVisibility"),
 						icon: "fas fa-eye-low-vision",
 						template: this.#visibilityTab
 					},
 					{
-						name: "Automation",
+						name: l("GRIDAWAREAURAS.TabAutomation"),
 						icon: "fas fa-bolt",
 						template: this.#automationTab
 					}
@@ -703,10 +703,9 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 		const buttons = html`
 			<button type="button"
-				class="header-control fas fa-passport"
+				class="header-control icon fas fa-passport"
 				data-tooltip=${`${aura}: ${this.#aura.id}`} data-tooltip-direction="UP"
-				@click=${copyId}
-				style="opacity: 0.6">
+				@click=${copyId}>
 			</button>
 		`;
 

@@ -181,7 +181,11 @@ export class AuraTable extends LitElement {
 			};
 		};
 
-		new ContextMenuGaa(this, "[data-action='create-aura']", [
+		const ContextMenu = game.release.generation === 12
+			? ContextMenuGaa
+			: foundry.applications.ux.ContextMenu.implementation;
+
+		new ContextMenu(this, "[data-action='create-aura']", [
 			{
 				name: "New",
 				icon: "<i class='fas fa-file'></i>",
@@ -192,9 +196,9 @@ export class AuraTable extends LitElement {
 				icon: "<i class='fas fa-upload'></i>",
 				callback: () => this.#importJson()
 			}
-		], { eventName: "click" });
+		], { eventName: "click", fixed: true });
 
-		this.#aurasContextMenu = new ContextMenuGaa(this, "[data-aura-id]", [
+		this.#aurasContextMenu = new ContextMenu(this, "[data-aura-id]", [
 			{
 				name: "Edit",
 				icon: "<i class='fas fa-edit'></i>",
@@ -235,7 +239,7 @@ export class AuraTable extends LitElement {
 					this.#dispatchChangeEvent();
 				})
 			}
-		]);
+		], { fixed: true });
 
 		this.#aurasContextMenu.disabled = this.disabled;
 	}

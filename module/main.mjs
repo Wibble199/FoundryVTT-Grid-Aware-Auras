@@ -1,6 +1,6 @@
 import * as api from "./api.mjs";
 import { addAuraConfigItemHeaderButton } from "./applications/item-aura-config.mjs";
-import { tokenConfigClose, tokenConfigRenderInner } from "./applications/token-aura-config.mjs";
+import { tokenConfigClose, v12TokenConfigRenderInner, v13TokenConfigRender } from "./applications/token-aura-config.mjs";
 import { setupAutomation } from "./automation/index.mjs";
 import { DOCUMENT_AURAS_FLAG, MODULE_NAME, SOCKET_NAME, TOGGLE_EFFECT_FUNC } from "./consts.mjs";
 import { initialiseAuraTargetFilters } from "./data/aura-target-filters.mjs";
@@ -25,9 +25,30 @@ Hooks.once("init", () => {
 
 	CONFIG.Canvas.layers.gaaAuraLayer = { group: "interface", layerClass: AuraLayer };
 
-	// Wrap the default TokenConfig instead of using the renderTokenConfig hook because the latter does not run when the
-	// config is re-rendered, and it can cause the tab to disappear :(
-	libWrapper.register(MODULE_NAME, "TokenConfig.prototype._renderInner", tokenConfigRenderInner, libWrapper.WRAPPER);
+	switch (game.release.generation) {
+		case 12: {
+			// Wrap the default TokenConfig instead of using the renderTokenConfig hook because the latter does not run
+			// when the config is re-rendered, and it causes the tab to disappear :(
+			libWrapper.register(MODULE_NAME, "TokenConfig.prototype._renderInner", v12TokenConfigRenderInner, libWrapper.WRAPPER);
+			Hooks.on("closeTokenConfig", tokenConfigClose);
+			Hooks.on("getItemSheetHeaderButtons", addAuraConfigItemHeaderButton);
+			break;
+		}
+
+		case 13: {
+			TokenConfig.TABS.sheet.tabs.push({ id: "gridAwareAuras", icon: "far fa-hexagon" });
+			// Delete the footer and re-add it so that it is after GAA's tab. This is so that the part renders in the
+			// right place, as Foundry uses the order from Object.entries and doesn't allow an explicit order to be set.
+			const footer = TokenConfig.PARTS.footer;
+			delete TokenConfig.PARTS.footer;
+			TokenConfig.PARTS.gridAwareAuras = { template: `modules/${MODULE_NAME}/templates/v13-token-config-tab.hbs`, scrollable: [] };
+			TokenConfig.PARTS.footer = footer;
+			Hooks.on("renderTokenConfig", v13TokenConfigRender);
+			Hooks.on("closeTokenConfig", tokenConfigClose);
+			Hooks.on("getItemSheetV2HeaderButtons", addAuraConfigItemHeaderButton);
+			break;
+		}
+	}
 
 	game.modules.get("grid-aware-auras").api = { ...api };
 });
@@ -148,7 +169,3 @@ Hooks.on("canvasTearDown", () => {
 	if (AuraLayer.current)
 		AuraLayer.current._isTearingDown = true;
 });
-
-Hooks.on("getItemSheetHeaderButtons", addAuraConfigItemHeaderButton);
-
-Hooks.on("closeTokenConfig", tokenConfigClose);

@@ -140,7 +140,7 @@
 }
 .grid-aware-auras-table thead {
 	background: none;
-	border-bottom: none;
+	border: none;
 	color: inherit;
 	text-shadow: none;
 }
@@ -151,6 +151,7 @@
 
 .grid-aware-auras-table-item-header {
 	display: flex;
+	align-items: center;
 }
 
 .grid-aware-auras-table-item-header > span {
@@ -162,7 +163,6 @@
 
 .grid-aware-auras-table-item-header > hr {
 	flex: 1;
-	align-self: center;
 }
 
 .grid-aware-auras-import-export-dialog .dialog-form,

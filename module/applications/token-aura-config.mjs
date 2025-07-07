@@ -28,10 +28,16 @@ class TokenConfigGridAwareAurasElement extends LitElement {
 		return `${this.tokenConfig.appId}-gridawareauras`;
 	}
 
+	get #preview() {
+		return game.release.generation === 12
+			? this.tokenConfig.preview
+			: this.tokenConfig._preview;
+	}
+
 	render() {
 		/** @type {Actor | undefined} */
 		const actor = this.tokenConfig.document.actor;
-		const tokenAuras = getDocumentOwnAuras(this.tokenConfig.preview ?? this.tokenConfig.document);
+		const tokenAuras = getDocumentOwnAuras(this.#preview ?? this.tokenConfig.document);
 
 		/** @type {Item[]} */
 		const items = actor?.items ?? [];
@@ -44,7 +50,7 @@ class TokenConfigGridAwareAurasElement extends LitElement {
 				name=${`flags.${MODULE_NAME}.${DOCUMENT_AURAS_FLAG}`}
 				.value=${tokenAuras}
 				subHeadingText="Token"
-				@change=${e => { this.tokenConfig._onChangeInput(e); this.#requestResize(); }}
+				@change=${e => { this.#onChangeInput(e); this.#requestResize(); }}
 				.radiusContext=${{ actor }}
 				${ref(this.#tokenAurasTableRef)}
 				style=${styleMap({ display: "block", marginTop: "0.5rem", marginBottom: itemsWithAuras.length ? "0" : "0.5rem" })}
@@ -92,6 +98,12 @@ class TokenConfigGridAwareAurasElement extends LitElement {
 		}
 	}
 
+	/** @param {Event} e */
+	#onChangeInput(e) {
+		if (game.release.generation === 12)
+			this.tokenConfig._onChangeInput(e);
+	}
+
 	/**
 	 * @param {Item} item
 	 * @param {import("../data/aura.mjs").AuraConfig[]} auras
@@ -101,8 +113,8 @@ class TokenConfigGridAwareAurasElement extends LitElement {
 
 		// Because the preview token that appears when the TokenConfig is open is different from the token returned by
 		// Actor.getActiveTokens, the updateItem hook won't trigger an update on the preview token. So do it manually.
-		if (AuraLayer.current && this.tokenConfig.preview?.object) {
-			AuraLayer.current._updateAuras({ token: this.tokenConfig.preview.object });
+		if (AuraLayer.current && this.#preview?.object) {
+			AuraLayer.current._updateAuras({ token: this.#preview.object });
 		}
 	}
 
@@ -132,7 +144,7 @@ customElements.define(elementName, TokenConfigGridAwareAurasElement);
  * @param {Parameters<TokenConfig["_renderInner"]>} args
  * @this {TokenConfig}
  */
-export async function tokenConfigRenderInner(wrapped, ...args) {
+export async function v12TokenConfigRenderInner(wrapped, ...args) {
 	const html = await wrapped(...args);
 
 	const updateTokenConfigSize = () => setTimeout(() => {
@@ -164,6 +176,24 @@ export async function tokenConfigRenderInner(wrapped, ...args) {
 	updateTokenConfigSize();
 
 	return html;
+}
+
+/**
+ * @param {TokenConfig} tokenConfig
+ * @param {HTMLElement} tokenConfigElement
+ */
+export async function v13TokenConfigRender(tokenConfig, tokenConfigElement) {
+	// Create an TokenConfigGridAwareAurasElement custom element, if there isn't one already.
+	// Don't destroy and re-create the table on redraw because then we lose state which needs to be persisted.
+	/** @type {TokenConfigGridAwareAurasElement} */
+	let gaaConfigElement = tokenConfig[elementRef];
+	if (!gaaConfigElement) {
+		gaaConfigElement = tokenConfig[elementRef] = document.createElement(elementName);
+		gaaConfigElement.tokenConfig = tokenConfig;
+	}
+
+	const gaaTab = tokenConfigElement.querySelector("[data-application-part='gridAwareAuras']");
+	gaaTab.replaceChildren(gaaConfigElement);
 }
 
 /**
