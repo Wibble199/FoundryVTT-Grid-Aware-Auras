@@ -13,7 +13,9 @@ export function setupAutomation() {
 	});
 
 	Hooks.on("updateCombat", (/** @type {Combat} */ combat, _delta, _options, /** @type {string} */ userId) => {
-		if (!combat.previous || combat.scene.id !== game.canvas.scene.id) return;
+		// Combat may not be linked to a scene (combat.scene = null). In this case we can still continue, but any
+		// automation will only run on tokens that are on the same scene as the user that triggered the update.
+		if (!combat.previous || (combat.scene && combat.scene.id !== game.canvas.scene.id)) return;
 
 		// Handle token's turn end
 		if (combat.previous.combatantId !== combat.current.combatantId && combat.previous.tokenId?.length) {
