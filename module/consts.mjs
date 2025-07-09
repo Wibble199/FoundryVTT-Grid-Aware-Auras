@@ -96,6 +96,25 @@ export const MACRO_MODES = /** @type {const} */ ({
 	ROUND_END: "GRIDAWAREAURAS.MacroModeRoundEnd"
 });
 
+/** @enum {keyof typeof SEQUENCE_MODES} */
+export const SEQUENCE_MODES = /** @type {const} */ ({
+	TARGET_ENTER: "GRIDAWAREAURAS.SequenceModeTargetEnter",
+	OWNER_ENTER: "GRIDAWAREAURAS.SequenceModeOwnerEnter",
+	TARGET_TO_OWNER_ENTER: "GRIDAWAREAURAS.SequenceModeTargetToOwnerEnter",
+	OWNER_TO_TARGET_ENTER: "GRIDAWAREAURAS.SequenceModeOwnerToTargetEnter",
+	TARGET_LEAVE: "GRIDAWAREAURAS.SequenceModeTargetLeave",
+	OWNER_LEAVE: "GRIDAWAREAURAS.SequenceModeOwnerLeave"
+});
+
+// Naming convention matches the Sequencer parameters
+/** @enum {keyof typeof SEQUENCE_EASINGS} */
+export const SEQUENCE_EASINGS = /** @type {const} */ ({
+	linear: "GRIDAWAREAURAS.SequenceEasingLinear",
+	easeInCubic: "GRIDAWAREAURAS.SequenceEasingEaseIn",
+	easeOutCubic: "GRIDAWAREAURAS.SequenceEasingEaseOut",
+	easeInOutCubic: "GRIDAWAREAURAS.SequenceEasingEaseInOut"
+});
+
 /** @enum {keyof typeof THT_RULER_ON_DRAG_MODES} */
 export const THT_RULER_ON_DRAG_MODES = /** @type {const} */ ({
 	NONE: "GRIDAWAREAURAS.ThtRulerOnDragModeNone",

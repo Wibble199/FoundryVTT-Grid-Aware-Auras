@@ -123,7 +123,7 @@ export class Aura {
 	 * @param {number} hexagonalShape
 	 */
 	async #redraw(width, height, radius, hexagonalShape) {
-		const auraConfig = { ...auraDefaults, ...this.#config };
+		const auraConfig = { ...auraDefaults(), ...this.#config };
 
 		width ??= this.#token.document.width;
 		height ??= this.#token.document.height;

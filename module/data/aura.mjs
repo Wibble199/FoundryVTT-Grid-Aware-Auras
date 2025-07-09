@@ -1,4 +1,4 @@
-/** @import { EFFECT_MODES, MACRO_MODES, THT_RULER_ON_DRAG_MODES } from "../consts.mjs" */
+/** @import { EFFECT_MODES, MACRO_MODES, SEQUENCE_EASINGS, SEQUENCE_MODES, THT_RULER_ON_DRAG_MODES } from "../consts.mjs" */
 import { DOCUMENT_AURAS_FLAG, LINE_TYPES, MODULE_NAME } from "../consts.mjs";
 
 export const latestAuraConfigVersion = 1;
@@ -26,6 +26,7 @@ export const latestAuraConfigVersion = 1;
  * @property {VisibilityConfig} nonOwnerVisibility
  * @property {EffectConfig[]} effects
  * @property {MacroConfig[]} macros
+ * @property {SequencerEffectConfig[]} sequencerEffects
  * @property {Object} terrainHeightTools
  * @property {THT_RULER_ON_DRAG_MODES} terrainHeightTools.rulerOnDrag
  * @property {string} terrainHeightTools.targetTokens ID of the filter to use to specify targetable tokens.
@@ -53,6 +54,23 @@ export const latestAuraConfigVersion = 1;
  * @property {string} macroId
  * @property {string} targetTokens ID of the filter to use to specify targetable tokens.
  * @property {MACRO_MODES} mode
+ */
+/**
+ * @typedef {Object} SequencerEffectConfig
+ * @property {string} uId Unique ID for this sequence, used in the sequencer name to uniquely identify it.
+ * @property {string} effectPath The DB path of the sequencer effect to play.
+ * @property {string} targetTokens ID of the filter to use to specify targetable tokens.
+ * @property {SEQUENCE_MODES} mode
+ * @property {number} repeatCount
+ * @property {number} repeatDelay
+ * @property {boolean} persistent Whether the effect is persistent (does nothing for 'leave' modes).
+ * @property {boolean} waitForNonPersistent For persistent enter effects, whether to wait for all non-persistent effects to finish before starting.
+ * @property {number} delay
+ * @property {number} fadeInDuration
+ * @property {SEQUENCE_EASINGS} fadeInEasing
+ * @property {number} fadeOutDuration
+ * @property {SEQUENCE_EASINGS} fadeOutEasing
+ * @property {boolean} belowTokens
  */
 
 /**
@@ -131,8 +149,8 @@ export const auraVisibilityDefaults = {
 	turn: true
 };
 
-/** @type {Omit<AuraConfig, "id">} */
-export const auraDefaults = {
+/** @type {() => Omit<AuraConfig, "id">} */
+export const auraDefaults = () => ({
 	_v: latestAuraConfigVersion,
 	name: "New Aura",
 	enabled: true,
@@ -153,27 +171,46 @@ export const auraDefaults = {
 	nonOwnerVisibility: auraVisibilityDefaults,
 	effects: [],
 	macros: [],
+	sequencerEffects: [],
 	terrainHeightTools: {
 		rulerOnDrag: "NONE",
 		targetTokens: ""
 	}
-};
+});
 
-/** @type {EffectConfig} */
-export const effectConfigDefaults = {
+/** @type {() => EffectConfig} */
+export const effectConfigDefaults = () => ({
 	effectId: null,
 	isOverlay: false,
 	targetTokens: "ALL",
 	mode: "APPLY_WHILE_INSIDE",
 	priority: 0
-};
+});
 
-/** @type {MacroConfig} */
-export const macroConfigDefaults = {
+/** @type {() => MacroConfig} */
+export const macroConfigDefaults = () => ({
 	macroId: null,
 	targetTokens: "ALL",
 	mode: "ENTER_LEAVE"
-};
+});
+
+/** @type {() => SequencerEffectConfig} */
+export const sequencerEffectConfigDefaults = () => ({
+	uId: foundry.utils.randomID(),
+	effectPath: "",
+	targetTokens: "ALL",
+	mode: "TARGET_ENTER",
+	repeatCount: 1,
+	repeatDelay: 0,
+	persistent: false,
+	waitForNonPersistent: false,
+	delay: 0,
+	fadeInDuration: 0,
+	fadeInEasing: "linear",
+	fadeOutDuration: 0,
+	fadeOutEasing: "linear",
+	belowTokens: false
+});
 
 /**
 * Migration functions to migrate Aura config to newer versions.
@@ -202,7 +239,7 @@ const migrations = [
 
 /** @returns {AuraConfig} */
 export function createAura() {
-	return foundry.utils.mergeObject(auraDefaults, { id: foundry.utils.randomID() }, { inplace: false });
+	return foundry.utils.mergeObject(auraDefaults(), { id: foundry.utils.randomID() }, { inplace: false });
 }
 
 /**
@@ -218,9 +255,10 @@ export function getAura(config) {
 	config._v = latestAuraConfigVersion;
 
 	// Merge with defaults
-	config = foundry.utils.mergeObject(auraDefaults, config, { inplace: false });
-	config.effects = config.effects?.map(e => foundry.utils.mergeObject(effectConfigDefaults, e, { inplace: false })) ?? [];
-	config.macros = config.macros?.map(m => foundry.utils.mergeObject(macroConfigDefaults, m, { inplace: false })) ?? [];
+	config = foundry.utils.mergeObject(auraDefaults(), config, { inplace: false });
+	config.effects = config.effects?.map(e => foundry.utils.mergeObject(effectConfigDefaults(), e, { inplace: false })) ?? [];
+	config.macros = config.macros?.map(m => foundry.utils.mergeObject(macroConfigDefaults(), m, { inplace: false })) ?? [];
+	config.sequencerEffects = config.sequencerEffects?.map(s => foundry.utils.mergeObject(sequencerEffectConfigDefaults(), s, { inplace: false })) ?? [];
 	return config;
 }
 

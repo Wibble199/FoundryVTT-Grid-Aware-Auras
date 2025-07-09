@@ -139,7 +139,7 @@ export class AuraTable extends LitElement {
 				</td>
 				<td>
 					${aura.name}
-					${when((effectsEnabled && aura.effects?.length) || (macrosEnabled && aura.macros?.length),
+					${when((effectsEnabled && aura.effects?.length) || (macrosEnabled && aura.macros?.length) || aura.sequencerEffects?.length,
 						() => html`<i class="fas fa-bolt" data-tooltip="This aura applies effects or calls macros"></i>`)}
 				</td>
 				<td class="text-center" style="width: 58px">
