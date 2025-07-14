@@ -3,6 +3,7 @@ import { DOCUMENT_AURAS_FLAG, MODULE_NAME } from "../consts.mjs";
 import { getDocumentOwnAuras } from "../data/aura.mjs";
 import { AuraLayer } from "../layers/aura-layer/aura-layer.mjs";
 import { createRef, html, LitElement, ref, repeat, styleMap, when } from "../lib/lit-all.min.js";
+import { warn } from "../utils/misc-utils.mjs";
 
 const elementName = "gaa-token-aura-config";
 
@@ -34,10 +35,18 @@ class TokenConfigGridAwareAurasElement extends LitElement {
 			: this.tokenConfig._preview;
 	}
 
+	get actor() {
+		return this.tokenConfig.actor;
+	}
+
+	get token() {
+		return this.tokenConfig.token;
+	}
+
 	render() {
 		/** @type {Actor | undefined} */
-		const actor = this.tokenConfig.document.actor;
-		const tokenAuras = getDocumentOwnAuras(this.#preview ?? this.tokenConfig.document);
+		const actor = this.actor;
+		const tokenAuras = getDocumentOwnAuras(this.#preview ?? this.token);
 
 		/** @type {Item[]} */
 		const items = actor?.items ?? [];
@@ -80,8 +89,8 @@ class TokenConfigGridAwareAurasElement extends LitElement {
 
 		// When the token's actor redraws (which happens when Items change), redraw this element
 		// Actor may not always be present (e.g. if the actor was deleted but token was not)
-		if (this.tokenConfig.document.actor) {
-			this.tokenConfig.document.actor.apps[this.appId] = {
+		if (this.actor) {
+			this.actor.apps[this.appId] = {
 				render: () => this.requestUpdate(),
 				close: () => {}
 			};
@@ -93,8 +102,8 @@ class TokenConfigGridAwareAurasElement extends LitElement {
 
 		// Remove the function that redraws this element when the actor changes.
 		// Actor may not always be present (e.g. if the actor was deleted but token was not)
-		if (this.tokenConfig.document.actor) {
-			delete this.tokenConfig.document.actor.apps[this.appId];
+		if (this.actor) {
+			delete this.actor.apps[this.appId];
 		}
 	}
 
@@ -183,6 +192,12 @@ export async function v12TokenConfigRenderInner(wrapped, ...args) {
  * @param {HTMLElement} tokenConfigElement
  */
 export async function v13TokenConfigRender(tokenConfig, tokenConfigElement) {
+	const gaaTab = tokenConfigElement.querySelector("[data-application-part='gridAwareAuras']");
+	if (!gaaTab) {
+		warn("Failed to add Grid-Aware Aura config to token config sheet.");
+		return;
+	}
+
 	// Create an TokenConfigGridAwareAurasElement custom element, if there isn't one already.
 	// Don't destroy and re-create the table on redraw because then we lose state which needs to be persisted.
 	/** @type {TokenConfigGridAwareAurasElement} */
@@ -192,7 +207,6 @@ export async function v13TokenConfigRender(tokenConfig, tokenConfigElement) {
 		gaaConfigElement.tokenConfig = tokenConfig;
 	}
 
-	const gaaTab = tokenConfigElement.querySelector("[data-application-part='gridAwareAuras']");
 	gaaTab.replaceChildren(gaaConfigElement);
 }
 

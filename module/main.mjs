@@ -25,6 +25,10 @@ Hooks.once("init", () => {
 
 	CONFIG.Canvas.layers.gaaAuraLayer = { group: "interface", layerClass: AuraLayer };
 
+	game.modules.get("grid-aware-auras").api = { ...api };
+});
+
+Hooks.once("ready", () => {
 	switch (game.release.generation) {
 		case 12: {
 			// Wrap the default TokenConfig instead of using the renderTokenConfig hook because the latter does not run
@@ -36,24 +40,34 @@ Hooks.once("init", () => {
 		}
 
 		case 13: {
-			TokenConfig.TABS.sheet.tabs.push({ id: "gridAwareAuras", icon: "far fa-hexagon" });
-			// Delete the footer and re-add it so that it is after GAA's tab. This is so that the part renders in the
-			// right place, as Foundry uses the order from Object.entries and doesn't allow an explicit order to be set.
-			const footer = TokenConfig.PARTS.footer;
-			delete TokenConfig.PARTS.footer;
-			TokenConfig.PARTS.gridAwareAuras = { template: `modules/${MODULE_NAME}/templates/v13-token-config-tab.hbs`, scrollable: [] };
-			TokenConfig.PARTS.footer = footer;
+			const patchedTypes = new Set();
+			const patchTokenConfig = cls => {
+				if (!(cls.prototype instanceof foundry.applications.api.ApplicationV2)) return;
+				if (patchedTypes.has(cls)) return;
+
+				cls.TABS.sheet.tabs.push({ id: "gridAwareAuras", icon: "far fa-hexagon" });
+				// Delete the footer and re-add it so that it is after GAA's tab. This is so that the part renders in the
+				// right place, as Foundry uses the order from Object.entries and doesn't allow an explicit order to be set.
+				const footer = cls.PARTS.footer;
+				delete cls.PARTS.footer;
+				cls.PARTS.gridAwareAuras = { template: `modules/${MODULE_NAME}/templates/v13-token-config-tab.hbs`, scrollable: [] };
+				cls.PARTS.footer = footer;
+				patchedTypes.add(cls);
+			};
+
+			for (const modelType of Object.values(CONFIG.Token.sheetClasses))
+				for (const sheetConfig of Object.values(modelType))
+					patchTokenConfig(sheetConfig.cls);
+			patchTokenConfig(CONFIG.Token.prototypeSheetClass);
+
 			Hooks.on("renderTokenConfig", v13TokenConfigRender);
+			Hooks.on("renderPrototypeTokenConfig", v13TokenConfigRender);
 			Hooks.on("closeTokenConfig", tokenConfigClose);
 			Hooks.on("getItemSheetV2HeaderButtons", addAuraConfigItemHeaderButton);
 			break;
 		}
 	}
 
-	game.modules.get("grid-aware-auras").api = { ...api };
-});
-
-Hooks.once("ready", () => {
 	game.socket.on(SOCKET_NAME, ({ func, runOn, ...args }) => {
 		if (runOn?.length > 0 && runOn !== game.userId)
 			return;
