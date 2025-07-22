@@ -206,6 +206,9 @@ api.toggleEffect(token, statusEffectId, true, { overlay: true });
 
 - [`AuraConfig`](#auraconfig)
 - [`VisibilityConfig`](#visibilityconfig)
+- [`EffectConfig`](#effectconfig)
+- [`MacroConfig`](#macroconfig)
+- [`SequencerEffectConfig`](#sequencereffectconfig)
 
 ## AuraConfig
 
@@ -232,8 +235,9 @@ Defines metadata about an aura.
 |`fillTextureScale`|`{ x: number; y: number; }`|When `fillType` is _Pattern_, a scale (in percent) for the texture. A value of 100 is the default and means no scaling. A value of 50 would mean to shrink the texture by half in that axis.|
 |`ownerVisibility`|[`VisibilityConfig`](#visibilityconfig)|The booleans that determine when the aura is visible to owners of the token.|
 |`nonOwnerVisibility`|[`VisibilityConfig`](#visibilityconfig)|The booleans that determine when the aura is visible to non-owners of the token.|
-|`effects`|[`EffectConfig[]`](#effect-config)|An array containing all the effects defined on the aura.|
-|`macro`|[`MacroConfig[]`](#macro-config)|An object containing macro automation config.|
+|`effects`|[`EffectConfig[]`](#effectconfig)|An array containing all the effects defined on the aura.|
+|`macros`|[`MacroConfig[]`](#macroconfig)|An array containing all the macros defined on the aura.|
+|`sequencerEffects`|[`SequencerEffectConfig[]`](#sequencereffectconfig)|A array containing all the sequencer effects defined on the aura.|
 |`terrainHeightTools`|`Object`|An object containing Terrain Height Tools automation config.|
 |`terrainHeightTools.rulerOnDrag`|`"NONE" \| "C2C" \| "E2E"`|The type of ruler to draw to tokens in range of this aura on drag. C2C = Centre-to-Centre. E2E = Edge-to-Edge and Centre-to-Centre.|
 |`terrainHeightTools.targetTokens`|`"ALL" \| "FRIENDLY" \| "NEUTRAL" \| "HOSTILE"`|The types of token that line of sight rulers should be drawn to.|
@@ -249,7 +253,7 @@ Defines metadata about an aura.
 |`targeted`|`boolean`|Whether the aura should be visible when targeted.|
 |`turn`|`boolean`|Whether the aura should be visible when it is that token's turn in a combat encounter.|
 
-## Effect Config
+## EffectConfig
 
 Defines metadata about an automated effect.
 
@@ -261,7 +265,7 @@ Defines metadata about an automated effect.
 |`mode`|`string`|The name of the trigger that the effect will be applied/removed on.|
 |`priority`|`number`|The priority of the effect automation.|
 
-## Macro Config
+## MacroConfig
 
 Defines metadata about a macro.
 
@@ -270,3 +274,32 @@ Defines metadata about a macro.
 |`macroId`|`string`|The ID of a macro to execute when a token enters/leaves this aura.|
 |`targetTokens`|`string`|The name of the filter that will be used to determine if a token is applicable or not.|
 |`mode`|`string`|The name of the trigger that the macro will fire on.|
+
+## SequencerEffectConfig
+
+Defines metadata about a sequencer effect.
+
+|Name|Type|Description|
+|-|-|-|
+|`uId`|`string`|A unique ID for this sequence (used for uniquely naming the sequencer effects).|
+|`effectPath`|`string`|The file path, wildcard filepath, or DB path of the effect to play.|
+|`targetTokens`|`string`|The name of the filter that will be used to determine if a token is applicable or not.|
+|`trigger`|`"ON_ENTER" \| "ON_LEAVE" \| "WHILE_INSIDE"`|The trigger for when the sequencer effect should play.|
+|`position`|`"ON_TARGET" \| "ON_OWNER" \| "OWNER_TO_TARGET" \| "TARGET_TO_OWNER"`|Where/how the effect should play.|
+|`repeatCount`|`number`|How many times the effect should play in total. Does not apply when `trigger` is `"WHILE_INSIDE"`.|
+|`repeatDelay`|`number`|Duration (in milliseconds) between repeats.|
+|`delay`|`number`|How long before the effect should begin playing. If there are multiple repeats, does NOT affect duration between repeats, only initial.|
+|`opacity`|`number`|The opacity of the effect.|
+|`fadeInDuration`|`number`|Duration (in milliseconds) of the fade in transition applied to the sequencer effect.|
+|`fadeInEasing`|`string`|The name of an easing function to use for the fade in transition.|
+|`fadeOutDuration`|`number`|Duration (in milliseconds) of the fade out transition applied to the sequencer effect.|
+|`fadeOutEasing`|`string`|The name of an easing function to use for the fade out transition.|
+|`scale`|`number`|The overall scaling factor applied to the effect.|
+|`scaleInScale`|`number`|The scaling factor applied to the effect when it starts playing.|
+|`scaleInDuration`|`number`|The duration (in milliseconds) of the scaling applied to the effect when it starts playing.|
+|`scaleInEasing`|`string`|The name of an easing function to use for the scaling applied to the effect when it starts playing.|
+|`scaleOutScale`|`number`|The scaling factor applied to the effect when it finishes playing.|
+|`scaleOutDuration`|`number`|The duration (in milliseconds) of the scaling applied to the effect when it finishes playing.|
+|`scaleOutEasing`|`string`|The name of an easing function to use for the scaling applied to the effect when it finishes playing.|
+|`playbackRate`|`number`|The playback rate of the effect (2 would mean 2x as fast, 0.5 would be half as fast).|
+|`belowTokens`|`boolean`|Whether the effect should be displayed below tokens.|

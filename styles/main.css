@@ -11,6 +11,12 @@
 	border-top: 2px groove #FFFFFF;
 }
 
+.grid-aware-auras-aura-config .standard-form hr {
+	margin: 0.5rem 0;
+	border-top: none;
+	flex: 0 0 2px;
+}
+
 .grid-aware-auras-aura-config .visibility-grid {
 	margin: 0 -0.625em;
 }
@@ -93,6 +99,10 @@
 	padding: 0.25rem 0;
 	border-top: 2px groove transparent;
 	border-bottom: 2px groove transparent;
+}
+
+.grid-aware-auras-aura-config .automated-item-list.automated-item-list-1-col > li {
+	grid-template-columns: 1fr min-content min-content;
 }
 
 .grid-aware-auras-aura-config .automated-item-list > li:hover {

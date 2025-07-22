@@ -7,7 +7,8 @@ import {
 	ENABLE_MACRO_AUTOMATION_SETTING,
 	LINE_TYPES, MACRO_MODES, MODULE_NAME,
 	SEQUENCE_EASINGS,
-	SEQUENCE_MODES,
+	SEQUENCE_POSITIONS,
+	SEQUENCE_TRIGGERS,
 	THT_RULER_ON_DRAG_MODES
 } from "../consts.mjs";
 import { listAuraTargetFilters } from "../data/aura-target-filters.mjs";
@@ -538,11 +539,10 @@ export class AuraConfigApplication extends ApplicationV2 {
 				</button>
 			</div>
 
-			${when(this.#aura.sequencerEffects.length, () => html`<ul class="automated-item-list">
+			${when(this.#aura.sequencerEffects.length, () => html`<ul class="automated-item-list automated-item-list-1-col">
 				${this.#aura.sequencerEffects.map((sequence, idx) => html`
 					<li>
 						<span><strong>${sequence.effectPath}</strong></span>
-						<span>${l(SEQUENCE_MODES[sequence.mode])}</span>
 						<button type="button" class="icon fas fa-edit" @click=${() => this.#editSequence(idx)} ?disabled=${!sequencerEnabled}></button>
 						<button type="button" class="icon fas fa-trash" @click=${() => this.#deleteSequence(idx)} ?disabled=${!sequencerEnabled}></button>
 					</li>
@@ -585,13 +585,24 @@ export class AuraConfigApplication extends ApplicationV2 {
 					</div>
 
 					<div class="form-group">
-						<label>Mode</label>
+						<label>Trigger</label>
 						<div class="form-fields">
-							<select name="mode">
-								${selectOptions(SEQUENCE_MODES, { selected: effect.mode })}
+							<select name="trigger">
+								${selectOptions(SEQUENCE_TRIGGERS, { selected: effect.trigger })}
 							</select>
 						</div>
 					</div>
+
+					<div class="form-group">
+						<label>Position</label>
+						<div class="form-fields">
+							<select name="position">
+								${selectOptions(SEQUENCE_POSITIONS, { selected: effect.position })}
+							</select>
+						</div>
+					</div>
+
+					<hr/>
 
 					<div class="form-group">
 						<label>Repeats</label>
@@ -602,29 +613,31 @@ export class AuraConfigApplication extends ApplicationV2 {
 							<input type="number" name="repeatDelay" value=${effect.repeatDelay} min="0">
 							<span class="units">ms</span>
 						</div>
-					</div>
-
-					<div class="form-group">
-						<label>Until Target Leaves</label>
-						<div class="form-fields">
-							<input type="checkbox" name="persistent" ?checked=${effect.persistent}>
-						</div>
-						<p class="hint">If checked, the effect will loop until the target token leaves the aura. Does not apply to 'On target leave' modes.</p>
-					</div>
-
-					<div class="form-group">
-						<label>Wait For Previous</label>
-						<div class="form-fields">
-							<input type="checkbox" name="waitForNonPersistent" ?checked=${effect.waitForNonPersistent}>
-						</div>
-						<p class="hint">Only applies to 'Until Target Leaves'-type effects. Whether this effect should wait for any non-'Until Target Leaves' effects to finish playing before starting.</p>
+						<p class="hint">How many times the effect should play, and how long between repeats.</p>
 					</div>
 
 					<div class="form-group">
 						<label>Start Delay</label>
 						<div class="form-fields">
 							<input type="number" name="delay" value=${effect.delay} min="0">
-							<span class="units" style="margin-right: 1rem">ms</span>
+							<span class="units">ms</span>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Playback Rate</label>
+						<div class="form-fields">
+							<input type="number" name="playbackRate" value=${effect.playbackRate} min="0.01" step="0.01">
+							<span class="units">x</span>
+						</div>
+					</div>
+
+					<hr/>
+
+					<div class="form-group">
+						<label>Opacity</label>
+						<div class="form-fields">
+							<range-picker name="opacity" .value=${effect.opacity} min="0" max="1" step="0.05"></range-picker>
 						</div>
 					</div>
 
@@ -632,7 +645,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 						<label>Fade In</label>
 						<div class="form-fields">
 							<input type="number" name="fadeInDuration" value=${effect.fadeInDuration} min="0">
-							<span class="units" style="margin-right: 1rem">ms</span>
+							<span class="units" style="margin-right: 0.75rem">ms</span>
 							<select name="fadeInEasing">
 								${selectOptions(SEQUENCE_EASINGS, { selected: effect.fadeInEasing })}
 							</select>
@@ -643,12 +656,50 @@ export class AuraConfigApplication extends ApplicationV2 {
 						<label>Fade Out</label>
 						<div class="form-fields">
 							<input type="number" name="fadeOutDuration" value=${effect.fadeOutDuration} min="0">
-							<span class="units" style="margin-right: 1rem">ms</span>
+							<span class="units" style="margin-right: 0.75rem">ms</span>
 							<select name="fadeOutEasing">
 								${selectOptions(SEQUENCE_EASINGS, { selected: effect.fadeOutEasing })}
 							</select>
 						</div>
 					</div>
+
+					<hr/>
+
+					<div class="form-group">
+						<label>Scale</label>
+						<div class="form-fields">
+							<input type="number" name="scale" value=${effect.scale} min="0" step="0.01">
+							<span class="units">x</span>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Scale In</label>
+						<div class="form-fields">
+							<input type="number" name="scaleInScale" value=${effect.scaleInScale}>
+							<span class="units" style="margin-right: 0.75rem">x</span>
+							<input type="number" name="scaleInDuration" value=${effect.scaleInDuration} min="0" step="0.01">
+							<span class="units" style="margin-right: 0.75rem">ms</span>
+							<select name="scaleInEasing" style="flex: 2">
+								${selectOptions(SEQUENCE_EASINGS, { selected: effect.scaleInEasing })}
+							</select>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Scale Out</label>
+						<div class="form-fields">
+							<input type="number" name="scaleOutScale" value=${effect.scaleOutScale}>
+							<span class="units" style="margin-right: 0.75rem">x</span>
+							<input type="number" name="scaleOutDuration" value=${effect.scaleOutDuration} min="0" step="0.01">
+							<span class="units" style="margin-right: 0.75rem">ms</span>
+							<select name="scaleOutEasing" style="flex: 2">
+								${selectOptions(SEQUENCE_EASINGS, { selected: effect.scaleOutEasing })}
+							</select>
+						</div>
+					</div>
+
+					<hr/>
 
 					<div class="form-group">
 						<label>Below Tokens</label>

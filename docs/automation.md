@@ -4,6 +4,7 @@ Automation is the broad category for doing things when tokens interact with aura
 
 - [Effects](#effects) - For automatically applying or removing active effects to tokens when tokens are inside auras.
 - [Macros](#macros) - For running macros when events happen relating to auras.
+- [Sequencer](#sequencer) - For playing Sequencer effects when tokens enter/leave auras.
 - [Terrain Height Tools](#terrain-height-tools) (If THT module is installed) - For showing line of sight rulers while dragging tokens.
 
 ## Effects
@@ -124,6 +125,31 @@ These three triggers are called with the following data in their `options` objec
 |`isRoundStart`|`boolean`|True if the macro has been called as a result of the round being started, or false as a result of the round being ended.|
 |`userId`|`string`|The ID of the user that changed the round in the combat tracker.|
 </details>
+
+## Sequencer
+
+If the Sequencer module is installed and activated, this config will be available. It allows for playing sequencer effects when tokens enter/leave an aura. You will also need a module that provides assets for Sequencer, such as JB2A. Note that the Sequencer API is vast, moreso than the UI config will allow. For more complex sequences, consider instead writing a macro for Sequencer and triggering this via the [macro](#macros) automation.
+
+Note that if you are editing the config of a sequencer effect, it is possible that a "While inside" effect can get stuck playing on a token. If this happens, you can use the Sequencer Effect Manager to remove that effect (or change scene/reload your brower). Also note that the effects are all played client-side, so if you start tweaking the settings while tokens already have effects playing, these changes may not accurately represent what other players see; Again, changing scene/reloading will fix this.
+
+### Config
+
+|Name|Description|
+|-|-|
+|Effect|Type the filepath, wildcard path, or the DB path of effect that will be played when the trigger is fired. To find an effect, click the button to open up the Sequencer database, find the effect you want, then click the database button to copy the Sequencer DB path and paste this into the aura config window.|
+|Target Tokens|This is used to filter which tokens will cause an effect to play. There are built in filters for the token's disposition (as set in the token config), or the type of actor the token represents. [GMs can also create custom filters using JavaScript](./custom-aura-target-filters.md).|
+|Trigger|This is the trigger that determines when the effect should play. "While inside" will loop the effect until the target token is no longer inside the aura; Other triggers will play a set number of times (depending on Repeat Count)|
+|Position|Where the effect will play. This can be on the target token (the one that entered the aura), the owner token (the one which owns the aura), or as a ranged effect from the target to the owner or owner to the target.|
+|Repeats|This is the number of times the effect will play, and the duration (in milliseconds) between repeats. Has no effect when trigger is "While inside".|
+|Start Delay|Delays the effect by this number of milliseconds before it begins playing.|
+|Playback Rate|How quickly the effect will play. For example, entering `2` would make the effect play at double speed, or `0.5` at half speed.|
+|Opacity|Opacity applied to the effect.|
+|Fade In|Duration and easing function of the fade in transition applied to the start of the effect.|
+|Fade Out|Duration and easing function of the fade out transition applied to the end of the effect.|
+|Scale|Overall scale factor applied to the effect file. For example, entering `2` will double the size of the effect, or `0.5` would halve it.|
+|Scale In|Scale factor, duration, and easing function of the scale in transition applied to the start of the effect.|
+|Scale Out|Scale factor, duration, and easing function of the scale out transition applied to the end of the effect.|
+|Below Tokens|Whether or not the effect should display below tokens and auras.|
 
 ## Terrain Height Tools
 

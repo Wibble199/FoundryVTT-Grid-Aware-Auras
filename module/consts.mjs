@@ -96,14 +96,19 @@ export const MACRO_MODES = /** @type {const} */ ({
 	ROUND_END: "GRIDAWAREAURAS.MacroModeRoundEnd"
 });
 
-/** @enum {keyof typeof SEQUENCE_MODES} */
-export const SEQUENCE_MODES = /** @type {const} */ ({
-	TARGET_ENTER: "GRIDAWAREAURAS.SequenceModeTargetEnter",
-	OWNER_ENTER: "GRIDAWAREAURAS.SequenceModeOwnerEnter",
-	TARGET_TO_OWNER_ENTER: "GRIDAWAREAURAS.SequenceModeTargetToOwnerEnter",
-	OWNER_TO_TARGET_ENTER: "GRIDAWAREAURAS.SequenceModeOwnerToTargetEnter",
-	TARGET_LEAVE: "GRIDAWAREAURAS.SequenceModeTargetLeave",
-	OWNER_LEAVE: "GRIDAWAREAURAS.SequenceModeOwnerLeave"
+/** @enum {keyof typeof SEQUENCE_TRIGGERS} */
+export const SEQUENCE_TRIGGERS = /** @type {const} */ ({
+	ON_ENTER: "GRIDAWAREAURAS.SequenceTriggerOnEnter",
+	ON_LEAVE: "GRIDAWAREAURAS.SequenceTriggerOnLeave",
+	WHILE_INSIDE: "GRIDAWAREAURAS.SequenceTriggerWhileInside"
+});
+
+/** @enum {keyof typeof SEQUENCE_POSITIONS} */
+export const SEQUENCE_POSITIONS = /** @type {const} */ ({
+	ON_TARGET: "GRIDAWAREAURAS.SequencePositionOnTarget",
+	ON_OWNER: "GRIDAWAREAURAS.SequencePositionOnOwner",
+	OWNER_TO_TARGET: "GRIDAWAREAURAS.SequencePositionFromOwnerToTarget",
+	TARGET_TO_OWNER: "GRIDAWAREAURAS.SequencePositionFromTargetToOwner"
 });
 
 // Naming convention matches the Sequencer parameters

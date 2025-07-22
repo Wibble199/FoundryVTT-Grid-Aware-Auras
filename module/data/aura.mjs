@@ -1,4 +1,4 @@
-/** @import { EFFECT_MODES, MACRO_MODES, SEQUENCE_EASINGS, SEQUENCE_MODES, THT_RULER_ON_DRAG_MODES } from "../consts.mjs" */
+/** @import { EFFECT_MODES, MACRO_MODES, SEQUENCE_EASINGS, SEQUENCE_TRIGGERS, SEQUENCE_POSITIONS, THT_RULER_ON_DRAG_MODES } from "../consts.mjs" */
 import { DOCUMENT_AURAS_FLAG, LINE_TYPES, MODULE_NAME } from "../consts.mjs";
 
 export const latestAuraConfigVersion = 1;
@@ -60,16 +60,24 @@ export const latestAuraConfigVersion = 1;
  * @property {string} uId Unique ID for this sequence, used in the sequencer name to uniquely identify it.
  * @property {string} effectPath The DB path of the sequencer effect to play.
  * @property {string} targetTokens ID of the filter to use to specify targetable tokens.
- * @property {SEQUENCE_MODES} mode
+ * @property {SEQUENCE_TRIGGERS} trigger
+ * @property {SEQUENCE_POSITIONS} position
  * @property {number} repeatCount
  * @property {number} repeatDelay
- * @property {boolean} persistent Whether the effect is persistent (does nothing for 'leave' modes).
- * @property {boolean} waitForNonPersistent For persistent enter effects, whether to wait for all non-persistent effects to finish before starting.
  * @property {number} delay
+ * @property {number} opacity
  * @property {number} fadeInDuration
  * @property {SEQUENCE_EASINGS} fadeInEasing
  * @property {number} fadeOutDuration
  * @property {SEQUENCE_EASINGS} fadeOutEasing
+ * @property {number} scale
+ * @property {number} scaleInScale
+ * @property {number} scaleInDuration
+ * @property {SEQUENCE_EASINGS} scaleInEasing
+ * @property {number} scaleOutScale
+ * @property {number} scaleOutDuration
+ * @property {SEQUENCE_EASINGS} scaleOutEasing
+ * @property {number} playbackRate
  * @property {boolean} belowTokens
  */
 
@@ -199,16 +207,24 @@ export const sequencerEffectConfigDefaults = () => ({
 	uId: foundry.utils.randomID(),
 	effectPath: "",
 	targetTokens: "ALL",
-	mode: "TARGET_ENTER",
+	trigger: "ON_ENTER",
+	position: "ON_TARGET",
 	repeatCount: 1,
 	repeatDelay: 0,
-	persistent: false,
-	waitForNonPersistent: false,
 	delay: 0,
+	opacity: 1,
 	fadeInDuration: 0,
 	fadeInEasing: "linear",
 	fadeOutDuration: 0,
 	fadeOutEasing: "linear",
+	scale: 1,
+	scaleInScale: 1,
+	scaleInDuration: 0,
+	scaleInEasing: "linear",
+	scaleOutScale: 1,
+	scaleOutDuration: 0,
+	scaleOutEasing: "linear",
+	playbackRate: 1,
 	belowTokens: false
 });
 
