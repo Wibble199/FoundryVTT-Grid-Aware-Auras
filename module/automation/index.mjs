@@ -1,6 +1,7 @@
 import { ENTER_LEAVE_AURA_HOOK } from "../consts.mjs";
 import * as effects from "./effects.mjs";
 import * as macros from "./macros.mjs";
+import * as sequencer from "./sequencer.mjs";
 import * as terrainHeightTools from "./terrain-height-tools.mjs";
 
 /** @typedef {{ round: number; turn: number; combatantId: string; tokenId: string; }} CombatState */
@@ -9,6 +10,7 @@ export function setupAutomation() {
 	Hooks.on(ENTER_LEAVE_AURA_HOOK, (...args) => {
 		effects.onEnterLeaveAura(...args);
 		macros.onEnterLeaveAura(...args);
+		sequencer.onEnterLeaveAura(...args);
 		terrainHeightTools.onEnterLeaveAura(...args);
 	});
 

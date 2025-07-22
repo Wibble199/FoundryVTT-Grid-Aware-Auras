@@ -45,6 +45,7 @@ Automation is the broad category for doing things when tokens interact with aura
 
 - [Effects](./docs/automation.md#effects) - For automatically applying or removing active effects to tokens when tokens are inside auras.
 - [Macros](./docs/automation.md#macros) - For running macros when events happen relating to auras.
+- [Sequencer](./docs/automation.md#sequencer) (If the Sequencer module is installed) - For playing effects on tokens inside an aura.
 - [Terrain Height Tools](./docs/automation.md#terrain-height-tools) (If THT module is installed) - For showing line of sight rulers while dragging tokens.
 
 ### Square Grids

@@ -96,6 +96,30 @@ export const MACRO_MODES = /** @type {const} */ ({
 	ROUND_END: "GRIDAWAREAURAS.MacroModeRoundEnd"
 });
 
+/** @enum {keyof typeof SEQUENCE_TRIGGERS} */
+export const SEQUENCE_TRIGGERS = /** @type {const} */ ({
+	ON_ENTER: "GRIDAWAREAURAS.SequenceTriggerOnEnter",
+	ON_LEAVE: "GRIDAWAREAURAS.SequenceTriggerOnLeave",
+	WHILE_INSIDE: "GRIDAWAREAURAS.SequenceTriggerWhileInside"
+});
+
+/** @enum {keyof typeof SEQUENCE_POSITIONS} */
+export const SEQUENCE_POSITIONS = /** @type {const} */ ({
+	ON_TARGET: "GRIDAWAREAURAS.SequencePositionOnTarget",
+	ON_OWNER: "GRIDAWAREAURAS.SequencePositionOnOwner",
+	OWNER_TO_TARGET: "GRIDAWAREAURAS.SequencePositionFromOwnerToTarget",
+	TARGET_TO_OWNER: "GRIDAWAREAURAS.SequencePositionFromTargetToOwner"
+});
+
+// Naming convention matches the Sequencer parameters
+/** @enum {keyof typeof SEQUENCE_EASINGS} */
+export const SEQUENCE_EASINGS = /** @type {const} */ ({
+	linear: "GRIDAWAREAURAS.SequenceEasingLinear",
+	easeInCubic: "GRIDAWAREAURAS.SequenceEasingEaseIn",
+	easeOutCubic: "GRIDAWAREAURAS.SequenceEasingEaseOut",
+	easeInOutCubic: "GRIDAWAREAURAS.SequenceEasingEaseInOut"
+});
+
 /** @enum {keyof typeof THT_RULER_ON_DRAG_MODES} */
 export const THT_RULER_ON_DRAG_MODES = /** @type {const} */ ({
 	NONE: "GRIDAWAREAURAS.ThtRulerOnDragModeNone",

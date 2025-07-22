@@ -119,7 +119,14 @@ export function partialEqual(a, b) {
 }
 
 /**
- * Determines if the required version of Terrain Height Tools is installed active to support the THT integration.
+ * Determines if the Sequencer module is installed and active.
+ */
+export function isSequencerActive() {
+	return game.modules.get("sequencer")?.active === true;
+}
+
+/**
+ * Determines if the required version of Terrain Height Tools to support the THT integration is installed and active.
  * @returns {boolean}
  */
 export function isTerrainHeightToolsActive() {

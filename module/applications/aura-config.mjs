@@ -6,13 +6,22 @@ import {
 	ENABLE_EFFECT_AUTOMATION_SETTING,
 	ENABLE_MACRO_AUTOMATION_SETTING,
 	LINE_TYPES, MACRO_MODES, MODULE_NAME,
+	SEQUENCE_EASINGS,
+	SEQUENCE_POSITIONS,
+	SEQUENCE_TRIGGERS,
 	THT_RULER_ON_DRAG_MODES
 } from "../consts.mjs";
 import { listAuraTargetFilters } from "../data/aura-target-filters.mjs";
-import { auraVisibilityModeMatrices, calculateAuraRadius, effectConfigDefaults, macroConfigDefaults } from "../data/aura.mjs";
+import {
+	auraVisibilityModeMatrices,
+	calculateAuraRadius,
+	effectConfigDefaults,
+	macroConfigDefaults,
+	sequencerEffectConfigDefaults
+} from "../data/aura.mjs";
 import { classMap, createRef, html, nothing, ref, render, when } from "../lib/lit-all.min.js";
 import { selectOptions } from "../utils/lit-utils.mjs";
-import { isTerrainHeightToolsActive, partialEqual } from "../utils/misc-utils.mjs";
+import { isSequencerActive, isTerrainHeightToolsActive, partialEqual } from "../utils/misc-utils.mjs";
 
 const { ApplicationV2 } = foundry.applications.api;
 
@@ -37,7 +46,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 	#radiusContext;
 
 	/** @type {ReturnType<html> | null} */
-	#nestedDialogContent = null;
+	#alternateContent = null;
 
 	/**
 	 * @param {AuraConfig} aura
@@ -67,7 +76,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 			title: "Aura Configuration"
 		},
 		position: {
-			width: 420,
+			width: 480,
 			height: "auto"
 		}
 	};
@@ -85,7 +94,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 			&& typeof calculateAuraRadius(this.#aura.radius, this.#radiusContext) !== "number";
 
 		return html`
-			<form class="standard-form" @input=${this.#valueChange}>
+			<form class=${classMap({ "standard-form": true, "hidden": this.#alternateContent })} @input=${this.#valueChange}>
 				<div class="form-group">
 					<label>${l("Name")}</label>
 					<div class="form-fields">
@@ -134,8 +143,8 @@ export class AuraConfigApplication extends ApplicationV2 {
 				</footer>
 			</form>
 
-			<div class=${classMap({ "nested-dialog-overlay": true, "nested-dialog-overlay-hidden": !this.#nestedDialogContent })}>
-				${this.#nestedDialogContent ?? nothing}
+			<div class=${classMap({ "hidden": !this.#alternateContent })}>
+				${this.#alternateContent ?? nothing}
 			</div>
 		`;
 	}
@@ -321,6 +330,12 @@ export class AuraConfigApplication extends ApplicationV2 {
 				template: this.#automationMacroTab
 			},
 			{
+				name: "Sequencer",
+				icon: "fas fa-list-ol",
+				hidden: !isSequencerActive(),
+				template: this.#automationSequencerTab
+			},
+			{
 				name: "Terrain Height Tools",
 				icon: "fas fa-chart-simple",
 				template: this.#automationThtTab,
@@ -364,73 +379,69 @@ export class AuraConfigApplication extends ApplicationV2 {
 		const editingEffect = this.#aura.effects[editingEffectIndex];
 
 		return html`
-			<form class="standard-form nested-dialog" @submit=${e => this.#updateArrayItem(e, this.#aura.effects, editingEffectIndex)}>
-				<fieldset>
-					<legend>Edit automated effect</legend>
-
-					<div class="form-group">
-						<label>Effect</label>
-						<div class="form-fields">
-							<select name="effectId">
-								<option value="" hidden>-${l("None")}-</option>
-								${selectOptions(CONFIG.statusEffects, {
-									selected: editingEffect.effectId,
-									labelSelector: "name",
-									valueSelector: "id",
-									sort: true
-								})}
-							</select>
-						</div>
+			<form class="standard-form" @submit=${e => this.#updateArrayItem(e, this.#aura.effects, editingEffectIndex)}>
+				<div class="form-group">
+					<label>Effect</label>
+					<div class="form-fields">
+						<select name="effectId">
+							<option value="" hidden>-${l("None")}-</option>
+							${selectOptions(CONFIG.statusEffects, {
+								selected: editingEffect.effectId,
+								labelSelector: "name",
+								valueSelector: "id",
+								sort: true
+							})}
+						</select>
 					</div>
+				</div>
 
-					<div class="form-group">
-						<label>Overlay</label>
-						<div class="form-fields">
-							<input
-								type="checkbox"
-								name="isOverlay"
-								.checked=${editingEffect.isOverlay ?? false}>
-						</div>
+				<div class="form-group">
+					<label>Overlay</label>
+					<div class="form-fields">
+						<input
+							type="checkbox"
+							name="isOverlay"
+							.checked=${editingEffect.isOverlay ?? false}>
 					</div>
+				</div>
 
-					<div class="form-group">
-						<label>Target Tokens</label>
-						<div class="form-fields">
-							<select name="targetTokens">
-								${selectOptions(listAuraTargetFilters(), { selected: editingEffect.targetTokens })}
-							</select>
-						</div>
+				<div class="form-group">
+					<label>Target Tokens</label>
+					<div class="form-fields">
+						<select name="targetTokens">
+							${selectOptions(listAuraTargetFilters(), { selected: editingEffect.targetTokens })}
+						</select>
 					</div>
+				</div>
 
-					<div class="form-group">
-						<label>Trigger</label>
-						<div class="form-fields">
-							<select name="mode">
-								${selectOptions(EFFECT_MODES, { selected: editingEffect.mode })}
-							</select>
-						</div>
+				<div class="form-group">
+					<label>Trigger</label>
+					<div class="form-fields">
+						<select name="mode">
+							${selectOptions(EFFECT_MODES, { selected: editingEffect.mode })}
+						</select>
 					</div>
+				</div>
 
-					<div class="form-group">
-						<label>Priority</label>
-						<div class="form-fields">
-							<input
-								type="number"
-								name="priority"
-								.value=${editingEffect?.priority ?? 0}
-								step="1">
-						</div>
+				<div class="form-group">
+					<label>Priority</label>
+					<div class="form-fields">
+						<input
+							type="number"
+							name="priority"
+							.value=${editingEffect?.priority ?? 0}
+							step="1">
 					</div>
+				</div>
 
-					<div class="flexrow">
-						<button type="button" @click=${() => this.#deleteEffect(editingEffectIndex)}>
-							<i class="fas fa-trash"></i> ${l("Delete")}
-						</button>
-						<button type="submit">
-							<i class="fas fa-check"></i> ${l("Confirm")}
-						</button>
-					</div>
-				</fieldset>
+				<div class="flexrow">
+					<button type="button" @click=${() => this.#deleteEffect(editingEffectIndex)}>
+						<i class="fas fa-trash"></i> ${l("Delete")}
+					</button>
+					<button type="submit">
+						<i class="fas fa-check"></i> ${l("Confirm")}
+					</button>
+				</div>
 			</form>
 		`;
 	};
@@ -472,23 +483,103 @@ export class AuraConfigApplication extends ApplicationV2 {
 		const macroInputRef = createRef();
 
 		return html`
-			<form class="standard-form nested-dialog" @submit=${e => this.#updateArrayItem(e, this.#aura.macros, macroIndex)}>
-				<fieldset @dragover=${this.#onMacroDragOver} @drop=${e => this.#onMacroDrop(e, macroInputRef)}>
-					<legend>Edit macro</legend>
+			<form class="standard-form"
+				@dragover=${this.#onMacroDragOver}
+				@drop=${e => this.#onMacroDrop(e, macroInputRef)}
+				@submit=${e => this.#updateArrayItem(e, this.#aura.macros, macroIndex)}>
+				<div class="form-group">
+					<label>Macro ID</label>
+					<div class="form-fields flexcol">
+						<input type="text" name="macroId" value=${editingMacro.macroId} ${ref(macroInputRef)}>
+						<p class="hint">Enter a macro's ID, or drag and drop it onto the textbox.</p>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label>Target Tokens</label>
+					<div class="form-fields">
+						<select name="targetTokens">
+							${selectOptions(listAuraTargetFilters(), { selected: editingMacro.targetTokens })}
+						</select>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label>Trigger</label>
+					<div class="form-fields">
+						<select name="mode">
+							${selectOptions(MACRO_MODES, { selected: editingMacro.mode })}
+						</select>
+					</div>
+				</div>
+
+				<div class="flexrow">
+					<button type="button" @click=${() => this.#deleteMacro(macroIndex)}>
+						<i class="fas fa-trash"></i> ${l("Delete")}
+					</button>
+					<button type="submit">
+						<i class="fas fa-check"></i> ${l("Confirm")}
+					</button>
+				</div>
+			</form>
+		`;
+	};
+
+	#automationSequencerTab = () => {
+		// GAA's (lazy) usage of Sequencer doesn't work properly unless players can create effects
+		const sequencerEnabled = game.settings.get("sequencer", "permissions-effect-create") === 0;
+
+		return html`
+			${when(!sequencerEnabled, () => html`
+				<p class="alert" role="alert">Sequencer integration requires players to have permission to create effects. GMs can configure this in the Sequencer settings.</p>
+			`)}
+
+			<div class="text-right" style="margin-top: -0.5rem; margin-bottom: -0.5rem;">
+				<button type="button" class="icon fas fa-plus" @click=${this.#createSequence} ?disabled=${!sequencerEnabled} style="display: inline-block">
+				</button>
+			</div>
+
+			${when(this.#aura.sequencerEffects.length, () => html`<ul class="automated-item-list automated-item-list-1-col">
+				${this.#aura.sequencerEffects.map((sequence, idx) => html`
+					<li>
+						<span><strong>${sequence.effectPath}</strong></span>
+						<button type="button" class="icon fas fa-edit" @click=${() => this.#editSequence(idx)} ?disabled=${!sequencerEnabled}></button>
+						<button type="button" class="icon fas fa-trash" @click=${() => this.#deleteSequence(idx)} ?disabled=${!sequencerEnabled}></button>
+					</li>
+				`)}
+			</ul>`)}
+
+			${when(sequencerEnabled && this.#aura.sequencerEffects.length === 0, () => html`
+				<p class="hint text-center">No sequencer effects configured. Click the plus above to create one.</p>
+			`)}
+		`;
+	};
+
+	/** @param {number} sequenceIndex */
+	#sequenceEditNestedDialog = sequenceIndex => {
+		const effect = this.#aura.sequencerEffects[sequenceIndex];
+
+		return html`
+			<form class="standard-form" @submit=${e => this.#updateArrayItem(e, this.#aura.sequencerEffects, sequenceIndex)}>
+				<div class="standard-form" style="height: 480px; overflow-y: scroll; padding-right: 1rem;">
+					<input type="hidden" name="uId" value=${effect.uId}>
 
 					<div class="form-group">
-						<label>Macro ID</label>
-						<div class="form-fields flexcol">
-							<input type="text" name="macroId" value=${editingMacro.macroId} ${ref(macroInputRef)}>
-							<p class="hint">Enter a macro's ID, or drag and drop it onto the textbox.</p>
+						<label>Effect</label>
+						<div class="form-fields">
+							<input type="text" name="effectPath" value=${effect.effectPath}>
+							<button type="button" @click=${() => Sequencer.DatabaseViewer.show()}>
+								<i class="fas fa-database"></i>
+							</button>
 						</div>
+						<p class="hint">The Sequencer file to play. Can be a filepath, wildcard filepath or database path.</p>
 					</div>
 
 					<div class="form-group">
 						<label>Target Tokens</label>
 						<div class="form-fields">
 							<select name="targetTokens">
-								${selectOptions(listAuraTargetFilters(), { selected: editingMacro.targetTokens })}
+								${selectOptions(listAuraTargetFilters(), { selected: effect.targetTokens })}
 							</select>
 						</div>
 					</div>
@@ -496,21 +587,137 @@ export class AuraConfigApplication extends ApplicationV2 {
 					<div class="form-group">
 						<label>Trigger</label>
 						<div class="form-fields">
-							<select name="mode">
-								${selectOptions(MACRO_MODES, { selected: editingMacro.mode })}
+							<select name="trigger">
+								${selectOptions(SEQUENCE_TRIGGERS, { selected: effect.trigger })}
 							</select>
 						</div>
 					</div>
 
-					<div class="flexrow">
-						<button type="button" @click=${() => this.#deleteMacro(macroIndex)}>
-							<i class="fas fa-trash"></i> ${l("Delete")}
-						</button>
-						<button type="submit">
-							<i class="fas fa-check"></i> ${l("Confirm")}
-						</button>
+					<div class="form-group">
+						<label>Position</label>
+						<div class="form-fields">
+							<select name="position">
+								${selectOptions(SEQUENCE_POSITIONS, { selected: effect.position })}
+							</select>
+						</div>
 					</div>
-				</fieldset>
+
+					<hr/>
+
+					<div class="form-group">
+						<label>Repeats</label>
+						<div class="form-fields">
+							<label>Count</label>
+							<input type="number" name="repeatCount" value=${effect.repeatCount} min="1">
+							<label>Delay</label>
+							<input type="number" name="repeatDelay" value=${effect.repeatDelay} min="0">
+							<span class="units">ms</span>
+						</div>
+						<p class="hint">How many times the effect should play, and how long between repeats.</p>
+					</div>
+
+					<div class="form-group">
+						<label>Start Delay</label>
+						<div class="form-fields">
+							<input type="number" name="delay" value=${effect.delay} min="0">
+							<span class="units">ms</span>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Playback Rate</label>
+						<div class="form-fields">
+							<input type="number" name="playbackRate" value=${effect.playbackRate} min="0.01" step="0.01">
+							<span class="units">x</span>
+						</div>
+					</div>
+
+					<hr/>
+
+					<div class="form-group">
+						<label>Opacity</label>
+						<div class="form-fields">
+							<range-picker name="opacity" .value=${effect.opacity} min="0" max="1" step="0.05"></range-picker>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Fade In</label>
+						<div class="form-fields">
+							<input type="number" name="fadeInDuration" value=${effect.fadeInDuration} min="0">
+							<span class="units" style="margin-right: 0.75rem">ms</span>
+							<select name="fadeInEasing">
+								${selectOptions(SEQUENCE_EASINGS, { selected: effect.fadeInEasing })}
+							</select>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Fade Out</label>
+						<div class="form-fields">
+							<input type="number" name="fadeOutDuration" value=${effect.fadeOutDuration} min="0">
+							<span class="units" style="margin-right: 0.75rem">ms</span>
+							<select name="fadeOutEasing">
+								${selectOptions(SEQUENCE_EASINGS, { selected: effect.fadeOutEasing })}
+							</select>
+						</div>
+					</div>
+
+					<hr/>
+
+					<div class="form-group">
+						<label>Scale</label>
+						<div class="form-fields">
+							<input type="number" name="scale" value=${effect.scale} min="0" step="0.01">
+							<span class="units">x</span>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Scale In</label>
+						<div class="form-fields">
+							<input type="number" name="scaleInScale" value=${effect.scaleInScale}>
+							<span class="units" style="margin-right: 0.75rem">x</span>
+							<input type="number" name="scaleInDuration" value=${effect.scaleInDuration} min="0" step="0.01">
+							<span class="units" style="margin-right: 0.75rem">ms</span>
+							<select name="scaleInEasing" style="flex: 2">
+								${selectOptions(SEQUENCE_EASINGS, { selected: effect.scaleInEasing })}
+							</select>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Scale Out</label>
+						<div class="form-fields">
+							<input type="number" name="scaleOutScale" value=${effect.scaleOutScale}>
+							<span class="units" style="margin-right: 0.75rem">x</span>
+							<input type="number" name="scaleOutDuration" value=${effect.scaleOutDuration} min="0" step="0.01">
+							<span class="units" style="margin-right: 0.75rem">ms</span>
+							<select name="scaleOutEasing" style="flex: 2">
+								${selectOptions(SEQUENCE_EASINGS, { selected: effect.scaleOutEasing })}
+							</select>
+						</div>
+					</div>
+
+					<hr/>
+
+					<div class="form-group">
+						<label>Below Tokens</label>
+						<div class="form-fields">
+							<input type="checkbox" name="belowTokens" ?checked=${effect.belowTokens}>
+						</div>
+						<p class="hint">Note that auras render at the same Z-index as tokens, so this also draws the effect below auras.</p>
+					</div>
+				</div>
+
+				<div class="flexrow">
+					<button type="button" @click=${() => this.#deleteSequence(sequenceIndex)}>
+						<i class="fas fa-trash"></i> ${l("Delete")}
+					</button>
+					<button type="submit">
+						<i class="fas fa-check"></i> ${l("Confirm")}
+					</button>
+				</div>
 			</form>
 		`;
 	};
@@ -579,45 +786,45 @@ export class AuraConfigApplication extends ApplicationV2 {
 		e.preventDefault();
 		const formData = new FormDataExtended(e.currentTarget);
 		Object.assign(array[index], formData.object);
-		this.#nestedDialogContent = null;
+		this.#setAlternateContent(null);
 		this.#auraUpdated();
 	};
 
 	#createEffect = () => {
-		this.#aura.effects.push(foundry.utils.deepClone(effectConfigDefaults));
-		this.#nestedDialogContent = this.#effectEditNestedDialog(this.#aura.effects.length - 1);
+		this.#aura.effects.push(effectConfigDefaults());
+		this.#setAlternateContent(this.#effectEditNestedDialog(this.#aura.effects.length - 1), "Edit Effect");
 		this.#auraUpdated();
 	};
 
 	/** @param {number} effectIndex */
 	#editEffect = effectIndex => {
-		this.#nestedDialogContent = this.#effectEditNestedDialog(effectIndex);
+		this.#setAlternateContent(this.#effectEditNestedDialog(effectIndex), "Edit Effect");
 		this.render();
 	};
 
 	/** @param {number} effectIndex */
 	#deleteEffect = effectIndex => {
 		this.#aura.effects = this.#aura.effects.filter((_, idx) => idx !== effectIndex);
-		this.#nestedDialogContent = null;
+		this.#setAlternateContent(null);
 		this.#auraUpdated();
 	};
 
 	#createMacro = () => {
-		this.#aura.macros.push(foundry.utils.deepClone(macroConfigDefaults));
-		this.#nestedDialogContent = this.#macroEditNestedDialog(this.#aura.macros.length - 1);
+		this.#aura.macros.push(macroConfigDefaults());
+		this.#setAlternateContent(this.#macroEditNestedDialog(this.#aura.macros.length - 1), "Edit Macro");
 		this.#auraUpdated();
 	};
 
 	/** @param {number} macroIndex */
 	#editMacro = macroIndex => {
-		this.#nestedDialogContent = this.#macroEditNestedDialog(macroIndex);
+		this.#setAlternateContent(this.#macroEditNestedDialog(macroIndex), "Edit Macro");
 		this.render();
 	};
 
 	/** @param {number} macroIndex */
 	#deleteMacro = macroIndex => {
 		this.#aura.macros = this.#aura.macros.filter((_, idx) => idx !== macroIndex);
-		this.#nestedDialogContent = null;
+		this.#setAlternateContent(null);
 		this.#auraUpdated();
 	};
 
@@ -638,9 +845,37 @@ export class AuraConfigApplication extends ApplicationV2 {
 		}
 	};
 
+	#createSequence = () => {
+		this.#aura.sequencerEffects.push(sequencerEffectConfigDefaults());
+		this.#editSequence(this.#aura.sequencerEffects.length - 1);
+		this.#auraUpdated();
+	};
+
+	/** @param {number} sequenceIndex */
+	#editSequence = sequenceIndex => {
+		this.#setAlternateContent(this.#sequenceEditNestedDialog(sequenceIndex), "Edit Sequencer Effect");
+		this.render();
+	};
+
+	/** @param {number} sequenceIndex */
+	#deleteSequence = sequenceIndex => {
+		this.#aura.sequencerEffects = this.#aura.sequencerEffects.filter((_, idx) => idx !== sequenceIndex);
+		this.#setAlternateContent(null);
+		this.#auraUpdated();
+	};
+
 	#auraUpdated() {
 		this.#onChange?.(this.#aura);
 		this.render();
+	}
+
+	/**
+	 * @param {ReturnType<html> | undefined} content
+	 * @param {string} [title]
+	 */
+	#setAlternateContent(content, title) {
+		this.#alternateContent = content;
+		this.element.querySelector(".window-title").innerText = "Aura Configuration" + (title?.length ? ` :: ${title}` : "");
 	}
 
 	/** @override */
@@ -677,8 +912,8 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	/** @override */
 	async close(options) {
-		if (this.#nestedDialogContent !== null) {
-			this.#nestedDialogContent = null;
+		if (this.#alternateContent !== null) {
+			this.#setAlternateContent(null);
 			this.render();
 			return;
 		}

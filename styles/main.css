@@ -2,13 +2,19 @@
 /* Aura Config Window */
 /* ------------------ */
 .grid-aware-auras-aura-config {
+	grid-template: 1fr / 1fr;
 	position: relative;
-	min-height: 350px; /* Ensures we have enough height for the edit automated effect sub-window */
 }
 
 .grid-aware-auras-aura-config hr {
 	width: 100%;
 	border-top: 2px groove #FFFFFF;
+}
+
+.grid-aware-auras-aura-config .standard-form hr {
+	margin: 0.5rem 0;
+	border-top: none;
+	flex: 0 0 2px;
 }
 
 .grid-aware-auras-aura-config .visibility-grid {
@@ -64,35 +70,10 @@
 	margin: 0;
 	padding: 4px;
 	font-size: var(--font-size-13);
-	color: rgb(121 87 12);
+	color: rgba(255 175 0 / 60%);
 	background-color: rgba(255 175 0 / 20%);
 	border: 1px solid rgba(255 175 0 / 60%);
 	border-radius: 3px;
-}
-
-.grid-aware-auras-aura-config .nested-dialog-overlay {
-	position: absolute;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	left: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background-color: var(--background);
-	backdrop-filter: blur(4px);
-	-webkit-backdrop-filter: blur(4px);
-	transition: all 150ms ease-out;
-}
-
-.grid-aware-auras-aura-config .nested-dialog-overlay.nested-dialog-overlay-hidden {
-	opacity: 0;
-	pointer-events: none;
-}
-
-.grid-aware-auras-aura-config .nested-dialog {
-	background-color: var(--background);
-	width: 90%;
 }
 
 .grid-aware-auras-aura-config button.icon {
@@ -118,6 +99,10 @@
 	padding: 0.25rem 0;
 	border-top: 2px groove transparent;
 	border-bottom: 2px groove transparent;
+}
+
+.grid-aware-auras-aura-config .automated-item-list.automated-item-list-1-col > li {
+	grid-template-columns: 1fr min-content min-content;
 }
 
 .grid-aware-auras-aura-config .automated-item-list > li:hover {
