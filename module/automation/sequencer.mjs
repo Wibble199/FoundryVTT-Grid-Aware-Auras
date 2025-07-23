@@ -115,7 +115,6 @@ export function onEnterLeaveAura(token, parent, aura, { hasEntered, isInit, isPr
 			.attachTo(["ON_TARGET", "TARGET_TO_OWNER"].includes(effect.position) ? token : parent)
 			.delay(effect.delay)
 			.opacity(Math.min(Math.max(effect.opacity, 0), 1))
-			.scale(effect.scale)
 			.playbackRate(effect.playbackRate)
 			.belowTokens(effect.belowTokens === true)
 			.tieToDocuments(parent);
@@ -139,6 +138,12 @@ export function onEnterLeaveAura(token, parent, aura, { hasEntered, isInit, isPr
 
 		if (effect.fadeOutDuration > 0) {
 			eff.fadeOut(effect.fadeOutDuration, { ease: effect.fadeOutEasing });
+		}
+
+		if (effect.scaleToObject) {
+			eff.scaleToObject(effect.scale, { uniform: true });
+		} else {
+			eff.scale(effect.scale);
 		}
 
 		// Don't scale in when it's being activated because of scene transition

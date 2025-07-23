@@ -71,6 +71,7 @@ export const latestAuraConfigVersion = 1;
  * @property {number} fadeOutDuration
  * @property {SEQUENCE_EASINGS} fadeOutEasing
  * @property {number} scale
+ * @property {boolean} scaleToObject
  * @property {number} scaleInScale
  * @property {number} scaleInDuration
  * @property {SEQUENCE_EASINGS} scaleInEasing
@@ -223,6 +224,7 @@ export const sequencerEffectConfigDefaults = () => ({
 	fadeOutDuration: 0,
 	fadeOutEasing: "linear",
 	scale: 1,
+	scaleToObject: false,
 	scaleInScale: 1,
 	scaleInDuration: 0,
 	scaleInEasing: "linear",

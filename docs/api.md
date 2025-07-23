@@ -398,6 +398,7 @@ Defines metadata about a sequencer effect.
 |`fadeOutDuration`|`number`|Duration (in milliseconds) of the fade out transition applied to the sequencer effect.|
 |`fadeOutEasing`|`string`|The name of an easing function to use for the fade out transition.|
 |`scale`|`number`|The overall scaling factor applied to the effect.|
+|`scaleToObject`|`boolean`|Whether the effect will be scaled based on the size of the token it's playing on.|
 |`scaleInScale`|`number`|The scaling factor applied to the effect when it starts playing.|
 |`scaleInDuration`|`number`|The duration (in milliseconds) of the scaling applied to the effect when it starts playing.|
 |`scaleInEasing`|`string`|The name of an easing function to use for the scaling applied to the effect when it starts playing.|

@@ -147,6 +147,7 @@ Note that if you are editing the config of a sequencer effect, it is possible th
 |Fade In|Duration and easing function of the fade in transition applied to the start of the effect.|
 |Fade Out|Duration and easing function of the fade out transition applied to the end of the effect.|
 |Scale|Overall scale factor applied to the effect file. For example, entering `2` will double the size of the effect, or `0.5` would halve it.|
+|Scale to Object|If checked, then the effect will be scaled based on the size of the token.|
 |Scale In|Scale factor, duration, and easing function of the scale in transition applied to the start of the effect.|
 |Scale Out|Scale factor, duration, and easing function of the scale out transition applied to the end of the effect.|
 |Below Tokens|Whether or not the effect should display below tokens and auras.|

@@ -672,6 +672,13 @@ export class AuraConfigApplication extends ApplicationV2 {
 					</div>
 
 					<div class="form-group">
+						<label>Scale to Object</label>
+						<div class="form-fields">
+							<input type="checkbox" name="scaleToObject" ?checked=${effect.scaleToObject}>
+						</div>
+					</div>
+
+					<div class="form-group">
 						<label>Scale In</label>
 						<div class="form-fields">
 							<input type="number" name="scaleInScale" value=${effect.scaleInScale}>
