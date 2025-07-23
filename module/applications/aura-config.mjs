@@ -292,13 +292,11 @@ export class AuraConfigApplication extends ApplicationV2 {
 				<div class="visibility-row">
 					<span class="title">Controlled/Selected</span>
 					<input type="checkbox" class="owner" name="ownerVisibility.controlled" .checked=${this.#aura.ownerVisibility.controlled}>
-					<input type="checkbox" class="nonowner" disabled>
 				</div>
 
 				<div class="visibility-row">
 					<span class="title">Dragging</span>
 					<input type="checkbox" class="owner" name="ownerVisibility.dragging" .checked=${this.#aura.ownerVisibility.dragging}>
-					<input type="checkbox" class="nonowner" disabled>
 				</div>
 
 				<div class="visibility-row">
