@@ -5,12 +5,79 @@
 
 Grid-Aware Auras exposes an API to be used by other macros, scripts, or modules. It is available through the module: `game.modules.get("grid-aware-auras").api`.
 
+- [`createAura`](#createaura)
+- [`deleteAuras`](#deleteauras)
 - [`getAurasContainingToken`](#getaurascontainingtoken)
 - [`getDocumentAuras`](#getdocumentauras)
 - [`getTokenAuras`](#gettokenauras)
 - [`getTokensInsideAura`](#gettokensinsideaura)
 - [`isTokenInside`](#istokeninside)
 - [`toggleEffect`](#toggleeffect)
+- [`updateAuras`](#updateauras)
+
+## createAura
+
+![Available Since v0.6.0](https://img.shields.io/badge/Available%20Since-v0.6.0-blue?style=flat-square)
+
+Creates a new aura on the specified owner.
+
+### Parameters
+
+|Name|Type|Default|Description|
+|-|-|-|-|
+|`owner`|`Token \| TokenDocument \| Item`|*Required*|The target entity to attach the aura to. Must be a token or an item.|
+|`aura`|[`Omit<Partial<AuraConfig>, "id">`](#auraconfig)|`{}`|The initial aura configuration. Will be merged with the default aura config.|
+
+### Returns
+
+A `Promise<void>` that will resolve when the aura has been created.
+
+### Example
+
+```js
+const { api } = game.modules.get("grid-aware-auras");
+const [token] = canvas.tokens.controlled;
+
+// Creates a new 5 radius lime aura on the controlled token
+await api.createAura(token, {
+	name: "My New Aura",
+	radius: 5,
+	lineColor: "#00ff00",
+	fillColor: "#00ff00"
+});
+```
+
+## deleteAuras
+
+![Available Since v0.6.0](https://img.shields.io/badge/Available%20Since-v0.6.0-blue?style=flat-square)
+
+Deletes auras from the specified owner document.
+
+### Parameters
+
+|Name|Type|Default|Description|
+|-|-|-|-|
+|`owner`|`Token \| TokenDocument \| Item`|*Required*|The target entity to delete the auras from. Must be a token or an item.|
+|`filter`|`{ name?: string; id?: string; }`|`{}`|A filter used to specify which aura(s) to delete. Note that the name filter is case-insensitive. You can also find an aura's ID by opening the edit dialog and clicking the book icon in the header.|
+|`options`|`Object`|`{}`|Additional options|
+|`options.includeItems`|`boolean`|`false`|If the target entity is a token and this is true, then auras on items owned by that token's actor will also be considered for deletion.|
+
+### Returns
+
+A `Promise<void>` that will resolve when the aura(s) have been removed.
+
+### Example
+
+```js
+const { api } = game.modules.get("grid-aware-auras");
+const [token] = canvas.tokens.controlled;
+
+// Delete the aura on the token with a specific ID.
+await api.deleteAuras(token, { id: "GFjtK29pZqW88hcb" });
+
+// Deletes all auras on the token and any of it's items with the given name (case-insensitive).
+await api.deleteAuras(token, { name: "Range" }, { includeItems: true });
+```
 
 ## getAurasContainingToken
 
@@ -22,7 +89,7 @@ Gets an array of auras that the given token is currently inside.
 
 |Name|Type|Default|Description|
 |-|-|-|-|
-|token|`Token`|*Required*|The token to check.|
+|`token`|`Token`|*Required*|The token to check.|
 
 ### Returns
 
@@ -30,8 +97,8 @@ An array of auras that the given token is inside. Each element of the array is a
 
 |Name|Type|Description|
 |-|-|-|
-|parent|`Token`|The token the owns this aura.|
-|aura|[`AuraConfig`](#auraconfig)|The aura definition.|
+|`parent`|`Token`|The token that owns this aura.|
+|`aura`|[`AuraConfig`](#auraconfig)|The aura definition.|
 
 ### Example
 
@@ -54,7 +121,7 @@ Returns a list of auras that are defined on the given document (TokenDocument or
 
 |Name|Type|Default|Description|
 |-|-|-|-|
-|document|`Document`|*Required*|The document whose auras to return.|
+|`document`|`Token \| TokenDocument \| Item`|*Required*|The document whose auras to return.|
 
 ### Returns
 
@@ -84,7 +151,7 @@ Returns a list of auras that are defined on the given token and any items owned 
 
 |Name|Type|Default|Description|
 |-|-|-|-|
-|token|`Token`|*Required*|The token whose auras to return.|
+|`token`|`Token`|*Required*|The token whose auras to return.|
 
 ### Returns
 
@@ -92,8 +159,8 @@ An array of objects with the following properties:
 
 |Name|Type|Description|
 |-|-|-|
-|aura|`AuraConfig`|The aura's config|
-|owner|`Document`|The document that defines the aura - either the TokenDocument for auras defined on the token itself, or the ItemDocument for auras defined on items|
+|`aura`|`AuraConfig`|The aura's config|
+|`owner`|`Document`|The document that defines the aura - either the TokenDocument for auras defined on the token itself, or the ItemDocument for auras defined on items|
 
 ### Example
 
@@ -118,8 +185,8 @@ Gets an array of Tokens that are inside the given aura.
 
 |Name|Type|Default|Description|
 |-|-|-|-|
-|parent|`Token`|*Required*|The token that owns the aura to check.|
-|auraId|`string`|*Required*|The ID of the aura on belonging to the parent token.|
+|`parent`|`Token`|*Required*|The token that owns the aura to check.|
+|`auraId`|`string`|*Required*|The ID of the aura on belonging to the parent token.|
 
 ### Returns
 
@@ -148,9 +215,9 @@ Checks to see if a token is within the area of another token's aura.
 
 |Name|Type|Default|Description|
 |-|-|-|-|
-|testToken|`Token`|*Required*|The token to test if it is within the aura.|
-|parentToken|`Token`|*Required*|The token that owns the aura that is being tested.|
-|auraId|`string`|*Required*|The ID of the aura to test for.|
+|`testToken`|`Token`|*Required*|The token to test if it is within the aura.|
+|`parentToken`|`Token`|*Required*|The token that owns the aura that is being tested.|
+|`auraId`|`string`|*Required*|The ID of the aura to test for.|
 
 ### Returns
 
@@ -198,6 +265,42 @@ const [token] = [...game.user.targets];
 const { id: statusEffectId } = CONFIG.statusEffects.find(s => s.name === "Invisible");
 
 api.toggleEffect(token, statusEffectId, true, { overlay: true });
+```
+
+## updateAuras
+
+![Available Since v0.6.0](https://img.shields.io/badge/Available%20Since-v0.6.0-blue?style=flat-square)
+
+Updates one or more auras on the target document.
+
+### Parameters
+
+|Name|Type|Default|Description|
+|-|-|-|-|
+|`owner`|`Token \| TokenDocument \| Item`|*Required*|The target entity to update the auras on. Must be a token or an item.|
+|`filter`|`{ name?: string; id?: string; }`|*Required*|A filter used to specify which aura(s) to update. Note that the name filter is case-insensitive. You can also find an aura's ID by opening the edit dialog and clicking the book icon in the header.|
+|`update`|[`Partial<AuraConfig> \| ((existing: AuraConfig) => Partial<AuraConfig>)`](#auraconfig)|Either a partial config to update the auras with, or a transformer function that takes an existing aura and returns the partial config.|
+|`options`|`Object`|`{}`|Additional options|
+|`options.includeItems`|`boolean`|`false`|If the target entity is a token and this is true, then auras on items owned by that token's actor will also be considered for updates.|
+
+### Returns
+
+A `Promise<void>` that will resolve when the aura(s) have been updated.
+
+### Example
+
+```js
+const { api } = game.modules.get("grid-aware-auras");
+const [token] = canvas.tokens.controlled;
+
+// Update the aura with the specified ID to have the new radius.
+await api.updateAuras(token, { id: "GFjtK29pZqW88hcb" }, { radius: 10 });
+
+// Disables the aura with the given name (case-insensitive).
+await api.updateAuras(token, { name: "Toxic Gas" }, { enabled: false });
+
+// Toggles all the auras on the token and it's children - enabling disabled ones and disabling enabled ones.
+await api.updateAuras(token, {}, aura => ({ enabled: !aura.enabled }), { includeItems: true });
 ```
 
 ---

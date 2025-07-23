@@ -110,12 +110,17 @@ export function getTokenAuras(token) {
 
 /**
  * Gets the auras defined on a document.
- * @param {Document} document
+ * @param {TokenDocument | Item} document
  * @param {Object} [options]
  * @param {boolean} [options.calculateRadius] If true, calculates the actual radius (resolving property paths).
  * @returns {(AuraConfig & { radiusCalculated?: number; })[]}
  */
 export function getDocumentOwnAuras(document, { calculateRadius = false } = {}) {
+	// Only Items and TokenDocuments can have auras
+	if (!(document instanceof TokenDocument || document instanceof Item)) {
+		throw new Error("Must provide an Item or Token document to getDocumentOwnAuras.");
+	}
+
 	/** @type {Partial<AuraConfig>[]} */
 	const auraData = document.getFlag(MODULE_NAME, DOCUMENT_AURAS_FLAG) ?? [];
 	let auras = auraData.map(getAura);

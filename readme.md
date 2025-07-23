@@ -81,5 +81,4 @@ The exception to this is gridless scenes, which instead **do** check from the ed
 
 Features that I will be looking to add to Grid-Aware Auras in future (in rough order of priority):
 
-- [ ] Formal API for creating/updating/deleting auras on tokens.
 - [ ] Setting auras by active effects (e.g. allowing effects to alter the range of an aura).

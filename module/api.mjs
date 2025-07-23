@@ -1,15 +1,58 @@
-/** @import { AuraConfigWithRadius } from "./data/aura.mjs" */
-import { getDocumentOwnAuras as getDocumentOwnAurasImpl } from "./data/aura.mjs";
+/** @import { AuraConfig, AuraConfigWithRadius } from "./data/aura.mjs" */
+import { DOCUMENT_AURAS_FLAG, MODULE_NAME } from "./consts.mjs";
+import { auraDefaults, getDocumentOwnAuras as getDocumentOwnAurasImpl } from "./data/aura.mjs";
 import { AuraLayer } from "./layers/aura-layer/aura-layer.mjs";
 import { toggleEffect as toggleEffectImpl } from "./utils/misc-utils.mjs";
 
 /**
+ * Creates a new aura on the provided document.
+ * @param {Token | TokenDocument | Item} owner The entity that will own the aura.
+ * @param {Omit<Partial<AuraConfig>, "id" | "_v">} aura The aura to create.
+ * @param {Promise<void>}
+ */
+export async function createAura(owner, aura = {}) {
+	owner = owner instanceof Token ? owner.document : owner;
+
+	const auras = getDocumentOwnAurasImpl(owner);
+	const newAura = foundry.utils.mergeObject(auraDefaults(), aura, { inplace: false });
+	newAura.id = foundry.utils.randomID();
+	await owner.update({ [`flags.${MODULE_NAME}.${DOCUMENT_AURAS_FLAG}`]: [...auras, newAura] });
+}
+
+/**
+ * Deletes the aura(s) matching the given filter on the provided document.
+ * @param {Token | TokenDocument | Item} owner The entity that owns the auras to delete.
+ * @param {{ name?: string; id?: string; }} filter
+ * @param {Object} [options]
+ * @param {boolean} [options.includeItems] When the owner is a token, whether or not to also delete auras on owned items.
+ * @returns {Promise<void>}
+ */
+export async function deleteAuras(owner, filter, { includeItems = false } = {}) {
+	owner = owner instanceof Token ? owner.document : owner;
+
+	await Promise.all([
+		deleteAuraImpl(owner),
+		...owner instanceof TokenDocument && includeItems ? owner.actor?.items?.map(deleteAuraImpl) ?? [] : []
+	]);
+
+	async function deleteAuraImpl(target) {
+		const auras = getDocumentOwnAurasImpl(target);
+		const filteredAuras = auras.filter(aura => !auraFilterTest(aura, filter));
+
+		if (auras.length !== filteredAuras.length) {
+			await target.update({ [`flags.${MODULE_NAME}.${DOCUMENT_AURAS_FLAG}`]: filteredAuras });
+		}
+	}
+}
+
+/**
  * For the given document, returns the auras defined on that document.
- * @param {Document} document
+ * @param {Token | TokenDocument | Item} owner
  * @returns {AuraConfigWithRadius}
  */
-export function getDocumentOwnAuras(document) {
-	return getDocumentOwnAurasImpl(document, { calculateRadius: true });
+export function getDocumentOwnAuras(owner) {
+	owner = owner instanceof Token ? owner.document : owner;
+	return getDocumentOwnAurasImpl(owner, { calculateRadius: true });
 }
 
 /**
@@ -84,4 +127,52 @@ export async function toggleEffect(target, effectId, state, { overlay = false } 
 
 	// Toggle the effect
 	await toggleEffectImpl(actor, effectId, !!state, { overlay }, true);
+}
+
+/**
+ * Updates the aura(s) matching the given filter with the given partial data or function.
+ * @param {Token | TokenDocument | Item} owner The entity that owns the auras to update.
+ * @param {{ name?: string; id?: string; }} filter
+ * @param {Partial<AuraConfig> | ((existing: AuraConfig) => Partial<AuraConfig>)} update
+ * @param {Object} [options]
+ * @param {boolean} [options.includeItems] When the owner is a token, whether or not to also affect auras on owned items.
+ * @returns {Promise<void>}
+ */
+export async function updateAuras(owner, filter, update, { includeItems = false } = {}) {
+	owner = owner instanceof Token ? owner.document : owner;
+
+	if (!update || ["object", "function"].includes(typeof update)) {
+		throw new Error("Must provide an object or a function as the `update` parameter.");
+	}
+
+	await Promise.all([
+		updateAuraImpl(owner),
+		...owner instanceof TokenDocument && includeItems ? owner.actor?.items?.map(updateAuraImpl) ?? [] : []
+	]);
+
+	async function updateAuraImpl(target) {
+		const auras = getDocumentOwnAurasImpl(target);
+		let anyMatched = false;
+		for (const aura of auras) {
+			if (auraFilterTest(aura, filter)) {
+				Object.assign(aura, typeof update === "function" ? update(aura) : update);
+				anyMatched = true;
+			}
+		}
+
+		if (anyMatched) {
+			await target.update({ [`flags.${MODULE_NAME}.${DOCUMENT_AURAS_FLAG}`]: auras });
+		}
+	}
+}
+
+/**
+ * @param {AuraConfig} aura
+ * @param {{ name?: string; id?: string; } | undefined} filter
+ */
+function auraFilterTest(aura, filter) {
+	return (
+		(filter?.id === undefined || aura.id === filter.id) &&
+		(filter?.name === undefined || aura.name.localeCompare(filter.name, undefined, { sensitivity: "accent" }) === 0)
+	);
 }
