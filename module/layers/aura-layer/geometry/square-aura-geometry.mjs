@@ -28,6 +28,7 @@ export class SquareAuraGeometry {
 	 * @param {number} gridSize
 	 */
 	constructor(width, height, radius, mode, gridSize) {
+		radius = Math.round(radius);
 		this.#config = { width, height, radius, mode, gridSize };
 		this.#points = generateSquareAuraBorder(width, height, radius, mode).map(({ x, y }) => ({ x: x * gridSize, y: y * gridSize }));
 	}

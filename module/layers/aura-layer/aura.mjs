@@ -136,6 +136,10 @@ export class Aura {
 			return;
 		}
 
+		// Set an upper limit for radius.
+		// This is fairly arbitrary, but if it's too high, the browser can crash trying to generate geometry.
+		radius = Math.min(radius, 1000);
+
 		switch (canvas.grid.type) {
 			case CONST.GRID_TYPES.GRIDLESS:
 				this.#geometry = new GridlessAuraGeometry(width, height, radius, canvas.grid.size);

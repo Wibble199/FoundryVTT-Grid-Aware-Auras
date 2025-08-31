@@ -19,9 +19,19 @@ Alternatively, paste this URL into the 'Manifest URL' field of the 'Install Modu
 ## Usage
 
 1. First open a token configuration by using the cog button when right-clicking a token on the scene, or open the prototype token configuration for an actor.
-2. Then, navigate to the new "Auras" tab, then click the `+` button to create a new aura. You can then set the size of the aura, how you want it to appear visually, [when it should be visible](#visibility), and whether you want to add any [automation functionality](#automation). You can add as many auras as you want!
+2. Then, navigate to the new "Auras" tab, then click the `+` button to create a new aura. You can then set the [radius](#radius) of the aura, how you want it to appear visually, [when it should be visible](#visibility), and whether you want to add any [automation functionality](#automation). You can add as many auras as you want!
 3. If you need to edit an existing aura, you can click the cog button next to it to edit it. You can also quickly toggle whether that aura is visible by clicking the eye icon.
 4. Finally, just click the "Update Token" button.
+
+### Radius
+
+The radius of the aura can either be a number or a roll expression.
+
+Roll expressions must be deterministic (i.e. not contain any dice expressions, for example). They are otherwise able to use any feature available to Foundry's rolls - including maths equations/functions.
+Roll expressions can also access values on the actor or the item (for item auras). This is done by using `@actor.<path>` or `@item.<path>`. For example, if you were using the Lancer game system, you could use `@actor.system.sensor_range` to have a radius equal to a mech's sensors. The exact path will depend heavily on the game system you are playing.
+
+On square and hexagonal grids, the final value will be rounded to the nearest whole number. On gridless scenes, this can be a decimal value.
+If the final value is less than 0, the aura will not be drawn.
 
 ### Visibility
 

@@ -322,7 +322,7 @@ Defines metadata about an aura.
 |`id`|`string`|Unique ID for the aura.|
 |`name`|`string`|Name of the aura.|
 |`enabled`|`boolean`|Whether this aura is enabled or not. Disabled auras do not trigger hooks.|
-|`radius`|`number \| string`|Expression that resolves to the radius of the aura. May be a property path on the actor or item.|
+|`radius`|`number \| string`|Expression that resolves to the radius of the aura. May be a number, a property path on the actor or item, or a roll expression.|
 |`radiusCalculated`|`number \| undefined`|When reading the auras, this will get populated with the calculated numeric value of the radius.|
 |`lineType`|`number`|Type of line used for the border of the aura. 0 = None, 1 = Solid, 2 = Dashed.|
 |`lineWidth`|`number`|Width of the line used for the border of the aura.|

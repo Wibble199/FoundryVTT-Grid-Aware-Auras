@@ -39,6 +39,7 @@ export class HexagonalAuraGeometry {
 	 * @param {number} gridSize The size of the grid in pixels.
 	 */
 	constructor(width, height, radius, shape, isColumnar, gridSize) {
+		radius = Math.round(radius);
 		this.#points = HexagonalAuraGeometry.#getPoints(width, height, radius, shape, isColumnar)
 			.map(({ x, y }) => ({ x: x * gridSize, y: y * gridSize }));
 		({ collidableEdges: this.#collidableEdges, boundingBox: this.#boundingBox } = HexagonalAuraGeometry.#getCollisionTestData(this.#points));

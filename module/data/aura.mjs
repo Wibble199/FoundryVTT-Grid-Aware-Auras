@@ -142,15 +142,35 @@ export function getDocumentOwnAuras(document, { calculateRadius = false } = {}) 
  * @param {{ actor: Actor | undefined; item: Item | undefined; }} context The context used to resolve properties from.
  */
 export function calculateAuraRadius(expression, context) {
-	// If it's a literal number, use that number.
-	let parsed = parseInt(expression);
-	if (typeof parsed === "number" && !isNaN(parsed))
-		return Math.round(parsed);
+	if (expression === "") return undefined;
 
-	// Evaluate the property name against the context
+	/** @param {number} v */
+	const round2dp = v => Math.round(v * 100) / 100;
+
+	// If it's a literal number, use that number.
+	let parsed = +expression;
+	if (typeof parsed === "number" && !isNaN(parsed))
+		return round2dp(parsed);
+
+	// For backwards compatibility, we see if it is a property path on the context. If so, we use that.
 	const property = foundry.utils.getProperty(context, expression);
-	parsed = parseInt(property);
-	return typeof parsed === "number" && !isNaN(parsed) ? Math.round(parsed) : undefined;
+	if (property !== undefined) {
+		parsed = parseInt(property);
+		return typeof parsed === "number" && !isNaN(parsed) ? round2dp(parsed) : undefined;
+	}
+
+	// Finally, try and evaluate it as a Roll
+	try {
+		const roll = new Roll(expression, context);
+		if (roll.isDeterministic) {
+			roll.evaluateSync();
+			return round2dp(roll.total);
+		}
+	} catch {
+		return undefined;
+	}
+
+	return undefined;
 }
 
 /** @type {VisibilityConfig} */

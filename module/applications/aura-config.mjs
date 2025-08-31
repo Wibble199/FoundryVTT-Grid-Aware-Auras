@@ -88,10 +88,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	/** @override */
 	_renderHTML() {
-		const radiusIsInvalidPath = typeof this.#aura.radius !== "number"
-			&& this.#aura.radius?.length > 0
-			&& isNaN(parseInt(this.#aura.radius))
-			&& typeof calculateAuraRadius(this.#aura.radius, this.#radiusContext) !== "number";
+		const radiusIsInvalidPath = typeof calculateAuraRadius(this.#aura.radius, this.#radiusContext) !== "number";
 
 		return html`
 			<form class=${classMap({ "standard-form": true, "hidden": this.#alternateContent })} @input=${this.#valueChange}>
