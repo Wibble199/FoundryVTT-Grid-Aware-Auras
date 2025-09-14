@@ -282,7 +282,9 @@ export class AuraTable extends LitElement {
 					icon: "<i class=''></i>",
 					label: "Import",
 					callback: (_event, _target, dialog) => {
-						const json = dialog.querySelector("textarea").value;
+						// On Foundry V13, dialog is a DialogV2; on Foundry V12 this is the dialog's element.
+						const dialogElement = dialog instanceof DialogV2 ? dialog.element : dialog;
+						const json = dialogElement.querySelector("textarea").value;
 						try {
 							this.#importAuraFromJson(json);
 						} catch (error) {
