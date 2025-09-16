@@ -54,7 +54,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 	 * @param {(aura: AuraConfig) => void} [options.onChange]
 	 * @param {() => void} [options.onClose]
 	 * @param {string} [options.parentId]
-	 * @param {Record<string, any>} [options.attachTo]
+	 * @param {Object} [options.attachTo]
 	 * @param {{ actor?: Actor | undefined; item?: Item | undefined; }} [options.radiusContext]
 	 */
 	constructor(aura, { onChange, onClose, parentId, attachTo, radiusContext, ...options } = {}) {

@@ -72,12 +72,16 @@
 	"SETTINGS": {
 		"CustomAuraTargetFilters.Name": "Custom Aura Target Filters",
 		"CustomAuraTargetFilters.Hint": "Create/edit custom filters which can be used when setting up automation for auras.",
+		"CustomAuraTargetFilters.Button": "Configure Target Filters",
 		"CustomAuraTargetFilters.LongHint": "Some Grid-Aware Aura features (such as effects) allow for setting a 'Token Filter' which determines which tokens can be affected by the aura. This utility allows you to define additional custom filters beyond the three that are provided built-in.",
 		"CustomAuraTargetFilters.LongHintLink": "See the documentation for more details.",
 		"EnableEffectAutomation.Name": "Enable Effect Automation",
 		"EnableEffectAutomation.Hint": "This will enable configuration options for auras to be able to automatically add or remove status effects from tokens when they enter/leave an aura. Note that this may require a GM user present to function correctly when the user that triggered the aura does not have ownership over an affected token.",
 		"EnableMacroAutomation.Name": "Enable Macro Automation",
 		"EnableMacroAutomation.Hint": "This will enable macros to be triggered by auras when tokens enter/leave their area. Note that by enabling this, it is possible for users to configure macros to be executed on other user's games. Make sure you understand the implications of this before turning this feature on.",
+		"Presets.Name": "Aura Presets",
+		"Presets.Hint": "Create/edit auras for easy reuse or to be added to tokens automatically.",
+		"Presets.Button": "Configure Presets",
 		"SquareGridMode.Name": "Square Grid Mode",
 		"SquareGridMode.Hint": "Coordinate system to determine the shape of the aura when using square grids."
 	},

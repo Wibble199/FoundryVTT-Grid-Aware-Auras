@@ -33,7 +33,7 @@
 }
 
 .grid-aware-auras-aura-config .visibility-row:nth-child(even) {
-	background-color: rgba(0 0 0 / 5%);
+	background-color: rgb(0 0 0 / 5%);
 }
 
 .grid-aware-auras-aura-config .visibility-row > .hint {
@@ -70,9 +70,9 @@
 	margin: 0;
 	padding: 4px;
 	font-size: var(--font-size-13);
-	color: rgba(255 175 0 / 60%);
-	background-color: rgba(255 175 0 / 20%);
-	border: 1px solid rgba(255 175 0 / 60%);
+	color: rgb(255 175 0 / 60%);
+	background-color: rgb(255 175 0 / 20%);
+	border: 1px solid rgb(255 175 0 / 60%);
 	border-radius: 3px;
 }
 
@@ -225,6 +225,79 @@
 #gaa-custom-aura-target-filter-config .filter-item .delete {
 	grid-area: delete;
 	align-self: center;
+}
+
+/* ------------ */
+/* Context Menu */
+/* ------------ */
+gaa-context-menu {
+	position: absolute;
+	z-index: var(--z-index-tooltip);
+
+	--background-color: var(--color-cool-5, #9f8475);
+    --border-color: var(--color-cool-3, #584a75);
+    --text-color: var(--color-text-secondary, #e7d1b1);
+    --hover-text-color: var(--color-text-emphatic, #f7f3e8);
+    --group-separator: var(--color-cool-4, #302831);
+    --hover-entry-border: var(--color-cool-4, #302831);
+    --hover-entry-background: var(--color-dark-1, #111);
+}
+
+.themed.theme-light gaa-context-menu {
+	--background-color: #d9d8c8;
+    --border-color: #999;
+    --text-color: var(--color-text-secondary);
+    --hover-text-color: var(--color-text-emphatic);
+    --group-separator: #999;
+    --hover-entry-border: #999;
+    --hover-entry-background: #f0f0e0;
+}
+
+gaa-context-menu > menu {
+	padding: 4px;
+	margin: 0;
+	height: max-content;
+    min-width: 150px;
+    max-width: 360px;
+	list-style: none;
+    color: var(--text-color);
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+	box-shadow: 0 3px 6px rgb(0 0 0 / 45%);
+}
+
+gaa-context-menu .gaa-context-menu-item {
+	display: flex;
+	padding: 6px;
+	border: 1px solid transparent;
+	font-size: var(--font-size-12);
+	cursor: pointer;
+	transition: all ease-out 200ms;
+}
+
+gaa-context-menu .gaa-context-menu-item:hover {
+	border-color: var(--hover-entry-border);
+    background: var(--hover-entry-background);
+    color: var(--hover-text-color);
+}
+
+gaa-context-menu .gaa-context-menu-item > i:first-child {
+	margin-right: 8px;
+}
+
+gaa-context-menu .gaa-context-menu-item > span {
+	flex-grow: 1;
+}
+
+gaa-context-menu .gaa-context-menu-item > i:last-child {
+	margin-left: 8px;
+	line-height: 15px;
+}
+
+gaa-context-menu .gaa-context-menu-separator {
+	margin: 4px 0;
+	border-bottom: 1px solid var(--group-separator);
 }
 
 /* ------- */

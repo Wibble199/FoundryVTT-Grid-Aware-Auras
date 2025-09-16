@@ -1,13 +1,14 @@
-/** @import { AuraConfig } from "../data/aura.mjs" */
+/** @import { AuraConfig, importAuraJson } from "../data/aura.mjs" */
+/** @import { Preset } from "../data/preset.mjs" */
 import { AuraConfigApplication } from "../applications/aura-config.mjs";
+import { PresetConfigApplication } from "../applications/preset-config.mjs";
 import { ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, LINE_TYPES, MODULE_NAME } from "../consts.mjs";
-import { calculateAuraRadius, createAura, getAura } from "../data/aura.mjs";
+import { calculateAuraRadius, createAura, exportAuraJson, getAura } from "../data/aura.mjs";
+import { getPresetsRaw, saveAuraAsNewPreset } from "../data/preset.mjs";
 import { html, LitElement, when } from "../lib/lit-all.min.js";
-import { ContextMenuGaa } from "./context-menu-gaa.mjs";
+import { ContextMenu } from "./context-menu.mjs";
 
 export const elementName = "gaa-aura-table";
-
-const { DialogV2 } = foundry.applications.api;
 
 export class AuraTable extends LitElement {
 
@@ -25,9 +26,6 @@ export class AuraTable extends LitElement {
 
 	/** @type {ElementInternals} */
 	#internals;
-
-	/** @type {ContextMenuGaa | undefined} */
-	#aurasContextMenu;
 
 	/** @type {Map<string, AuraConfigApplication>} */
 	#openAuraConfigApps = new Map();
@@ -51,13 +49,11 @@ export class AuraTable extends LitElement {
 		/** @type {string | undefined} */
 		this.parentId = undefined;
 
-		/** @type {Record<string, any> | undefined} */
+		/** @type {Object | undefined} */
 		this.attachConfigsTo = undefined;
 
 		/** @type {{ actor: Actor | undefined; item: Item | undefined; }} */
 		this.radiusContext = { actor: undefined, item: undefined };
-
-		this.#setupContextMenu();
 	}
 
 	get form() {
@@ -70,6 +66,11 @@ export class AuraTable extends LitElement {
 
 	get type() {
 		return this.localName;
+	}
+
+	get canEditPresets() {
+		// Presets setting is a world-level setting so needs GM permissions
+		return game.user.isGM;
 	}
 
 	render() {
@@ -88,7 +89,7 @@ export class AuraTable extends LitElement {
 							<th class="text-center" style="width: 58px">Fill</th>
 							<th class="text-center" style="width: 24px">
 								${when(!this.disabled, () => html`
-									<a data-action="create-aura">
+									<a data-action="create-aura" @click=${this.#createAuraContextMenu}>
 										<i class="fas fa-plus"></i>
 									</a>
 								`)}
@@ -124,7 +125,7 @@ export class AuraTable extends LitElement {
 		const calculatedRadius = calculateAuraRadius(aura.radius, this.radiusContext);
 
 		return html`
-			<tr data-aura-id=${aura.id}>
+			<tr data-aura-id=${aura.id} @contextmenu=${e => this.#openContextMenu(aura, e)}>
 				<td style="width: 24px">
 					${this.disabled
 						// eslint-disable-next-line @stylistic/js/indent
@@ -157,7 +158,7 @@ export class AuraTable extends LitElement {
 				</td>
 				<td class="text-center" style="width: 24px">
 					${when(!this.disabled, () => html`
-						<a @click=${this.#openContextMenu} style="width: 100%; display: inline-block;">
+						<a @click=${e => this.#openContextMenu(aura, e)} style="width: 100%; display: inline-block;">
 							<i class="fas fa-ellipsis-vertical"></i>
 						</a>
 					`)}
@@ -166,101 +167,66 @@ export class AuraTable extends LitElement {
 		`;
 	}
 
-	#setupContextMenu() {
-		/**
-		 * Callback wrapper for context menu which adds auraId and aura to the callback parameter.
-		 * @template T
-		 * @param {(args: { el: JQuery; auraId: string; aura: AuraConfig; }) => T} callback
-		 * @returns {(el: JQuery) => T}}
-		 */
-		const withAura = callback => {
-			return el => {
-				const auraId = el.get(0).dataset.auraId;
-				const aura = this.value.find(a => a.id === auraId);
-				return callback({ el, auraId, aura });
-			};
-		};
-
-		const ContextMenu = game.release.generation === 12
-			? ContextMenuGaa
-			: foundry.applications.ux.ContextMenu.implementation;
-
-		new ContextMenu(this, "[data-action='create-aura']", [
-			{
-				name: "New",
-				icon: "<i class='fas fa-file'></i>",
-				callback: () => this.#createNewAura()
-			},
-			{
-				name: "Import JSON",
-				icon: "<i class='fas fa-upload'></i>",
-				callback: () => this.#importJson()
-			}
-		], { eventName: "click", fixed: true });
-
-		this.#aurasContextMenu = new ContextMenu(this, "[data-aura-id]", [
-			{
-				name: "Edit",
-				icon: "<i class='fas fa-edit'></i>",
-				callback: withAura(({ aura }) => this.#editAura(aura))
-			},
-			{
-				name: "Enable",
-				icon: "<i class='fas fa-toggle-on'></i>",
-				callback: withAura(({ auraId }) => this.#setAuraEnabled(auraId, true)),
-				condition: withAura(({ aura }) => !aura.enabled)
-			},
-			{
-				name: "Disable",
-				icon: "<i class='fas fa-toggle-off'></i>",
-				callback: withAura(({ auraId }) => this.#setAuraEnabled(auraId, false)),
-				condition: withAura(({ aura }) => aura.enabled)
-			},
-			{
-				name: "Duplicate",
-				icon: "<i class='fas fa-clone'></i>",
-				callback: withAura(({ aura }) => {
-					const clonedAura = getAura({ ...aura, id: foundry.utils.randomID() });
-					this.#editAura(clonedAura);
-					this.value = [...this.value, clonedAura];
-					this.#dispatchChangeEvent();
-				})
-			},
-			{
-				name: "Export JSON",
-				icon: "<i class='fas fa-download'></i>",
-				callback: withAura(({ aura }) => this.#exportJson(aura))
-			},
-			{
-				name: "Delete",
-				icon: "<i class='fas fa-trash'></i>",
-				callback: withAura(({ auraId }) => {
-					this.value = this.value.filter(a => a.id !== auraId);
-					this.#dispatchChangeEvent();
-				})
-			}
-		], { fixed: true });
-
-		this.#aurasContextMenu.disabled = this.disabled;
-	}
-
 	/** @param {Map<string, any>} changedProperties */
 	updated(changedProperties) {
 		if (changedProperties.has("value")) {
 			this.#internals.setFormValue(JSON.stringify(this.value));
 		}
-
-		if (this.#aurasContextMenu) {
-			this.#aurasContextMenu.disabled = this.disabled;
-		}
 	}
+
+	/** @param {Event} e */
+	#createAuraContextMenu = e => {
+		const presets = getPresetsRaw();
+
+		ContextMenu.open(e, [
+			{
+				label: "New",
+				icon: "fas fa-file",
+				onClick: () => this.#createNewAura()
+			},
+			(presets.length || this.canEditPresets) && {
+				label: "Add Preset",
+				icon: "far fa-cube",
+				children: [
+					...presets.map(preset => ({
+						label: preset.config.name,
+						onClick: () => this.#createAuraFromConfig(preset.config)
+					})),
+					...this.canEditPresets ? [
+						presets.length && {
+							type: "separator"
+						},
+						{
+							label: "Edit presets",
+							onClick: () => new PresetConfigApplication().render(true)
+						}
+					] : []
+				]
+			},
+			{
+				label: "Import JSON",
+				icon: "fas fa-upload",
+				onClick: () => this.#importJson()
+			}
+		]);
+	};
 
 	/**
 	 * Creates a new aura and opens the edit dialog for it.
 	 */
 	#createNewAura() {
 		const aura = createAura();
+		this.value = [...this.value, aura];
+		this.#dispatchChangeEvent();
 		this.#editAura(aura);
+	}
+
+	/**
+	 * Creates a new aura from the given aura config.
+	 * @param {Partial<AuraConfig>} auraConfig
+	 */
+	#createAuraFromConfig(auraConfig) {
+		const aura = getAura(auraConfig, { newId: true });
 		this.value = [...this.value, aura];
 		this.#dispatchChangeEvent();
 	}
@@ -268,61 +234,8 @@ export class AuraTable extends LitElement {
 	/**
 	 * Shows a dialog to the user and asks them to provide JSON for a new aura.
 	 */
-	#importJson() {
-		new DialogV2({
-			window: {
-				title: "Import",
-				icon: "fas fa-upload",
-				resizable: true
-			},
-			classes: ["grid-aware-auras-import-export-dialog"],
-			content: "<textarea></textarea>",
-			buttons: [
-				{
-					icon: "<i class=''></i>",
-					label: "Import",
-					callback: (_event, _target, dialog) => {
-						// On Foundry V13, dialog is a DialogV2; on Foundry V12 this is the dialog's element.
-						const dialogElement = dialog instanceof DialogV2 ? dialog.element : dialog;
-						const json = dialogElement.querySelector("textarea").value;
-						try {
-							this.#importAuraFromJson(json);
-						} catch (error) {
-							ui.notifications.error(error.message);
-							throw error; // Rethrow to prevent dialog from closing
-						}
-					}
-				},
-				{
-					icon: "<i class='fas fa-times'></i>",
-					label: game.i18n.localize("Close"),
-					action: "close"
-				}
-			],
-			position: {
-				width: 530,
-				height: 320
-			}
-		}).render(true);
-	}
-
-	/**
-	 * Attempts to import an Aura from a JSON.
-	 * @param {string} json
-	 */
-	#importAuraFromJson(json) {
-		let parsed;
-		try {
-			parsed = JSON.parse(json);
-		} catch (ex) {
-			throw new Error(`Failed to import aura: Invalid JSON provided (${ex.message}).`);
-		}
-
-		if (Array.isArray(parsed) || typeof parsed !== "object")
-			throw new Error("Failed to import aura: Expected JSON to be an object.");
-
-		const aura = getAura(parsed);
-		aura.id = foundry.utils.randomID(); // Ensure it gets a new ID
+	async #importJson() {
+		const aura = await importAuraJson();
 		this.value = [...this.value, aura];
 		this.#dispatchChangeEvent();
 		this.#editAura(aura);
@@ -352,34 +265,6 @@ export class AuraTable extends LitElement {
 	}
 
 	/**
-	 * Shows a dialog with the JSON for the given aura.
-	 * @param {AuraConfig} aura
-	 */
-	#exportJson(aura) {
-		const { id, ...auraWithoutId } = aura;
-		new DialogV2({
-			window: {
-				title: "Export",
-				icon: "fas fa-download",
-				resizable: true
-			},
-			classes: ["grid-aware-auras-import-export-dialog"],
-			content: `<textarea>${JSON.stringify(auraWithoutId)}</textarea>`,
-			buttons: [
-				{
-					icon: "<i class='fas fa-times'></i>",
-					label: game.i18n.localize("Close"),
-					action: "close"
-				}
-			],
-			position: {
-				width: 530,
-				height: 320
-			}
-		}).render(true);
-	}
-
-	/**
 	 * @param {string} auraId
 	 * @param {boolean} enabled
 	 */
@@ -388,14 +273,59 @@ export class AuraTable extends LitElement {
 		this.#dispatchChangeEvent();
 	}
 
-	/** @param {MouseEvent} e */
-	#openContextMenu(e) {
+	/**
+	 * @param {AuraConfig} aura
+	 * @param {MouseEvent} e
+	 */
+	#openContextMenu(aura, e) {
 		e.preventDefault();
 		e.stopPropagation();
-		const { clientX, clientY } = e;
-		e.currentTarget.closest("[data-aura-id]").dispatchEvent(new PointerEvent("contextmenu", {
-			view: window, bubbles: true, cancelable: true, clientX, clientY
-		}));
+
+		ContextMenu.open(e, [
+			{
+				label: "Edit",
+				icon: "fas fa-edit",
+				onClick: () => this.#editAura(aura)
+			},
+			!aura.enabled && {
+				label: "Enable",
+				icon: "fas fa-toggle-on",
+				onClick: () => this.#setAuraEnabled(aura.id, true)
+			},
+			aura.enabled && {
+				label: "Disable",
+				icon: "fas fa-toggle-off",
+				onClick: () => this.#setAuraEnabled(aura.id, false)
+			},
+			{
+				label: "Duplicate",
+				icon: "fas fa-clone",
+				onClick: () => {
+					const clonedAura = getAura({ ...aura, id: foundry.utils.randomID() });
+					this.#editAura(clonedAura);
+					this.value = [...this.value, clonedAura];
+					this.#dispatchChangeEvent();
+				}
+			},
+			this.canEditPresets && {
+				label: "Save as Preset",
+				icon: "fas fa-floppy-disk",
+				onClick: () => saveAuraAsNewPreset(aura)
+			},
+			{
+				label: "Export JSON",
+				icon: "fas fa-download",
+				onClick: () => exportAuraJson(aura)
+			},
+			{
+				label: "Delete",
+				icon: "fas fa-trash",
+				onClick: () => {
+					this.value = this.value.filter(a => a.id !== aura.id);
+					this.#dispatchChangeEvent();
+				}
+			}
+		]);
 	}
 
 	#dispatchChangeEvent() {

@@ -288,9 +288,11 @@ export function createAura() {
 /**
  * From the given (possibly incomplete, e.g. when new fields are added) aura config, gets the complete config.
  * @param {Partial<AuraConfig>} [config]
+ * @param {Object} [options]
+ * @param {boolean} [options.newId] If true, assigns a new ID to the aura.
  * @returns {AuraConfig}
  */
-export function getAura(config) {
+export function getAura(config, { newId = false } = {}) {
 	// Migrate
 	for (let version = +(config._v ?? 0); version < latestAuraConfigVersion; version++) {
 		config = migrations[version](config);
@@ -302,6 +304,7 @@ export function getAura(config) {
 	config.effects = config.effects?.map(e => foundry.utils.mergeObject(effectConfigDefaults(), e, { inplace: false })) ?? [];
 	config.macros = config.macros?.map(m => foundry.utils.mergeObject(macroConfigDefaults(), m, { inplace: false })) ?? [];
 	config.sequencerEffects = config.sequencerEffects?.map(s => foundry.utils.mergeObject(sequencerEffectConfigDefaults(), s, { inplace: false })) ?? [];
+	if (newId) config.id = foundry.utils.randomID();
 	return config;
 }
 
@@ -453,3 +456,87 @@ export const auraVisibilityModeMatrices = {
 		}
 	}
 };
+
+/**
+ * Shows a dialog with the JSON for the given aura.
+ * @param {AuraConfig} aura
+ */
+export function exportAuraJson(aura) {
+	const { id, ...auraWithoutId } = aura;
+	new foundry.applications.api.DialogV2({
+		window: {
+			title: "Export",
+			icon: "fas fa-download",
+			resizable: true
+		},
+		classes: ["grid-aware-auras-import-export-dialog"],
+		content: `<textarea>${JSON.stringify(auraWithoutId)}</textarea>`,
+		buttons: [
+			{
+				icon: "<i class='fas fa-times'></i>",
+				label: game.i18n.localize("Close"),
+				action: "close"
+			}
+		],
+		position: {
+			width: 530,
+			height: 320
+		}
+	}).render(true);
+}
+
+/**
+ * Shows a dialog to the user and asks them to provide JSON for a new aura.
+ * @param {Object} [options]
+ * @param {boolean} [options.newId] When true, will create a new ID for the aura, regardless of if it was provided in the JSON.
+ * @returns {Promise<AuraConfig>}
+ */
+export function importAuraJson({ newId = true } = {}) {
+	return new Promise(resolve => {
+		new foundry.applications.api.DialogV2({
+			window: {
+				title: "Import",
+				icon: "fas fa-upload",
+				resizable: true
+			},
+			classes: ["grid-aware-auras-import-export-dialog"],
+			content: "<textarea></textarea>",
+			buttons: [
+				{
+					icon: "<i class=''></i>",
+					label: "Import",
+					callback: (_event, _target, dialog) => {
+						// On Foundry V13, dialog is a DialogV2; on Foundry V12 this is the dialog's element.
+						const dialogElement = dialog instanceof foundry.applications.api.DialogV2 ? dialog.element : dialog;
+						const json = dialogElement.querySelector("textarea").value;
+						try {
+							let parsed;
+							try {
+								parsed = JSON.parse(json);
+							} catch (ex) {
+								throw new Error(`Failed to import aura: Invalid JSON provided (${ex.message}).`);
+							}
+
+							if (Array.isArray(parsed) || typeof parsed !== "object")
+								throw new Error("Failed to import aura: Expected JSON to be an object.");
+
+							resolve(getAura(parsed, { newId }));
+						} catch (error) {
+							ui.notifications.error(error.message);
+							throw error; // Rethrow to prevent dialog from closing
+						}
+					}
+				},
+				{
+					icon: "<i class='fas fa-times'></i>",
+					label: game.i18n.localize("Close"),
+					action: "close"
+				}
+			],
+			position: {
+				width: 530,
+				height: 320
+			}
+		}).render(true);
+	});
+}

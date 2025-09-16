@@ -1,9 +1,11 @@
 import { CustomAuraTargetFilterConfig } from "./applications/custom-aura-target-filter-config.mjs";
+import { PresetConfigApplication } from "./applications/preset-config.mjs";
 import {
 	CUSTOM_AURA_TARGET_FILTERS_SETTING,
 	ENABLE_EFFECT_AUTOMATION_SETTING,
 	ENABLE_MACRO_AUTOMATION_SETTING,
 	MODULE_NAME,
+	PRESET_SETTING,
 	SQUARE_GRID_MODE,
 	SQUARE_GRID_MODE_SETTING
 } from "./consts.mjs";
@@ -41,10 +43,27 @@ export function registerSettings() {
 		config: true
 	});
 
+	game.settings.registerMenu(MODULE_NAME, PRESET_SETTING, {
+		name: "SETTINGS.Presets.Name",
+		hint: "SETTINGS.Presets.Hint",
+		label: "SETTINGS.Presets.Button",
+		icon: "far fa-hexagon",
+		type: PresetConfigApplication,
+		restricted: true
+	});
+
+	game.settings.register(MODULE_NAME, PRESET_SETTING, {
+		name: "SETTINGS.Presets.Name",
+		scope: "world",
+		default: [],
+		type: Array,
+		config: false
+	});
+
 	game.settings.registerMenu(MODULE_NAME, CUSTOM_AURA_TARGET_FILTERS_SETTING, {
 		name: "SETTINGS.CustomAuraTargetFilters.Name",
 		hint: "SETTINGS.CustomAuraTargetFilters.Hint",
-		label: "Configure",
+		label: "SETTINGS.CustomAuraTargetFilters.Button",
 		icon: "fas fa-filter",
 		type: CustomAuraTargetFilterConfig,
 		restricted: true
