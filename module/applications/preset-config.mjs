@@ -14,7 +14,7 @@ export class PresetConfigApplication extends ApplicationV2 {
 	static DEFAULT_OPTIONS = {
 		window: {
 			contentClasses: ["sheet", "standard-form", "grid-aware-auras-preset-config"],
-			icon: "far fa-hexagon",
+			icon: "far fa-cube",
 			title: "Aura Preset Configuration"
 		},
 		position: {
@@ -55,9 +55,11 @@ export class PresetConfigApplication extends ApplicationV2 {
 					${this.#presets.map((preset, idx) => html`
 						<tr @contextmenu=${e => this.#openContextMenu(preset, idx, e)}>
 							<td>
-								${preset.config.name}
-								${when(preset.config.effects?.length || preset.config.macros?.length || preset.config.sequencerEffects?.length,
-									() => html`<i class="fas fa-bolt" data-tooltip="This aura applies effects or calls macros"></i>`)}
+								<a @click=${() => this.#editAura(preset.config)}>
+									${preset.config.name}
+									${when(preset.config.effects?.length || preset.config.macros?.length || preset.config.sequencerEffects?.length,
+										() => html`<i class="fas fa-bolt" data-tooltip="This aura applies effects or calls macros"></i>`)}
+								</a>
 							</td>
 							<td class="text-center" style="width: 58px">
 								${preset.config.radius}

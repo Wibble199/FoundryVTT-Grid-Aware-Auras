@@ -47,7 +47,7 @@ export function registerSettings() {
 		name: "SETTINGS.Presets.Name",
 		hint: "SETTINGS.Presets.Hint",
 		label: "SETTINGS.Presets.Button",
-		icon: "far fa-hexagon",
+		icon: "far fa-cube",
 		type: PresetConfigApplication,
 		restricted: true
 	});
