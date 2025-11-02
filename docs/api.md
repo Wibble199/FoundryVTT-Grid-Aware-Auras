@@ -8,7 +8,7 @@ Grid-Aware Auras exposes an API to be used by other macros, scripts, or modules.
 - [`createAura`](#createaura)
 - [`deleteAuras`](#deleteauras)
 - [`getAurasContainingToken`](#getaurascontainingtoken)
-- [`getDocumentAuras`](#getdocumentauras)
+- [`getDocumentOwnAuras`](#getdocumentownauras)
 - [`getTokenAuras`](#gettokenauras)
 - [`getTokensInsideAura`](#gettokensinsideaura)
 - [`isTokenInside`](#istokeninside)
@@ -278,8 +278,8 @@ Updates one or more auras on the target document.
 |Name|Type|Default|Description|
 |-|-|-|-|
 |`owner`|`Token \| TokenDocument \| Item`|*Required*|The target entity to update the auras on. Must be a token or an item.|
-|`filter`|`{ name?: string; id?: string; }`|*Required*|A filter used to specify which aura(s) to update. Note that the name filter is case-insensitive. You can also find an aura's ID by opening the edit dialog and clicking the book icon in the header.|
-|`update`|[`Partial<AuraConfig> \| ((existing: AuraConfig) => Partial<AuraConfig>)`](#auraconfig)|Either a partial config to update the auras with, or a transformer function that takes an existing aura and returns the partial config.|
+|`filter`|`{ name?: string; id?: string; }`|*Required*|A filter used to specify which aura(s) to update. Note that the name filter is case-insensitive. You can find an aura's ID by opening the edit dialog and clicking the book icon in the header.|
+|`update`|[`Partial<AuraConfig> \| ((existing: AuraConfig) => Partial<AuraConfig>)`](#auraconfig)|*Required*|Either the changes to be made to the config (partial [`AuraConfig`](#auraconfig)), or a function that runs for each aura and is passed the existing aura config and returns the changes [`AuraConfig`](#auraconfig).|
 |`options`|`Object`|`{}`|Additional options|
 |`options.includeItems`|`boolean`|`false`|If the target entity is a token and this is true, then auras on items owned by that token's actor will also be considered for updates.|
 
@@ -323,7 +323,7 @@ Defines metadata about an aura.
 |`name`|`string`|Name of the aura.|
 |`enabled`|`boolean`|Whether this aura is enabled or not. Disabled auras do not trigger hooks.|
 |`radius`|`number \| string`|Expression that resolves to the radius of the aura. May be a number, a property path on the actor or item, or a roll expression.|
-|`radiusCalculated`|`number \| undefined`|When reading the auras, this will get populated with the calculated numeric value of the radius.|
+|`radiusCalculated`|`number \| undefined`|When reading the auras (with `getDocumentOwnAuras` or `getTokenAuras`), this will get populated with the calculated numeric value of the radius. In other contexts this is unset/ignored.|
 |`lineType`|`number`|Type of line used for the border of the aura. 0 = None, 1 = Solid, 2 = Dashed.|
 |`lineWidth`|`number`|Width of the line used for the border of the aura.|
 |`lineColor`|`string`|Color of the line used for the border of the aura.|
