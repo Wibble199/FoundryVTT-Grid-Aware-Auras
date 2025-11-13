@@ -118,7 +118,7 @@ export function getTokenAuras(token) {
  */
 export function getDocumentOwnAuras(document, { calculateRadius = false } = {}) {
 	// Only Items and TokenDocuments can have auras
-	if (!(document instanceof TokenDocument || document instanceof Item)) {
+	if (!(document instanceof TokenDocument || document instanceof Item || document instanceof foundry.data.PrototypeToken)) {
 		throw new Error("Must provide an Item or Token document to getDocumentOwnAuras.");
 	}
 
