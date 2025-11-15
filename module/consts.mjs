@@ -127,3 +127,12 @@ export const THT_RULER_ON_DRAG_MODES = /** @type {const} */ ({
 	C2C: "GRIDAWAREAURAS.ThtRulerOnDragModeC2C",
 	E2E: "GRIDAWAREAURAS.ThtRulerOnDragModeE2E"
 });
+
+/** @enum {keyof typeof AURA_POSITIONS} */
+export const AURA_POSITIONS = /** @type {const} */ ({
+	CENTER: "GRIDAWAREAURAS.AuraPositionCenter",
+	TOP_LEFT: "GRIDAWAREAURAS.AuraPositionTopLeft",
+	TOP_RIGHT: "GRIDAWAREAURAS.AuraPositionTopRight",
+	BOTTOM_RIGHT: "GRIDAWAREAURAS.AuraPositionBottomRight",
+	BOTTOM_LEFT: "GRIDAWAREAURAS.AuraPositionBottomLeft"
+});

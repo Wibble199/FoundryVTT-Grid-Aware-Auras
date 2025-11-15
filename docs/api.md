@@ -324,6 +324,7 @@ Defines metadata about an aura.
 |`enabled`|`boolean`|Whether this aura is enabled or not. Disabled auras do not trigger hooks.|
 |`radius`|`number \| string`|Expression that resolves to the radius of the aura. May be a number, a property path on the actor or item, or a roll expression.|
 |`radiusCalculated`|`number \| undefined`|When reading the auras (with `getDocumentOwnAuras` or `getTokenAuras`), this will get populated with the calculated numeric value of the radius. In other contexts this is unset/ignored.|
+|`position`|`"CENTER" \| "TOP_LEFT" \| "TOP_RIGHT" \| "BOTTOM_RIGHT" \| "BOTTOM_LEFT"`|How the aura will be aligned to the token. This option only has any effect on square grids.|
 |`lineType`|`number`|Type of line used for the border of the aura. 0 = None, 1 = Solid, 2 = Dashed.|
 |`lineWidth`|`number`|Width of the line used for the border of the aura.|
 |`lineColor`|`string`|Color of the line used for the border of the aura.|

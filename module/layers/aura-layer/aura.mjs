@@ -1,5 +1,6 @@
 /** @import { AuraConfig, AuraConfigWithRadius } from "../../data/aura.mjs" */
 /** @import { AuraGeometry } from "./geometry/index.mjs" */
+/** @import { AURA_POSITIONS } from "../../consts.mjs" */
 import { LINE_TYPES, MODULE_NAME, SQUARE_GRID_MODE_SETTING } from "../../consts.mjs";
 import { auraDefaults, auraVisibilityDefaults } from "../../data/aura.mjs";
 import { pickProperties } from "../../utils/misc-utils.mjs";
@@ -55,8 +56,6 @@ export class Aura {
 	 * @param {boolean} [options.force] Force a redraw, even if no aura properties have changed.
 	*/
 	update(config, { tokenDelta, force = false } = {}) {
-		this.updatePosition({ tokenDelta });
-
 		const shouldRedraw = force ||
 			this.#config !== config ||
 			this.#radius !== config.radiusCalculated ||
@@ -68,6 +67,8 @@ export class Aura {
 
 		this.#config = config;
 		this.#radius = config.radiusCalculated;
+
+		this.updatePosition({ tokenDelta });
 
 		// If a relevant property has changed, do a redraw
 		if (shouldRedraw || force) {
@@ -124,8 +125,15 @@ export class Aura {
 	async #redraw(width, height, radius, hexagonalShape) {
 		const auraConfig = { ...auraDefaults(), ...this.#config };
 
-		width ??= this.#token.document.width;
-		height ??= this.#token.document.height;
+		// If there is a positional offset (i.e. aura is non-central), then use 0 as the effective token width/height.
+		if (this.#getPositionOffset()) {
+			width = 0;
+			height = 0;
+		} else {
+			width ??= this.#token.document.width;
+			height ??= this.#token.document.height;
+		}
+
 		hexagonalShape ??= this.#token.document.hexagonalShape;
 
 		// Negative radii are not supported
@@ -203,21 +211,41 @@ export class Aura {
 	 */
 	#getOffset(...positions) {
 		/** @type {{ x: number; y: number }} */
-		const tokenCoords = pickProperties(["x", "y"], ...positions);
+		let { x, y } = pickProperties(["x", "y"], ...positions);
 
-		// If the token is >= 1 in both dimensions or is an a gridless scene, we don't need any special offset logic.
+		// If the token has a size of < 1 on a non-gridless scen), then we need to snap the aura to the nearest grid cell
 		const { width, height } = this.#token.document;
-		if ((width >= 1 && height >= 1) || canvas.grid.type === CONST.GRID_TYPES.GRIDLESS)
-			return tokenCoords;
+		if ((width < 1 || height < 1) && canvas.grid.type !== CONST.GRID_TYPES.GRIDLESS) {
+			const gridCoords = canvas.grid.getOffset({
+				x: x + (this.#token.w / 2),
+				y: y + (this.#token.h / 2)
+			});
 
-		// Else (if the token has a size of < 1 on a non-gridless scene), then we need to snap the aura to the nearest
-		// grid cell instead.
-		const gridCoords = canvas.grid.getOffset({
-			x: tokenCoords.x + (this.#token.w / 2),
-			y: tokenCoords.y + (this.#token.h / 2)
-		});
+			({ x, y } = canvas.grid.getTopLeftPoint(gridCoords));
+		}
 
-		return canvas.grid.getTopLeftPoint(gridCoords);
+		// If the position of the aura is non-central, then apply the relevant offset
+		const positionOffset = this.#getPositionOffset();
+		if (positionOffset !== undefined) {
+			x += Math.max(width, 1) * positionOffset.x * canvas.grid.sizeX;
+			y += Math.max(height, 1) * positionOffset.y * canvas.grid.sizeY;
+		}
+
+		return { x, y };
+	}
+
+	/** Gets the x and y offset as determined by the "position" config alone. */
+	#getPositionOffset() {
+		if (canvas.grid.type !== CONST.GRID_TYPES.SQUARE)
+			return;
+
+		const position = this.#config.position;
+		switch (position) {
+			case "TOP_LEFT": return { x: 0, y: 0 };
+			case "TOP_RIGHT": return { x: 1, y: 0 };
+			case "BOTTOM_RIGHT": return { x: 1, y: 1 };
+			case "BOTTOM_LEFT": return { x: 0, y: 1 };
+		}
 	}
 
 	/**

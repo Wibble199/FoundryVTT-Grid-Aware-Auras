@@ -1,4 +1,4 @@
-/** @import { EFFECT_MODES, MACRO_MODES, SEQUENCE_EASINGS, SEQUENCE_TRIGGERS, SEQUENCE_POSITIONS, THT_RULER_ON_DRAG_MODES } from "../consts.mjs" */
+/** @import { AURA_POSITIONS, EFFECT_MODES, MACRO_MODES, SEQUENCE_EASINGS, SEQUENCE_TRIGGERS, SEQUENCE_POSITIONS, THT_RULER_ON_DRAG_MODES } from "../consts.mjs" */
 import { DOCUMENT_AURAS_FLAG, LINE_TYPES, MODULE_NAME } from "../consts.mjs";
 
 export const latestAuraConfigVersion = 1;
@@ -10,6 +10,7 @@ export const latestAuraConfigVersion = 1;
  * @property {string} name
  * @property {boolean} enabled
  * @property {number | string} radius A numeric value or a property name on the actor pointing to a numeric value.
+ * @property {AURA_POSITIONS} position
  * @property {LINE_TYPES} lineType
  * @property {number} lineWidth
  * @property {string} lineColor
@@ -189,6 +190,7 @@ export const auraDefaults = () => ({
 	name: "New Aura",
 	enabled: true,
 	radius: 1,
+	position: "CENTER",
 	lineType: LINE_TYPES.SOLID,
 	lineWidth: 4,
 	lineColor: "#FF0000",

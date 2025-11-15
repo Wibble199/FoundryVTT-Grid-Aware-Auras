@@ -1,6 +1,7 @@
 /** @import { AuraConfig, VisibilityConfig } from "../data/aura.mjs"; */
 import "../components/tabs.mjs";
 import {
+	AURA_POSITIONS,
 	AURA_VISIBILITY_MODES,
 	EFFECT_MODES,
 	ENABLE_EFFECT_AUTOMATION_SETTING,
@@ -110,6 +111,18 @@ export class AuraConfigApplication extends ApplicationV2 {
 					${when(radiusIsInvalidPath, () => html`
 						<div class="hint" style="text-align: right; color: var(--color-level-error);">${l("GRIDAWAREAURAS.UnresolvedRadiusConfigDialogWarning")}</div>
 					`)}
+				</div>
+
+				<div class="form-group">
+					<label>Position</label>
+					<div class="form-fields">
+						<select name="position">
+							${selectOptions(AURA_POSITIONS, { selected: this.#aura.position })}
+						</select>
+						<span style="flex: 0; margin-left: 0.5rem; cursor: help;">
+							<i class="fas fa-question-circle" data-tooltip=${l("GRIDAWAREAURAS.Position.Hint")}></i>
+						</span>
+					</div>
 				</div>
 
 				<gaa-tabs .tabs=${[
