@@ -84,18 +84,22 @@ Hooks.once("ready", () => {
 });
 
 // Apply presets when the token is created
-Hooks.on("preCreateActor", (actorDocument, data) => {
+Hooks.on("preCreateToken", (tokenDocument, data) => {
 	/** @type {import("./data/aura.mjs").AuraConfig[]} */
-	const auras = data.prototypeToken?.flags?.[MODULE_NAME]?.[DOCUMENT_AURAS_FLAG] ?? [];
+	const auras = data.flags?.[MODULE_NAME]?.[DOCUMENT_AURAS_FLAG] ?? [];
 
-	const applicablePresets = getPresets().filter(p => p.applyToNew.includes(data.type));
+	/** @type {Actor | undefined} */
+	const actor = game.actors.get(data.actorId);
+	if (!actor) return;
+
+	const applicablePresets = getPresets().filter(p => p.applyToNew.includes(actor.type));
 	for (const preset of applicablePresets) {
 		// Don't add any that have the same ID
 		if (auras.some(a => a.id === preset.config.id)) continue;
 		auras.push(preset.config);
 	}
 
-	actorDocument.updateSource({ [`prototypeToken.flags.${MODULE_NAME}.${DOCUMENT_AURAS_FLAG}`]: auras });
+	tokenDocument.updateSource({ [`flags.${MODULE_NAME}.${DOCUMENT_AURAS_FLAG}`]: auras });
 });
 
 Hooks.on("createToken", (tokenDocument, _options, userId) => {
