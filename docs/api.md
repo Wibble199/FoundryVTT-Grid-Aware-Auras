@@ -17,7 +17,7 @@ Grid-Aware Auras exposes an API to be used by other macros, scripts, or modules.
 
 ## createAura
 
-![Available Since v0.6.0](https://img.shields.io/badge/Available%20Since-v0.6.0-blue?style=flat-square)
+![Available Since v0.5.2](https://img.shields.io/badge/Available%20Since-v0.5.2-blue?style=flat-square)
 
 Creates a new aura on the specified owner.
 
@@ -49,7 +49,7 @@ await api.createAura(token, {
 
 ## deleteAuras
 
-![Available Since v0.6.0](https://img.shields.io/badge/Available%20Since-v0.6.0-blue?style=flat-square)
+![Available Since v0.5.2](https://img.shields.io/badge/Available%20Since-v0.5.2-blue?style=flat-square)
 
 Deletes auras from the specified owner document.
 
@@ -269,7 +269,7 @@ api.toggleEffect(token, statusEffectId, true, { overlay: true });
 
 ## updateAuras
 
-![Available Since v0.6.0](https://img.shields.io/badge/Available%20Since-v0.6.0-blue?style=flat-square)
+![Available Since v0.5.2](https://img.shields.io/badge/Available%20Since-v0.5.2-blue?style=flat-square)
 
 Updates one or more auras on the target document.
 
