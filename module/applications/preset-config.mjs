@@ -1,6 +1,7 @@
 /** @import { AuraConfig } from "../data/aura.mjs"; */
 /** @import { Preset } from "../data/preset.mjs" */
 import { ContextMenu } from "../components/context-menu.mjs";
+import "../components/multi-select.mjs";
 import { LINE_TYPES } from "../consts.mjs";
 import { createAura, exportAuraJson, getAura, importAuraJson } from "../data/aura.mjs";
 import { getPresets, savePresets } from "../data/preset.mjs";
@@ -18,7 +19,7 @@ export class PresetConfigApplication extends ApplicationV2 {
 			title: "Aura Preset Configuration"
 		},
 		position: {
-			width: 640,
+			width: 720,
 			height: "auto"
 		}
 	};
@@ -36,6 +37,11 @@ export class PresetConfigApplication extends ApplicationV2 {
 
 	/** @override */
 	_renderHTML() {
+		const actorTypes = Object.keys(game.model.Actor).filter(a => a !== "base").map(a => ({
+			label: game.i18n.localize(`TYPES.Actor.${a}`),
+			value: a
+		}));
+
 		return html`
 			<table class="grid-aware-auras-table">
 				<thead>
@@ -44,6 +50,7 @@ export class PresetConfigApplication extends ApplicationV2 {
 						<th class="text-center" style="width: 58px">Radius</th>
 						<th class="text-center" style="width: 58px">Line</th>
 						<th class="text-center" style="width: 58px">Fill</th>
+						<td class="text-center" style="width: 190px">Apply to new actors</td>
 						<th class="text-center" style="width: 24px">
 							<a @click=${this.#openCreateContextMenu}>
 								<i class="fas fa-plus"></i>
@@ -71,6 +78,14 @@ export class PresetConfigApplication extends ApplicationV2 {
 							<td class="text-center" style="width: 58px">
 								${when(preset.config.fillType !== CONST.DRAWING_FILL_TYPES.NONE,
 									() => html`<input type="color" value="${preset.config.fillColor}" disabled>`)}
+							</td>
+							<td>
+								<gaa-multi-select
+									.items=${actorTypes}
+									placeholder="None"
+									.value=${preset.applyToNew}
+									@change=${e => this.#updateApplyToNew(preset.config, e)}
+								></gaa-multi-select>
 							</td>
 							<td class="text-center" style="width: 24px">
 								${when(!this.disabled, () => html`
@@ -201,6 +216,15 @@ export class PresetConfigApplication extends ApplicationV2 {
 		this.#openAuraConfigApps.set(aura.id, app);
 
 		app.render(true);
+	}
+
+	/**
+	 * @param {AuraConfig} aura
+	 * @param {Event} e
+	 */
+	#updateApplyToNew(aura, e) {
+		const applyToNew = e.target.value;
+		this.#presets = this.#presets.map(p => p.config.id === aura.id ? { ...p, applyToNew } : p);
 	}
 
 	/**

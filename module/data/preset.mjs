@@ -5,6 +5,7 @@ import { getAura } from "./aura.mjs";
 /**
  * @typedef {Object} Preset
  * @property {AuraConfig} config
+ * @property {string[]} applyToNew
  */
 
 /**

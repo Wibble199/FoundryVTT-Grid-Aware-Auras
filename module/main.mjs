@@ -4,6 +4,7 @@ import { tokenConfigClose, v12TokenConfigRenderInner, v13TokenConfigRender } fro
 import { setupAutomation } from "./automation/index.mjs";
 import { DOCUMENT_AURAS_FLAG, MODULE_NAME, SOCKET_NAME, TOGGLE_EFFECT_FUNC } from "./consts.mjs";
 import { initialiseAuraTargetFilters } from "./data/aura-target-filters.mjs";
+import { getPresets } from "./data/preset.mjs";
 import { AuraLayer } from "./layers/aura-layer/aura-layer.mjs";
 import { registerSettings } from "./settings.mjs";
 import { toggleEffect } from "./utils/misc-utils.mjs";
@@ -80,6 +81,21 @@ Hooks.once("ready", () => {
 			}
 		}
 	});
+});
+
+// Apply presets when the token is created
+Hooks.on("preCreateActor", (actorDocument, data) => {
+	/** @type {import("./data/aura.mjs").AuraConfig[]} */
+	const auras = data.prototypeToken?.flags?.[MODULE_NAME]?.[DOCUMENT_AURAS_FLAG] ?? [];
+
+	const applicablePresets = getPresets().filter(p => p.applyToNew.includes(data.type));
+	for (const preset of applicablePresets) {
+		// Don't add any that have the same ID
+		if (auras.some(a => a.id === preset.config.id)) continue;
+		auras.push(preset.config);
+	}
+
+	actorDocument.updateSource({ [`prototypeToken.flags.${MODULE_NAME}.${DOCUMENT_AURAS_FLAG}`]: auras });
 });
 
 Hooks.on("createToken", (tokenDocument, _options, userId) => {
