@@ -125,14 +125,14 @@ Hooks.on("refreshToken", (token, { refreshPosition, refreshVisibility }) => {
 			AuraLayer.current?._updateAuras({ token });
 			AuraLayer.current?._testCollisionsForToken(token, { useActualPosition: true });
 		} else {
-			AuraLayer.current?._updateAuraGraphics({ token });
+			AuraLayer.current?._updateAuraGraphics({ token, updatePosition: !!refreshPosition });
 		}
 	}
 });
 
 // When token is hovered/unhovered, we need to check aura visibility
 Hooks.on("hoverToken", token => {
-	AuraLayer.current?._updateAuraGraphics({ token });
+	AuraLayer.current?._updateAuraGraphics({ token, updatePosition: false });
 });
 
 // When token is controlled/uncontrolled, we need to check aura visibility

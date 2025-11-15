@@ -69,8 +69,10 @@ export class AuraLayer extends CanvasLayer {
 	 * Does not perform any collision tests.
 	 * @param {Object} [options]
 	 * @param {Token} [options.token] If provided, only updates the positions for auras belonging to this token.
+	 * @param {boolean} [options.updatePosition] Whether or not to update the position of the tokens' auras.
+	 * @param {boolean} [options.updateVisibility] Whether or not to update the visibility of the tokens' auras.
 	 */
-	_updateAuraGraphics({ token } = {}) {
+	_updateAuraGraphics({ token, updatePosition = true, updateVisibility = true } = {}) {
 		// Tokens may not all be ready yet
 		if (!this.#isInitialised) return;
 
@@ -78,8 +80,8 @@ export class AuraLayer extends CanvasLayer {
 
 		for (const token of tokens) {
 			for (const aura of this._auraManager.getTokenAuras(token)) {
-				aura.updatePosition();
-				aura.updateVisibility();
+				if (updatePosition) aura.updatePosition();
+				if (updateVisibility) aura.updateVisibility();
 			}
 		}
 	}

@@ -83,8 +83,7 @@ export class Aura {
 	 * @param {Record<string, any>} [options.tokenDelta] If provided, uses the properties from this instead of the token
 	 */
 	updatePosition({ tokenDelta } = {}) {
-		this.#graphics.x = tokenDelta?.x ?? this.#token.x;
-		this.#graphics.y = tokenDelta?.y ?? this.#token.y;
+		Object.assign(this.#graphics, this.#getOffset(tokenDelta, this.#token));
 		this.#graphics.elevation = tokenDelta?.elevation ?? this.#token.document.elevation;
 	}
 
@@ -107,7 +106,7 @@ export class Aura {
 	 */
 	isInside(targetToken, { sourceTokenPosition, useActualSourcePosition = false, targetTokenPosition } = {}) {
 		// Need to offset by token position, as the geometry is relative to token position, not relative to canvas pos
-		const auraOffset = pickProperties(["x", "y"], sourceTokenPosition, useActualSourcePosition ? this.#token : this.#token.document);
+		const auraOffset = this.#getOffset(sourceTokenPosition, useActualSourcePosition ? this.#token : this.#token.document);
 
 		return this.#geometry?.isInside(targetToken, { auraOffset, tokenAltPosition: targetTokenPosition }) ?? false;
 	}
@@ -195,6 +194,30 @@ export class Aura {
 			drawComplexPath(this.#graphics, this.#geometry.getPath());
 			this.#graphics.endFill();
 		}
+	}
+
+	/**
+	 * Gets the render offset for the aura graphics.
+	 * Will use the first X and Y positions found in the positions array as the token's current position.
+	 * @param {...{ x?: number; y?: number; }?} positions
+	 */
+	#getOffset(...positions) {
+		/** @type {{ x: number; y: number }} */
+		const tokenCoords = pickProperties(["x", "y"], ...positions);
+
+		// If the token is >= 1 in both dimensions or is an a gridless scene, we don't need any special offset logic.
+		const { width, height } = this.#token.document;
+		if ((width >= 1 && height >= 1) || canvas.grid.type === CONST.GRID_TYPES.GRIDLESS)
+			return tokenCoords;
+
+		// Else (if the token has a size of < 1 on a non-gridless scene), then we need to snap the aura to the nearest
+		// grid cell instead.
+		const gridCoords = canvas.grid.getOffset({
+			x: tokenCoords.x + (this.#token.w / 2),
+			y: tokenCoords.y + (this.#token.h / 2)
+		});
+
+		return canvas.grid.getTopLeftPoint(gridCoords);
 	}
 
 	/**

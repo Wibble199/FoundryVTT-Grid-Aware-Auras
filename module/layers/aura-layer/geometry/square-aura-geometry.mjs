@@ -29,6 +29,11 @@ export class SquareAuraGeometry {
 	 */
 	constructor(width, height, radius, mode, gridSize) {
 		radius = Math.round(radius);
+
+		// Round width and height so that half size is still grid-aligned
+		width = Math.round(width);
+		height = Math.round(height);
+
 		this.#config = { width, height, radius, mode, gridSize };
 		this.#points = generateSquareAuraBorder(width, height, radius, mode).map(({ x, y }) => ({ x: x * gridSize, y: y * gridSize }));
 	}
