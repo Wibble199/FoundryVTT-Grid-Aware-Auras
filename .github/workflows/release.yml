@@ -57,7 +57,7 @@ jobs:
 
       - name: Publish to Foundry Package Registry
         run: |
-          NAME=$(jq -r '.name' module.json)
+          PACKAGE_ID=$(jq -r '.id' module.json)
           VERSION_TAG=$(echo ${{ github.ref }} | sed 's/refs\/tags\///')
           VERSION=$(jq -r '.version' module.json)
           MINIMUM=$(jq -r '.compatibility.minimum' module.json)
@@ -67,7 +67,7 @@ jobs:
                -H 'Content-Type: application/json' \
                -H 'Authorization: ${{ secrets.FOUNDRY_AUTH_TOKEN }}' \
                -d '{
-                     "id": "'"$NAME"'",
+                     "id": "'"$PACKAGE_ID"'",
                      "release": {
                        "version": "'"$VERSION"'",
                        "manifest": "https://github.com/Wibble199/FoundryVTT-Grid-Aware-Auras/releases/download/'"$VERSION_TAG"'/module.json",
