@@ -1,7 +1,7 @@
 /** @import { AuraConfig, importAuraJson } from "../data/aura.mjs" */
 /** @import { Preset } from "../data/preset.mjs" */
 import { AuraConfigApplication } from "../applications/aura-config.mjs";
-import { PresetConfigApplication } from "../applications/preset-config.mjs";
+import { PresetManagerApplication } from "../applications/preset-manager.mjs";
 import { ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, LINE_TYPES, MODULE_NAME } from "../consts.mjs";
 import { calculateAuraRadius, createAura, exportAuraJson, getAura } from "../data/aura.mjs";
 import { getPresetsRaw, saveAuraAsNewPreset } from "../data/preset.mjs";
@@ -200,7 +200,7 @@ export class AuraTable extends LitElement {
 						},
 						{
 							label: "Edit presets",
-							onClick: () => new PresetConfigApplication().render(true)
+							onClick: () => new PresetManagerApplication().render(true)
 						}
 					] : []
 				]

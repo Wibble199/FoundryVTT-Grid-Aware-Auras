@@ -1,5 +1,5 @@
 import { CustomAuraTargetFilterConfig } from "./applications/custom-aura-target-filter-config.mjs";
-import { PresetConfigApplication } from "./applications/preset-config.mjs";
+import { PresetManagerApplication } from "./applications/preset-manager.mjs";
 import {
 	CUSTOM_AURA_TARGET_FILTERS_SETTING,
 	ENABLE_EFFECT_AUTOMATION_SETTING,
@@ -48,7 +48,7 @@ export function registerSettings() {
 		hint: "SETTINGS.Presets.Hint",
 		label: "SETTINGS.Presets.Button",
 		icon: "far fa-cube",
-		type: PresetConfigApplication,
+		type: PresetManagerApplication,
 		restricted: true
 	});
 

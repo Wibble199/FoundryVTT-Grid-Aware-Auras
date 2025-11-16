@@ -10,13 +10,13 @@ import { AuraConfigApplication } from "./aura-config.mjs";
 
 const { ApplicationV2 } = foundry.applications.api;
 
-export class PresetConfigApplication extends ApplicationV2 {
+export class PresetManagerApplication extends ApplicationV2 {
 
 	static DEFAULT_OPTIONS = {
 		window: {
 			contentClasses: ["sheet", "standard-form", "grid-aware-auras-preset-config"],
 			icon: "far fa-cube",
-			title: "Aura Preset Configuration"
+			title: "Aura Preset Manager"
 		},
 		position: {
 			width: 720,
@@ -62,6 +62,10 @@ export class PresetConfigApplication extends ApplicationV2 {
 					${this.#presets.map((preset, idx) => html`
 						<tr @contextmenu=${e => this.#openContextMenu(preset, idx, e)}>
 							<td>
+								<a data-tooltip="Enable/disable aura" style="width: 18px" @click=${() => this.#setAuraEnabled(preset.config.id, !preset.config.enabled)}>
+									<i class=${`fas fa-toggle-${preset.config.enabled ? "on" : "off"}`}></i>
+								</a>
+
 								<a @click=${() => this.#editAura(preset.config)}>
 									${preset.config.name}
 									${when(preset.config.effects?.length || preset.config.macros?.length || preset.config.sequencerEffects?.length,
@@ -84,7 +88,7 @@ export class PresetConfigApplication extends ApplicationV2 {
 									.items=${actorTypes}
 									placeholder="None"
 									.value=${preset.applyToNew}
-									@change=${e => this.#updateApplyToNew(preset.config, e)}
+									@change=${e => this.#updateApplyToNew(preset.config.id, e)}
 								></gaa-multi-select>
 							</td>
 							<td class="text-center" style="width: 24px">
@@ -219,12 +223,21 @@ export class PresetConfigApplication extends ApplicationV2 {
 	}
 
 	/**
-	 * @param {AuraConfig} aura
+	 * @param {string} auraId
+	 * @param {boolean} enabled
+	 */
+	#setAuraEnabled(auraId, enabled) {
+		this.#presets = this.#presets.map(p => p.config.id === auraId ? { ...p, config: { ...p.config, enabled } } : p);
+		this.render();
+	}
+
+	/**
+	 * @param {string} auraId
 	 * @param {Event} e
 	 */
-	#updateApplyToNew(aura, e) {
+	#updateApplyToNew(auraId, e) {
 		const applyToNew = e.target.value;
-		this.#presets = this.#presets.map(p => p.config.id === aura.id ? { ...p, applyToNew } : p);
+		this.#presets = this.#presets.map(p => p.config.id === auraId ? { ...p, applyToNew } : p);
 	}
 
 	/**

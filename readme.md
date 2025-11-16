@@ -58,6 +58,21 @@ Automation is the broad category for doing things when tokens interact with aura
 - [Sequencer](./docs/automation.md#sequencer) (If the Sequencer module is installed) - For playing effects on tokens inside an aura.
 - [Terrain Height Tools](./docs/automation.md#terrain-height-tools) (If THT module is installed) - For showing line of sight rulers while dragging tokens.
 
+### Presets
+
+If you have an aura that you want to re-use in many places, or you wish to automatically apply auras to newly created tokens, you can use the preset functionality.
+
+Note that presets are saved to the Foundry world, meaning that any other players that have permission to update their tokens will be able to add saved presets. You require GM permissions to be able to save, edit, or delete presets however.
+
+To create a preset, you can either open the context menu of an aura that you have already created and choose 'Save as Preset', or you can open the GAA preset manager in Foundry's game settings panel and create a new one from there.
+
+To add a preset to a token or item, click the <kbd>+</kbd> button in the aura table and choose the 'Add Preset' item, then choose the preset you wish to add.
+
+You can use the preset manager panel to edit or delete existing presets. Editing a preset will NOT change any cases where this preset has been added to a token/item.
+Here, you can also choose actor types for the "Auto-apply to" setting. What this does is when tokens that represent an actor of this type are created on the scene, the aura will automatically be added to that token (if an aura with the same name does not already exist).
+
+Note that the enabled/disabled toggle in the preset manager determines the initial enabled/disabled state of the aura. It does not enable or disable the preset itself (i.e. a disabled aura will still show up in the 'Add Preset' menu and will still be auto-applied to relevant tokens).
+
 ### Square Grids
 
 When dealing with square grids, there are different ways of handling diagonals. You can configure which rules Grid-Aware Auras uses in the module settings. Which one you choose will depend on your game. GAA supports the following:

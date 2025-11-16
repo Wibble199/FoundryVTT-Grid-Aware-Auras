@@ -87,7 +87,7 @@
 		"EnableMacroAutomation.Hint": "This will enable macros to be triggered by auras when tokens enter/leave their area. Note that by enabling this, it is possible for users to configure macros to be executed on other user's games. Make sure you understand the implications of this before turning this feature on.",
 		"Presets.Name": "Aura Presets",
 		"Presets.Hint": "Create/edit auras for easy reuse or to be added to tokens automatically.",
-		"Presets.Button": "Configure Presets",
+		"Presets.Button": "Preset Manager",
 		"SquareGridMode.Name": "Square Grid Mode",
 		"SquareGridMode.Hint": "Coordinate system to determine the shape of the aura when using square grids."
 	},

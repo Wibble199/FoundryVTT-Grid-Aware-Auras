@@ -94,9 +94,9 @@ Hooks.on("preCreateToken", (tokenDocument, data) => {
 
 	const applicablePresets = getPresets().filter(p => p.applyToNew.includes(actor.type));
 	for (const preset of applicablePresets) {
-		// Don't add any that have the same ID
-		if (auras.some(a => a.id === preset.config.id)) continue;
-		auras.push(preset.config);
+		// Don't add any that have the same name
+		if (!auras.some(a => a.name.localeCompare(preset.config.name, undefined, { sensitivity: "accent" }) === 0))
+			auras.push(preset.config);
 	}
 
 	tokenDocument.updateSource({ [`flags.${MODULE_NAME}.${DOCUMENT_AURAS_FLAG}`]: auras });
