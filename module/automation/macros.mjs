@@ -10,9 +10,10 @@ import { warn } from "../utils/misc-utils.mjs";
  * @param {AuraConfig} aura
  * @param {{ hasEntered: boolean; isPreview: boolean; isInit: boolean; userId: string; }} options
  */
-export function onEnterLeaveAura(token, parent, aura, { hasEntered, isPreview, isInit, userId }) {
+export function onEnterLeaveAura(token, parent, aura, options) {
 	if (!game.settings.get(MODULE_NAME, ENABLE_MACRO_AUTOMATION_SETTING)) return;
 
+	const { isPreview, hasEntered } = options;
 	for (const macroConfig of aura.macros) {
 		if (
 			(!isPreview && macroConfig.mode === "ENTER_LEAVE") ||
@@ -22,8 +23,34 @@ export function onEnterLeaveAura(token, parent, aura, { hasEntered, isPreview, i
 			(isPreview && macroConfig.mode === "PREVIEW_ENTER" && hasEntered) ||
 			(isPreview && macroConfig.mode === "PREVIEW_LEAVE" && !hasEntered)
 		) {
-			tryCallMacro(macroConfig, token, parent, aura, { hasEntered, isPreview, isInit, userId });
+			tryCallMacro(macroConfig, token, parent, aura, options);
 		}
+	}
+}
+
+/**
+ * @param {Token} token
+ * @param {Token} parent
+ * @param {AuraConfig} aura
+ * @param {{ userId: string; }} options
+ */
+export function onStartMoveInsideAura(token, parent, aura, options) {
+	for (const macroConfig of aura.macros) {
+		if (macroConfig.mode === "TARGET_START_MOVE")
+			tryCallMacro(macroConfig, token, parent, aura, options);
+	}
+}
+
+/**
+ * @param {Token} token
+ * @param {Token} parent
+ * @param {AuraConfig} aura
+ * @param {{ startedInside: boolean; startPosition: { x: number; y: number; } userId: string; }} options
+ */
+export function onEndMoveInsideAura(token, parent, aura, options) {
+	for (const macroConfig of aura.macros) {
+		if (macroConfig.mode === "TARGET_END_MOVE")
+			tryCallMacro(macroConfig, token, parent, aura, options);
 	}
 }
 

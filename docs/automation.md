@@ -124,6 +124,27 @@ These three triggers are called with the following data in their `options` objec
 |-|-|-|
 |`isRoundStart`|`boolean`|True if the macro has been called as a result of the round being started, or false as a result of the round being ended.|
 |`userId`|`string`|The ID of the user that changed the round in the combat tracker.|
+
+#### Target Starts Movement Inside Aura
+
+This macrop is triggered when a target token is within the aura and is then moved.
+It is invoked with the following data in its `options` object:
+
+|Property name|Type|Description
+|-|-|-|
+|`userId`|`string`|The ID of the user that triggered the movement.|
+
+#### Target Ends Movement Inside Aura
+
+This macro is triggered when a target token is moved and the end position is within the aura.
+It is invoked with the following data in its `options` object:
+
+|Property name|Type|Description
+|-|-|-|
+|`startedInside`|`boolean`|True if the same movement operation started within this aura as well. False if the move started outside the aura.|
+|`startPosition`|`{ x: number; y: number; }`|The original co-ordinates of the token before the movement happened (measured in pixels).|
+|`userId`|`string`|The ID of the user that triggered the movement.|
+
 </details>
 
 ## Sequencer

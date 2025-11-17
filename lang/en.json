@@ -45,6 +45,8 @@
 		"MacroModeRoundEnd": "Round End",
 		"MacroModeRoundStart": "Round Start",
 		"MacroModeRoundStartEnd": "Round Start/End",
+		"MacroModeTargetEndMove": "Target Ends Movement Inside Aura",
+		"MacroModeTargetStartMove": "Target Starts Movement Inside Aura",
 		"MacroModeTargetTurnEnd": "Target Turn End",
 		"MacroModeTargetTurnStart": "Target Turn Start",
 		"MacroModeTargetTurnStartEnd": "Target Turn Start/End",

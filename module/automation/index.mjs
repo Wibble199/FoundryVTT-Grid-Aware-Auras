@@ -1,4 +1,4 @@
-import { ENTER_LEAVE_AURA_HOOK } from "../consts.mjs";
+import { END_MOVE_INSIDE_AURA_HOOK, ENTER_LEAVE_AURA_HOOK, START_MOVE_INSIDE_AURA_HOOK } from "../consts.mjs";
 import * as effects from "./effects.mjs";
 import * as macros from "./macros.mjs";
 import * as sequencer from "./sequencer.mjs";
@@ -12,6 +12,14 @@ export function setupAutomation() {
 		macros.onEnterLeaveAura(...args);
 		sequencer.onEnterLeaveAura(...args);
 		terrainHeightTools.onEnterLeaveAura(...args);
+	});
+
+	Hooks.on(START_MOVE_INSIDE_AURA_HOOK, (...args) => {
+		macros.onStartMoveInsideAura(...args);
+	});
+
+	Hooks.on(END_MOVE_INSIDE_AURA_HOOK, (...args) => {
+		macros.onEndMoveInsideAura(...args);
 	});
 
 	Hooks.on("updateCombat", (/** @type {Combat} */ combat, _delta, _options, /** @type {string} */ userId) => {

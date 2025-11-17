@@ -2,12 +2,12 @@ import * as api from "./api.mjs";
 import { addAuraConfigItemHeaderButton } from "./applications/item-aura-config.mjs";
 import { tokenConfigClose, v12TokenConfigRenderInner, v13TokenConfigRender } from "./applications/token-aura-config.mjs";
 import { setupAutomation } from "./automation/index.mjs";
-import { DOCUMENT_AURAS_FLAG, MODULE_NAME, SOCKET_NAME, TOGGLE_EFFECT_FUNC } from "./consts.mjs";
+import { DOCUMENT_AURAS_FLAG, END_MOVE_INSIDE_AURA_HOOK, MODULE_NAME, SOCKET_NAME, START_MOVE_INSIDE_AURA_HOOK, TOGGLE_EFFECT_FUNC } from "./consts.mjs";
 import { initialiseAuraTargetFilters } from "./data/aura-target-filters.mjs";
 import { getPresets } from "./data/preset.mjs";
 import { AuraLayer } from "./layers/aura-layer/aura-layer.mjs";
 import { registerSettings } from "./settings.mjs";
-import { toggleEffect } from "./utils/misc-utils.mjs";
+import { pickProperties, toggleEffect } from "./utils/misc-utils.mjs";
 
 // Token properties (flattened) to trigger an aura check on
 const watchedTokenProperties = [
@@ -109,13 +109,33 @@ Hooks.on("createToken", (tokenDocument, _options, userId) => {
 	}
 });
 
-// If the token has moved, or changed shape/size then update the auras.
-// Do not always run this, because some modules (such as token FX) trigger an updateToken, which if it happens while
-// the token is already moving causes problems.
 Hooks.on("updateToken", (tokenDocument, delta, _options, userId) => {
+	if (!AuraLayer.current) return;
+
 	const token = game.canvas.tokens.get(tokenDocument.id);
-	if (Object.keys(foundry.utils.flattenObject(delta)).some(k => watchedTokenProperties.includes(k)) && token && AuraLayer.current) {
+	if (!token) return;
+
+	// If the update was a move update, then call the hooks for any auras the token was in at the start of the move (i.e
+	// before doing _updateAuras)
+	const isMovementUpdate = "x" in delta || "y" in delta;
+	const startPosition = pickProperties(["x", "y"], tokenDocument);
+	const startingAuras = isMovementUpdate ? AuraLayer.current._auraManager.getAurasContainingToken(token) : [];
+	for (const aura of startingAuras)
+		Hooks.callAll(START_MOVE_INSIDE_AURA_HOOK, token, aura.parent, aura.aura.config, { userId });
+
+	// If the token has moved, or changed shape/size then update the auras.
+	// Do not always run this, because some modules (such as token FX) trigger an updateToken, which if it happens while
+	// the token is already moving causes problems.
+	if (Object.keys(foundry.utils.flattenObject(delta)).some(k => watchedTokenProperties.includes(k))) {
 		AuraLayer.current._updateAuras({ token, tokenDelta: delta, userId });
+	}
+
+	// If the update was a move update, then call the hooks for any auras the token was in at the end of the move (i.e.
+	// after doing _updateAuras)
+	const endingAuras = isMovementUpdate ? AuraLayer.current._auraManager.getAurasContainingToken(token) : [];
+	for (const aura of endingAuras) {
+		const startedInside = startingAuras.some(a => a.aura === aura.aura && a.parent === aura.parent);
+		Hooks.callAll(END_MOVE_INSIDE_AURA_HOOK, token, aura.parent, aura.aura.config, { startedInside, startPosition, userId });
 	}
 });
 

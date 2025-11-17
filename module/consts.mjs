@@ -16,7 +16,9 @@ export const PRESET_SETTING = "presets";
 
 // Hooks
 const HOOK_PREFIX = "gridAwareAuras";
+export const END_MOVE_INSIDE_AURA_HOOK = `${HOOK_PREFIX}.endMoveInsideAura`;
 export const ENTER_LEAVE_AURA_HOOK = `${HOOK_PREFIX}.enterLeaveAura`;
+export const START_MOVE_INSIDE_AURA_HOOK = `${HOOK_PREFIX}.startMoveInsideAura`;
 
 // Socket functions
 export const TOGGLE_EFFECT_FUNC = "toggleEffect";
@@ -94,7 +96,9 @@ export const MACRO_MODES = /** @type {const} */ ({
 	TARGET_TURN_END: "GRIDAWAREAURAS.MacroModeTargetTurnEnd",
 	ROUND_START_END: "GRIDAWAREAURAS.MacroModeRoundStartEnd",
 	ROUND_START: "GRIDAWAREAURAS.MacroModeRoundStart",
-	ROUND_END: "GRIDAWAREAURAS.MacroModeRoundEnd"
+	ROUND_END: "GRIDAWAREAURAS.MacroModeRoundEnd",
+	TARGET_START_MOVE: "GRIDAWAREAURAS.MacroModeTargetStartMove",
+	TARGET_END_MOVE: "GRIDAWAREAURAS.MacroModeTargetEndMove"
 });
 
 /** @enum {keyof typeof SEQUENCE_TRIGGERS} */

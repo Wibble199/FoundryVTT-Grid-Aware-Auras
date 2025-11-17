@@ -1,6 +1,24 @@
 # Hooks
 
+- [`gridAwareAuras.endMoveInsideAura`](#gridawareaurasendmoveinsideaura)
 - [`gridAwareAuras.enterLeaveAura`](#gridawareaurasenteraura)
+- [`gridAwareAuras.startMoveInsideAura`](#gridawareaurasstartmoveinsideaura)
+
+## gridAwareAuras.endMoveInsideAura
+
+This hook fires when a token ends its movement inside another token's aura.
+
+### Arguments
+
+|Name|Type|Description|
+|-|-|-|
+|`token`|`Token`|The token that started its movement inside another token's aura.|
+|`parent`|`Token`|The token that owns the aura which the other token started moving within.|
+|`aura`|[`AuraConfig`](./api.md#auraconfig)|The metadata about the aura that was moved within.|
+|`options`|`Object`|Additional information about the hook.|
+|`options.startedInside`|`boolean`|Whether the moved token also started its movement inside this same aura.|
+|`options.startPosition`|`{ x: number; y: number; }`|The starting position of the token.|
+|`options.userId`|`string`|The ID of the user that triggered the movement.|
 
 ## gridAwareAuras.enterLeaveAura
 
@@ -33,7 +51,7 @@ In this example, a token's light emission is changed to represent being on shiel
 
 ```js
 Hooks.on("gridAwareAuras.enterLeaveAura", async (token, parent, aura, options) => {
-	// We don't want to apply this status to preview tokens
+	// We don't want to apply this light to preview tokens
 	if (options.isPreview) {
 		return;
 	}
@@ -58,3 +76,17 @@ Hooks.on("gridAwareAuras.enterLeaveAura", async (token, parent, aura, options) =
 	await token.document.update({ light });
 });
 ```
+
+## gridAwareAuras.startMoveInsideAura
+
+This hook fires when a token starts its movemovement inside another token's aura.
+
+### Arguments
+
+|Name|Type|Description|
+|-|-|-|
+|`token`|`Token`|The token that started its movement inside another token's aura.|
+|`parent`|`Token`|The token that owns the aura which the other token started moving within.|
+|`aura`|[`AuraConfig`](./api.md#auraconfig)|The metadata about the aura that was moved within.|
+|`options`|`Object`|Additional information about the hook.|
+|`options.userId`|`string`|The ID of the user that triggered the movement.|
