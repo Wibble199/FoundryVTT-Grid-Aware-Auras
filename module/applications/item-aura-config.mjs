@@ -101,11 +101,13 @@ export class ItemAuraConfigApplication extends ApplicationV2 {
  * @param {ApplicationHeaderButtons[]} buttons
  */
 export function addAuraConfigItemHeaderButton(sheet, buttons) {
+	if (!(sheet.document instanceof Item)) return;
+
 	buttons.unshift({
 		label: "Auras",
 		class: "configure-auras",
 		icon: "far fa-hexagon",
-		onclick: e => {
+		[sheet instanceof Application ? "onclick" : "onClick"]: e => {
 			e.preventDefault();
 			const app = new ItemAuraConfigApplication(sheet.document);
 			app.render(true);

@@ -64,7 +64,8 @@ Hooks.once("ready", () => {
 			Hooks.on("renderTokenConfig", v13TokenConfigRender);
 			Hooks.on("renderPrototypeTokenConfig", v13TokenConfigRender);
 			Hooks.on("closeTokenConfig", tokenConfigClose);
-			Hooks.on("getItemSheetV2HeaderButtons", addAuraConfigItemHeaderButton);
+			Hooks.on("getItemSheetHeaderButtons", addAuraConfigItemHeaderButton); // For item sheets still using Application v1
+			Hooks.on("getHeaderControlsApplicationV2", addAuraConfigItemHeaderButton);
 			break;
 		}
 	}

@@ -87,7 +87,7 @@ export class AuraTable extends LitElement {
 							<th class="text-center" style="width: 58px">Radius</th>
 							<th class="text-center" style="width: 58px">Line</th>
 							<th class="text-center" style="width: 58px">Fill</th>
-							<th class="text-center" style="width: 24px">
+							<th class="text-center" style="width: 45px">
 								${when(!this.disabled, () => html`
 									<a data-action="create-aura" @click=${this.#createAuraContextMenu}>
 										<i class="fas fa-plus"></i>
@@ -158,7 +158,7 @@ export class AuraTable extends LitElement {
 					${when(aura.fillType !== CONST.DRAWING_FILL_TYPES.NONE,
 						() => html`<input type="color" value="${aura.fillColor}" disabled>`)}
 				</td>
-				<td class="text-center" style="width: 24px">
+				<td class="text-center" style="width: 45px">
 					${when(!this.disabled, () => html`
 						<a @click=${e => this.#openContextMenu(aura, e)} style="width: 100%; display: inline-block;">
 							<i class="fas fa-ellipsis-vertical"></i>
