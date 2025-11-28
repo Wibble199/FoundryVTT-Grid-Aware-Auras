@@ -36,6 +36,8 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	#visibilityMode;
 
+	#disabled;
+
 	#onChange;
 
 	#onClose;
@@ -52,17 +54,19 @@ export class AuraConfigApplication extends ApplicationV2 {
 	/**
 	 * @param {AuraConfig} aura
 	 * @param {Object} [options]
+	 * @param {boolean} [options.disabled]
 	 * @param {(aura: AuraConfig) => void} [options.onChange]
 	 * @param {() => void} [options.onClose]
 	 * @param {string} [options.parentId]
 	 * @param {Object} [options.attachTo]
 	 * @param {{ actor?: Actor | undefined; item?: Item | undefined; }} [options.radiusContext]
 	 */
-	constructor(aura, { onChange, onClose, parentId, attachTo, radiusContext, ...options } = {}) {
+	constructor(aura, { disabled = false, onChange, onClose, parentId, attachTo, radiusContext, ...options } = {}) {
 		super(options);
 
 		this.#aura = foundry.utils.deepClone(aura);
 		this.#visibilityMode = this.#getVisibilityMode(aura.ownerVisibility, aura.nonOwnerVisibility);
+		this.#disabled = disabled;
 		this.#onChange = onChange;
 		this.#onClose = onClose;
 		this.#parentId = parentId;
@@ -96,14 +100,14 @@ export class AuraConfigApplication extends ApplicationV2 {
 				<div class="form-group">
 					<label>${l("Name")}</label>
 					<div class="form-fields">
-						<input type="text" name="name" .value=${this.#aura.name} required>
+						<input type="text" name="name" .value=${this.#aura.name} ?disabled=${this.#disabled} required>
 					</div>
 				</div>
 
 				<div class="form-group">
 					<label>Radius</label>
 					<div class="form-fields">
-						<input type="text" name="radius" value=${this.#aura.radius} required>
+						<input type="text" name="radius" value=${this.#aura.radius} ?disabled=${this.#disabled} required>
 						<span style="flex: 0; margin-left: 0.5rem; cursor: help;">
 							<i class="fas fa-question-circle" data-tooltip=${l("GRIDAWAREAURAS.Radius.Hint")}></i>
 						</span>
@@ -116,7 +120,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 				<div class="form-group">
 					<label>Position</label>
 					<div class="form-fields">
-						<select name="position">
+						<select name="position" ?disabled=${this.#disabled}>
 							${selectOptions(AURA_POSITIONS, { selected: this.#aura.position })}
 						</select>
 						<span style="flex: 0; margin-left: 0.5rem; cursor: help;">
@@ -166,7 +170,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 			<div class="form-group">
 				<label>${l("GRIDAWAREAURAS.LineType")}</label>
 				<div class="form-fields">
-					<select name="lineType" data-dtype="Number">
+					<select name="lineType" ?disabled=${this.#disabled} data-dtype="Number">
 						${selectOptions(LINE_TYPES, {
 							selected: this.#aura.lineType,
 							labelSelector: ([name]) => `GRIDAWAREAURAS.LineType${name.titleCase()}`,
@@ -179,29 +183,29 @@ export class AuraConfigApplication extends ApplicationV2 {
 			<div class="form-group">
 				<label>${l("DRAWING.LineWidth")} <span class="units">(${l("Pixels")})</span></label>
 				<div class="form-fields">
-					<input type="number" name="lineWidth" .value=${this.#aura.lineWidth} required min="0" step="1">
+					<input type="number" name="lineWidth" .value=${this.#aura.lineWidth} required min="0" step="1" ?disabled=${this.#disabled}>
 				</div>
 			</div>
 
 			<div class="form-group">
 				<label>${l("DRAWING.StrokeColor")}</label>
 				<div class="form-fields">
-					<color-picker name="lineColor" .value=${this.#aura.lineColor}></color-picker>
+					<color-picker name="lineColor" .value=${this.#aura.lineColor} ?disabled=${this.#disabled}></color-picker>
 				</div>
 			</div>
 
 			<div class="form-group">
 				<label>${l("DRAWING.LineOpacity")}</label>
 				<div class="form-fields">
-					<range-picker name="lineOpacity" .value=${this.#aura.lineOpacity} min="0" max="1" step="0.1"></range-picker>
+					<range-picker name="lineOpacity" .value=${this.#aura.lineOpacity} min="0" max="1" step="0.1" ?disabled=${this.#disabled}></range-picker>
 				</div>
 			</div>
 
 			<div class="form-group">
 				<label>Dash Config</label>
 				<div class="form-fields">
-					<input type="number" name="lineDashSize" placeholder="Dash" .value=${this.#aura.lineDashSize} required min="0" step="1" ?disabled=${!isDashed}>
-					<input type="number" name="lineGapSize" placeholder="Gap" .value=${this.#aura.lineGapSize} required min="0" step="1" ?disabled=${!isDashed}>
+					<input type="number" name="lineDashSize" placeholder="Dash" .value=${this.#aura.lineDashSize} required min="0" step="1" ?disabled=${this.#disabled || !isDashed}>
+					<input type="number" name="lineGapSize" placeholder="Gap" .value=${this.#aura.lineGapSize} required min="0" step="1" ?disabled=${this.#disabled || !isDashed}>
 				</div>
 			</div>
 		`;
@@ -213,7 +217,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 			<div class="form-group">
 				<label>${l("DRAWING.FillTypes")}</label>
 				<div class="form-fields">
-					<select name="fillType" data-dtype="Number">
+					<select name="fillType" ?disabled=${this.#disabled} data-dtype="Number">
 						${selectOptions(CONST.DRAWING_FILL_TYPES, {
 							selected: this.#aura.fillType,
 							labelSelector: ([name]) => `DRAWING.FillType${name.titleCase()}`,
@@ -226,37 +230,37 @@ export class AuraConfigApplication extends ApplicationV2 {
 			<div class="form-group">
 				<label>${l("DRAWING.FillColor")}</label>
 				<div class="form-fields">
-					<color-picker name="fillColor" .value=${this.#aura.fillColor}></color-picker>
+					<color-picker name="fillColor" .value=${this.#aura.fillColor} ?disabled=${this.#disabled}></color-picker>
 				</div>
 			</div>
 
 			<div class="form-group">
 				<label>${l("DRAWING.FillOpacity")}</label>
 				<div class="form-fields">
-					<range-picker name="fillOpacity" .value=${this.#aura.fillOpacity} min="0" max="1" step="0.1"></range-picker>
+					<range-picker name="fillOpacity" .value=${this.#aura.fillOpacity} min="0" max="1" step="0.1" ?disabled=${this.#disabled}></range-picker>
 				</div>
 			</div>
 
 			<div class="form-group">
 				<label>${l("DRAWING.FillTexture")}</label>
 				<div class="form-fields">
-					<file-picker name="fillTexture" type="image" value=${this.#aura.fillTexture}></file-picker>
+					<file-picker name="fillTexture" type="image" value=${this.#aura.fillTexture} ?disabled=${this.#disabled}></file-picker>
 				</div>
 			</div>
 
 			<div class="form-group">
 				<label>Texture Offset <span class="units">(px)</span></label>
 				<div class="form-fields">
-					<input type="number" name="fillTextureOffset.x" placeholder="x" .value=${this.#aura.fillTextureOffset.x} required ?disabled=${!isPattern}>
-					<input type="number" name="fillTextureOffset.y" placeholder="y" .value=${this.#aura.fillTextureOffset.y} required ?disabled=${!isPattern}>
+					<input type="number" name="fillTextureOffset.x" placeholder="x" .value=${this.#aura.fillTextureOffset.x} required ?disabled=${this.#disabled || !isPattern}>
+					<input type="number" name="fillTextureOffset.y" placeholder="y" .value=${this.#aura.fillTextureOffset.y} required ?disabled=${this.#disabled || !isPattern}>
 				</div>
 			</div>
 
 			<div class="form-group">
 				<label>Texture Scale <span class="units">(%)</span></label>
 				<div class="form-fields">
-					<input type="number" name="fillTextureScale.x" placeholder="x" .value=${this.#aura.fillTextureScale.x} required ?disabled=${!isPattern}>
-					<input type="number" name="fillTextureScale.y" placeholder="y" .value=${this.#aura.fillTextureScale.y} required ?disabled=${!isPattern}>
+					<input type="number" name="fillTextureScale.x" placeholder="x" .value=${this.#aura.fillTextureScale.x} required ?disabled=${this.#disabled || !isPattern}>
+					<input type="number" name="fillTextureScale.y" placeholder="y" .value=${this.#aura.fillTextureScale.y} required ?disabled=${this.#disabled || !isPattern}>
 				</div>
 			</div>
 		`;
@@ -266,13 +270,13 @@ export class AuraConfigApplication extends ApplicationV2 {
 		<div class="form-group">
 			<label>Display Aura</label>
 			<div class="form-fields">
-				<select name="visibilityMode" @change=${this.#setVisibilityMode}>
+				<select name="visibilityMode" ?disabled=${this.#disabled} @change=${this.#setVisibilityMode}>
 					${selectOptions(AURA_VISIBILITY_MODES, { selected: this.#visibilityMode })}
 				</select>
 			</div>
 		</div>
 
-		<fieldset class=${classMap({ disabled: this.#visibilityMode !== "CUSTOM" })} style="padding-block-end: 0;">
+		<fieldset class=${classMap({ disabled: this.#disabled || this.#visibilityMode !== "CUSTOM" })} style="padding-block-end: 0;">
 			<legend>Custom</legend>
 
 			<p class="hint" style="margin-top: 0;">
@@ -361,7 +365,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 			`)}
 
 			<div class="text-right" style="margin-top: -0.5rem; margin-bottom: -0.5rem;">
-				<button type="button" class="icon fas fa-plus" @click=${this.#createEffect} ?disabled=${!effectsEnabled} style="display: inline-block">
+				<button type="button" class="icon fas fa-plus" @click=${this.#createEffect} ?disabled=${this.#disabled || !effectsEnabled} style="display: inline-block">
 				</button>
 			</div>
 
@@ -370,8 +374,8 @@ export class AuraConfigApplication extends ApplicationV2 {
 					<li>
 						<span><strong>${l(CONFIG.statusEffects.find(e => e.id === effect.effectId)?.name ?? "None")}</strong></span>
 						<span><em>${l(EFFECT_MODES[effect.mode] ?? "")}</em></span>
-						<button type="button" class="icon fas fa-edit" @click=${() => this.#editEffect(idx)} ?disabled=${!effectsEnabled}></button>
-						<button type="button" class="icon fas fa-trash" @click=${() => this.#deleteEffect(idx)} ?disabled=${!effectsEnabled}></button>
+						<button type="button" class=${"icon fas " + (this.#disabled ? "fa-eye" : "fa-edit")} @click=${() => this.#editEffect(idx)} ?disabled=${!effectsEnabled}></button>
+						<button type="button" class="icon fas fa-trash" @click=${() => this.#deleteEffect(idx)} ?disabled=${this.#disabled || !effectsEnabled}></button>
 					</li>
 				`)}
 			</ul>`)}
@@ -391,7 +395,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 				<div class="form-group">
 					<label>Effect</label>
 					<div class="form-fields">
-						<select name="effectId">
+						<select name="effectId" ?disabled=${this.#disabled}>
 							<option value="" hidden>-${l("None")}-</option>
 							${selectOptions(CONFIG.statusEffects, {
 								selected: editingEffect.effectId,
@@ -409,14 +413,15 @@ export class AuraConfigApplication extends ApplicationV2 {
 						<input
 							type="checkbox"
 							name="isOverlay"
-							.checked=${editingEffect.isOverlay ?? false}>
+							.checked=${editingEffect.isOverlay ?? false}
+							?disabled=${this.#disabled}>
 					</div>
 				</div>
 
 				<div class="form-group">
 					<label>Target Tokens</label>
 					<div class="form-fields">
-						<select name="targetTokens">
+						<select name="targetTokens" ?disabled=${this.#disabled}>
 							${selectOptions(listAuraTargetFilters(), { selected: editingEffect.targetTokens })}
 						</select>
 					</div>
@@ -425,7 +430,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 				<div class="form-group">
 					<label>Trigger</label>
 					<div class="form-fields">
-						<select name="mode">
+						<select name="mode" ?disabled=${this.#disabled}>
 							${selectOptions(EFFECT_MODES, { selected: editingEffect.mode })}
 						</select>
 					</div>
@@ -438,17 +443,24 @@ export class AuraConfigApplication extends ApplicationV2 {
 							type="number"
 							name="priority"
 							.value=${editingEffect?.priority ?? 0}
-							step="1">
+							step="1"
+							?disabled=${this.#disabled}>
 					</div>
 				</div>
 
 				<div class="flexrow">
-					<button type="button" @click=${() => this.#deleteEffect(editingEffectIndex)}>
-						<i class="fas fa-trash"></i> ${l("Delete")}
-					</button>
-					<button type="submit">
-						<i class="fas fa-check"></i> ${l("Confirm")}
-					</button>
+					${when(this.#disabled, () => html`
+						<button type="button" @click=${() => this.#setAlternateContent(null, { render: true })}>
+							${l("Close")}
+						</button>
+					`, () => html`
+						<button type="button" @click=${() => this.#deleteEffect(editingEffectIndex)}>
+							<i class="fas fa-trash"></i> ${l("Delete")}
+						</button>
+						<button type="submit">
+							<i class="fas fa-check"></i> ${l("Confirm")}
+						</button>
+					`)}
 				</div>
 			</form>
 		`;
@@ -463,7 +475,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 			`)}
 
 			<div class="text-right" style="margin-top: -0.5rem; margin-bottom: -0.5rem;">
-				<button type="button" class="icon fas fa-plus" @click=${this.#createMacro} ?disabled=${!macrosEnabled} style="display: inline-block">
+				<button type="button" class="icon fas fa-plus" @click=${this.#createMacro} ?disabled=${this.#disabled || !macrosEnabled} style="display: inline-block">
 				</button>
 			</div>
 
@@ -472,8 +484,8 @@ export class AuraConfigApplication extends ApplicationV2 {
 					<li>
 						<span><strong>${game.macros.get(macro.macroId)?.name ?? l("None")}</strong></span>
 						<span><em>${l(MACRO_MODES[macro.mode] ?? "")}</em></span>
-						<button type="button" class="icon fas fa-edit" @click=${() => this.#editMacro(idx)} ?disabled=${!macrosEnabled}></button>
-						<button type="button" class="icon fas fa-trash" @click=${() => this.#deleteMacro(idx)} ?disabled=${!macrosEnabled}></button>
+						<button type="button" class=${"icon fas " + (this.#disabled ? "fa-eye" : "fa-edit")} @click=${() => this.#editMacro(idx)} ?disabled=${!macrosEnabled}></button>
+						<button type="button" class="icon fas fa-trash" @click=${() => this.#deleteMacro(idx)} ?disabled=${this.#disabled || !macrosEnabled}></button>
 					</li>
 				`)}
 			</ul>`)}
@@ -493,12 +505,12 @@ export class AuraConfigApplication extends ApplicationV2 {
 		return html`
 			<form class="standard-form"
 				@dragover=${this.#onMacroDragOver}
-				@drop=${e => this.#onMacroDrop(e, macroInputRef)}
+				@drop=${this.#disabled ? nothing : e => this.#onMacroDrop(e, macroInputRef)}
 				@submit=${e => this.#updateArrayItem(e, this.#aura.macros, macroIndex)}>
 				<div class="form-group">
 					<label>Macro ID</label>
 					<div class="form-fields flexcol">
-						<input type="text" name="macroId" value=${editingMacro.macroId} ${ref(macroInputRef)}>
+						<input type="text" name="macroId" value=${editingMacro.macroId} ?disabled=${this.#disabled} ${ref(macroInputRef)}>
 						<p class="hint">Enter a macro's ID, or drag and drop it onto the textbox.</p>
 					</div>
 				</div>
@@ -506,7 +518,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 				<div class="form-group">
 					<label>Target Tokens</label>
 					<div class="form-fields">
-						<select name="targetTokens">
+						<select name="targetTokens" ?disabled=${this.#disabled}>
 							${selectOptions(listAuraTargetFilters(), { selected: editingMacro.targetTokens })}
 						</select>
 					</div>
@@ -515,19 +527,25 @@ export class AuraConfigApplication extends ApplicationV2 {
 				<div class="form-group">
 					<label>Trigger</label>
 					<div class="form-fields">
-						<select name="mode">
+						<select name="mode" ?disabled=${this.#disabled}>
 							${selectOptions(MACRO_MODES, { selected: editingMacro.mode })}
 						</select>
 					</div>
 				</div>
 
 				<div class="flexrow">
-					<button type="button" @click=${() => this.#deleteMacro(macroIndex)}>
-						<i class="fas fa-trash"></i> ${l("Delete")}
-					</button>
-					<button type="submit">
-						<i class="fas fa-check"></i> ${l("Confirm")}
-					</button>
+					${when(this.#disabled, () => html`
+						<button type="button" @click=${() => this.#setAlternateContent(null, { render: true })}>
+							${l("Close")}
+						</button>
+					`, () => html`
+						<button type="button" @click=${() => this.#deleteMacro(macroIndex)}>
+							<i class="fas fa-trash"></i> ${l("Delete")}
+						</button>
+						<button type="submit">
+							<i class="fas fa-check"></i> ${l("Confirm")}
+						</button>
+					`)}
 				</div>
 			</form>
 		`;
@@ -543,7 +561,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 			`)}
 
 			<div class="text-right" style="margin-top: -0.5rem; margin-bottom: -0.5rem;">
-				<button type="button" class="icon fas fa-plus" @click=${this.#createSequence} ?disabled=${!sequencerEnabled} style="display: inline-block">
+				<button type="button" class="icon fas fa-plus" @click=${this.#createSequence} ?disabled=${this.#disabled || !sequencerEnabled} style="display: inline-block">
 				</button>
 			</div>
 
@@ -551,8 +569,8 @@ export class AuraConfigApplication extends ApplicationV2 {
 				${this.#aura.sequencerEffects.map((sequence, idx) => html`
 					<li>
 						<span><strong>${sequence.effectPath}</strong></span>
-						<button type="button" class="icon fas fa-edit" @click=${() => this.#editSequence(idx)} ?disabled=${!sequencerEnabled}></button>
-						<button type="button" class="icon fas fa-trash" @click=${() => this.#deleteSequence(idx)} ?disabled=${!sequencerEnabled}></button>
+						<button type="button" class=${"icon fas " + (this.#disabled ? "fa-eye" : "fa-edit")} @click=${() => this.#editSequence(idx)} ?disabled=${!sequencerEnabled}></button>
+						<button type="button" class="icon fas fa-trash" @click=${() => this.#deleteSequence(idx)} ?disabled=${this.#disabled || !sequencerEnabled}></button>
 					</li>
 				`)}
 			</ul>`)}
@@ -575,7 +593,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 					<div class="form-group">
 						<label>Effect</label>
 						<div class="form-fields">
-							<input type="text" name="effectPath" value=${effect.effectPath}>
+							<input type="text" name="effectPath" value=${effect.effectPath} ?disabled=${this.#disabled}>
 							<button type="button" @click=${() => Sequencer.DatabaseViewer.show()}>
 								<i class="fas fa-database"></i>
 							</button>
@@ -586,7 +604,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 					<div class="form-group">
 						<label>Target Tokens</label>
 						<div class="form-fields">
-							<select name="targetTokens">
+							<select name="targetTokens" ?disabled=${this.#disabled}>
 								${selectOptions(listAuraTargetFilters(), { selected: effect.targetTokens })}
 							</select>
 						</div>
@@ -595,7 +613,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 					<div class="form-group">
 						<label>Trigger</label>
 						<div class="form-fields">
-							<select name="trigger">
+							<select name="trigger" ?disabled=${this.#disabled}>
 								${selectOptions(SEQUENCE_TRIGGERS, { selected: effect.trigger })}
 							</select>
 						</div>
@@ -604,7 +622,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 					<div class="form-group">
 						<label>Position</label>
 						<div class="form-fields">
-							<select name="position">
+							<select name="position" ?disabled=${this.#disabled}>
 								${selectOptions(SEQUENCE_POSITIONS, { selected: effect.position })}
 							</select>
 						</div>
@@ -616,9 +634,9 @@ export class AuraConfigApplication extends ApplicationV2 {
 						<label>Repeats</label>
 						<div class="form-fields">
 							<label>Count</label>
-							<input type="number" name="repeatCount" value=${effect.repeatCount} min="1">
+							<input type="number" name="repeatCount" value=${effect.repeatCount} min="1" ?disabled=${this.#disabled}>
 							<label>Delay</label>
-							<input type="number" name="repeatDelay" value=${effect.repeatDelay} min="0">
+							<input type="number" name="repeatDelay" value=${effect.repeatDelay} min="0" ?disabled=${this.#disabled}>
 							<span class="units">ms</span>
 						</div>
 						<p class="hint">How many times the effect should play, and how long between repeats.</p>
@@ -627,7 +645,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 					<div class="form-group">
 						<label>Start Delay</label>
 						<div class="form-fields">
-							<input type="number" name="delay" value=${effect.delay} min="0">
+							<input type="number" name="delay" value=${effect.delay} min="0" ?disabled=${this.#disabled}>
 							<span class="units">ms</span>
 						</div>
 					</div>
@@ -635,7 +653,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 					<div class="form-group">
 						<label>Playback Rate</label>
 						<div class="form-fields">
-							<input type="number" name="playbackRate" value=${effect.playbackRate} min="0.01" step="0.01">
+							<input type="number" name="playbackRate" value=${effect.playbackRate} min="0.01" step="0.01" ?disabled=${this.#disabled}>
 							<span class="units">x</span>
 						</div>
 					</div>
@@ -645,16 +663,16 @@ export class AuraConfigApplication extends ApplicationV2 {
 					<div class="form-group">
 						<label>Opacity</label>
 						<div class="form-fields">
-							<range-picker name="opacity" .value=${effect.opacity} min="0" max="1" step="0.05"></range-picker>
+							<range-picker name="opacity" .value=${effect.opacity} min="0" max="1" step="0.05" ?disabled=${this.#disabled}></range-picker>
 						</div>
 					</div>
 
 					<div class="form-group">
 						<label>Fade In</label>
 						<div class="form-fields">
-							<input type="number" name="fadeInDuration" value=${effect.fadeInDuration} min="0">
+							<input type="number" name="fadeInDuration" value=${effect.fadeInDuration} min="0" ?disabled=${this.#disabled}>
 							<span class="units" style="margin-right: 0.75rem">ms</span>
-							<select name="fadeInEasing">
+							<select name="fadeInEasing" ?disabled=${this.#disabled}>
 								${selectOptions(SEQUENCE_EASINGS, { selected: effect.fadeInEasing })}
 							</select>
 						</div>
@@ -663,9 +681,9 @@ export class AuraConfigApplication extends ApplicationV2 {
 					<div class="form-group">
 						<label>Fade Out</label>
 						<div class="form-fields">
-							<input type="number" name="fadeOutDuration" value=${effect.fadeOutDuration} min="0">
+							<input type="number" name="fadeOutDuration" value=${effect.fadeOutDuration} min="0" ?disabled=${this.#disabled}>
 							<span class="units" style="margin-right: 0.75rem">ms</span>
-							<select name="fadeOutEasing">
+							<select name="fadeOutEasing" ?disabled=${this.#disabled}>
 								${selectOptions(SEQUENCE_EASINGS, { selected: effect.fadeOutEasing })}
 							</select>
 						</div>
@@ -676,7 +694,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 					<div class="form-group">
 						<label>Scale</label>
 						<div class="form-fields">
-							<input type="number" name="scale" value=${effect.scale} min="0" step="0.01">
+							<input type="number" name="scale" value=${effect.scale} min="0" step="0.01" ?disabled=${this.#disabled}>
 							<span class="units">x</span>
 						</div>
 					</div>
@@ -684,18 +702,18 @@ export class AuraConfigApplication extends ApplicationV2 {
 					<div class="form-group">
 						<label>Scale to Object</label>
 						<div class="form-fields">
-							<input type="checkbox" name="scaleToObject" ?checked=${effect.scaleToObject}>
+							<input type="checkbox" name="scaleToObject" ?checked=${effect.scaleToObject} ?disabled=${this.#disabled}>
 						</div>
 					</div>
 
 					<div class="form-group">
 						<label>Scale In</label>
 						<div class="form-fields">
-							<input type="number" name="scaleInScale" value=${effect.scaleInScale}>
+							<input type="number" name="scaleInScale" value=${effect.scaleInScale} ?disabled=${this.#disabled}>
 							<span class="units" style="margin-right: 0.75rem">x</span>
-							<input type="number" name="scaleInDuration" value=${effect.scaleInDuration} min="0" step="0.01">
+							<input type="number" name="scaleInDuration" value=${effect.scaleInDuration} min="0" step="0.01" ?disabled=${this.#disabled}>
 							<span class="units" style="margin-right: 0.75rem">ms</span>
-							<select name="scaleInEasing" style="flex: 2">
+							<select name="scaleInEasing" style="flex: 2" ?disabled=${this.#disabled}>
 								${selectOptions(SEQUENCE_EASINGS, { selected: effect.scaleInEasing })}
 							</select>
 						</div>
@@ -704,11 +722,11 @@ export class AuraConfigApplication extends ApplicationV2 {
 					<div class="form-group">
 						<label>Scale Out</label>
 						<div class="form-fields">
-							<input type="number" name="scaleOutScale" value=${effect.scaleOutScale}>
+							<input type="number" name="scaleOutScale" value=${effect.scaleOutScale} ?disabled=${this.#disabled}>
 							<span class="units" style="margin-right: 0.75rem">x</span>
-							<input type="number" name="scaleOutDuration" value=${effect.scaleOutDuration} min="0" step="0.01">
+							<input type="number" name="scaleOutDuration" value=${effect.scaleOutDuration} min="0" step="0.01" ?disabled=${this.#disabled}>
 							<span class="units" style="margin-right: 0.75rem">ms</span>
-							<select name="scaleOutEasing" style="flex: 2">
+							<select name="scaleOutEasing" style="flex: 2" ?disabled=${this.#disabled}>
 								${selectOptions(SEQUENCE_EASINGS, { selected: effect.scaleOutEasing })}
 							</select>
 						</div>
@@ -719,19 +737,25 @@ export class AuraConfigApplication extends ApplicationV2 {
 					<div class="form-group">
 						<label>Below Tokens</label>
 						<div class="form-fields">
-							<input type="checkbox" name="belowTokens" ?checked=${effect.belowTokens}>
+							<input type="checkbox" name="belowTokens" ?checked=${effect.belowTokens} ?disabled=${this.#disabled}>
 						</div>
 						<p class="hint">Note that auras render at the same Z-index as tokens, so this also draws the effect below auras.</p>
 					</div>
 				</div>
 
 				<div class="flexrow">
-					<button type="button" @click=${() => this.#deleteSequence(sequenceIndex)}>
-						<i class="fas fa-trash"></i> ${l("Delete")}
-					</button>
-					<button type="submit">
-						<i class="fas fa-check"></i> ${l("Confirm")}
-					</button>
+					${when(this.#disabled, () => html`
+						<button type="button" @click=${() => this.#setAlternateContent(null, { render: true })}>
+							${l("Close")}
+						</button>
+					`, () => html`
+						<button type="button" @click=${() => this.#deleteSequence(sequenceIndex)}>
+							<i class="fas fa-trash"></i> ${l("Delete")}
+						</button>
+						<button type="submit">
+							<i class="fas fa-check"></i> ${l("Confirm")}
+						</button>
+					`)}
 				</div>
 			</form>
 		`;
@@ -741,7 +765,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 		<div class="form-group">
 			<label>Token Ruler on Drag</label>
 			<div class="form-fields">
-				<select name="terrainHeightTools.rulerOnDrag">
+				<select name="terrainHeightTools.rulerOnDrag" ?disabled=${this.#disabled}>
 					${selectOptions(THT_RULER_ON_DRAG_MODES, { selected: this.#aura.terrainHeightTools.rulerOnDrag })}
 				</select>
 			</div>
@@ -750,7 +774,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 		<div class="form-group">
 			<label>Target Tokens</label>
 			<div class="form-fields">
-				<select name="terrainHeightTools.targetTokens">
+				<select name="terrainHeightTools.targetTokens" ?disabled=${this.#disabled}>
 					${selectOptions(listAuraTargetFilters(), { selected: this.#aura.terrainHeightTools.targetTokens })}
 				</select>
 			</div>
@@ -807,14 +831,13 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	#createEffect = () => {
 		this.#aura.effects.push(effectConfigDefaults());
-		this.#setAlternateContent(this.#effectEditNestedDialog(this.#aura.effects.length - 1), "Edit Effect");
+		this.#setAlternateContent(this.#effectEditNestedDialog(this.#aura.effects.length - 1), { title: "Edit Effect" });
 		this.#auraUpdated();
 	};
 
 	/** @param {number} effectIndex */
 	#editEffect = effectIndex => {
-		this.#setAlternateContent(this.#effectEditNestedDialog(effectIndex), "Edit Effect");
-		this.render();
+		this.#setAlternateContent(this.#effectEditNestedDialog(effectIndex), { title: "Edit Effect", render: true });
 	};
 
 	/** @param {number} effectIndex */
@@ -826,14 +849,13 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	#createMacro = () => {
 		this.#aura.macros.push(macroConfigDefaults());
-		this.#setAlternateContent(this.#macroEditNestedDialog(this.#aura.macros.length - 1), "Edit Macro");
+		this.#setAlternateContent(this.#macroEditNestedDialog(this.#aura.macros.length - 1), { title: "Edit Macro" });
 		this.#auraUpdated();
 	};
 
 	/** @param {number} macroIndex */
 	#editMacro = macroIndex => {
-		this.#setAlternateContent(this.#macroEditNestedDialog(macroIndex), "Edit Macro");
-		this.render();
+		this.#setAlternateContent(this.#macroEditNestedDialog(macroIndex), { title: "Edit Macro", render: true });
 	};
 
 	/** @param {number} macroIndex */
@@ -868,8 +890,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	/** @param {number} sequenceIndex */
 	#editSequence = sequenceIndex => {
-		this.#setAlternateContent(this.#sequenceEditNestedDialog(sequenceIndex), "Edit Sequencer Effect");
-		this.render();
+		this.#setAlternateContent(this.#sequenceEditNestedDialog(sequenceIndex), { title: "Edit Sequencer Effect", render: true });
 	};
 
 	/** @param {number} sequenceIndex */
@@ -886,11 +907,14 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	/**
 	 * @param {ReturnType<html> | undefined} content
-	 * @param {string} [title]
+	 * @param {Object} [options]
+	 * @param {string} [options.title]
+	 * @param {boolean} [options.render]
 	 */
-	#setAlternateContent(content, title) {
+	#setAlternateContent(content, { title, render = false } = {}) {
 		this.#alternateContent = content;
 		this.element.querySelector(".window-title").innerText = "Aura Configuration" + (title?.length ? ` :: ${title}` : "");
+		if (render) this.render();
 	}
 
 	/** @override */
@@ -928,8 +952,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 	/** @override */
 	async close(options) {
 		if (this.#alternateContent !== null) {
-			this.#setAlternateContent(null);
-			this.render();
+			this.#setAlternateContent(null, { render: true });
 			return;
 		}
 

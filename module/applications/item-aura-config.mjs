@@ -3,7 +3,7 @@
 import "../components/aura-table.mjs";
 import { DOCUMENT_AURAS_FLAG, MODULE_NAME } from "../consts.mjs";
 import { getDocumentOwnAuras } from "../data/aura.mjs";
-import { createRef, html, ref, render } from "../lib/lit-all.min.js";
+import { createRef, html, ref, render, when } from "../lib/lit-all.min.js";
 
 const { ApplicationV2 } = foundry.applications.api;
 
@@ -11,14 +11,21 @@ export class ItemAuraConfigApplication extends ApplicationV2 {
 
 	#item;
 
+	#disabled;
+
 	/** @type {{ value?: AuraTable }} */
 	#auraTableRef = createRef();
 
-	/** @param {Item} item */
-	constructor(item, options = {}) {
-		super(options);
+	/**
+	 * @param {Item} item
+	 * @param {Object} [options]
+	 * @param {boolean} [options.disabled]
+	 */
+	constructor(item, { disabled = false, ...optionsPassthrough } = {}) {
+		super(optionsPassthrough);
 
 		this.#item = item;
+		this.#disabled = disabled;
 		item.apps[this.appId] = this;
 	}
 
@@ -54,17 +61,20 @@ export class ItemAuraConfigApplication extends ApplicationV2 {
 			<gaa-aura-table
 				name="auras"
 				.value=${getDocumentOwnAuras(this.#item)}
+				.disabled=${this.#disabled}
 				.parentId=${this.#item.id}
 				.radiusContext=${{ actor: this.#item.parent, item: this.#item }}
 				${ref(this.#auraTableRef)}>
 			</gaa-aura-table>
 
-			<footer class="sheet-footer flexrow">
-				<button type="submit">
-					<i class="fas fa-save"></i>
-					${game.i18n.localize("Save Changes")}
-				</button>
-			</footer>
+			${when(!this.#disabled, () => html`
+				<footer class="sheet-footer flexrow">
+					<button type="submit">
+						<i class="fas fa-save"></i>
+						${game.i18n.localize("Save Changes")}
+					</button>
+				</footer>
+			`)}
 		`;
 	}
 
@@ -102,6 +112,7 @@ export class ItemAuraConfigApplication extends ApplicationV2 {
  */
 export function addAuraConfigItemHeaderButton(sheet, buttons) {
 	if (!(sheet.document instanceof Item)) return;
+	if (sheet instanceof DocumentOwnershipConfig) return;
 
 	buttons.unshift({
 		label: "Auras",
@@ -109,7 +120,8 @@ export function addAuraConfigItemHeaderButton(sheet, buttons) {
 		icon: "far fa-hexagon",
 		[sheet instanceof Application ? "onclick" : "onClick"]: e => {
 			e.preventDefault();
-			const app = new ItemAuraConfigApplication(sheet.document);
+			const disabled = typeof sheet.isEditable === "boolean" ? !sheet.isEditable : false;
+			const app = new ItemAuraConfigApplication(sheet.document, { disabled });
 			app.render(true);
 		}
 	});

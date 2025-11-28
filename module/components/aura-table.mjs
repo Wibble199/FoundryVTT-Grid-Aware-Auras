@@ -133,7 +133,7 @@ export class AuraTable extends LitElement {
 							<i class=${`fas fa-toggle-${aura.enabled ? "on" : "off"}`}></i>
 						</p>`
 						// eslint-disable-next-line @stylistic/js/indent
-						: html`<a data-tooltip="Enable/disable aura" style="width: 18px" @click=${() => !this.disabled && this.#setAuraEnabled(aura.id, !aura.enabled)}>
+						: html`<a data-tooltip="Enable/disable aura" style="width: 18px" @click=${() => this.#setAuraEnabled(aura.id, !aura.enabled)}>
 							<i class=${`fas fa-toggle-${aura.enabled ? "on" : "off"}`}></i>
 						</a>`
 					}
@@ -159,11 +159,9 @@ export class AuraTable extends LitElement {
 						() => html`<input type="color" value="${aura.fillColor}" disabled>`)}
 				</td>
 				<td class="text-center" style="width: 45px">
-					${when(!this.disabled, () => html`
-						<a @click=${e => this.#openContextMenu(aura, e)} style="width: 100%; display: inline-block;">
-							<i class="fas fa-ellipsis-vertical"></i>
-						</a>
-					`)}
+					<a @click=${e => this.#openContextMenu(aura, e)} style="width: 100%; display: inline-block;">
+						<i class="fas fa-ellipsis-vertical"></i>
+					</a>
 				</td>
 			</tr>
 		`;
@@ -251,6 +249,7 @@ export class AuraTable extends LitElement {
 		if (this.#openAuraConfigApps.has(aura.id)) return;
 
 		const app = new AuraConfigApplication(aura, {
+			disabled: this.disabled,
 			onChange: newAura => {
 				this.value = this.value.map(a => a.id === aura.id ? { ...a, ...newAura } : a);
 				this.#dispatchChangeEvent();
@@ -285,21 +284,21 @@ export class AuraTable extends LitElement {
 
 		ContextMenu.open(e, [
 			{
-				label: "Edit",
-				icon: "fas fa-edit",
+				label: this.disabled ? "View" : "Edit",
+				icon: this.disabled ? "fas fa-eye" : "fas fa-edit",
 				onClick: () => this.#editAura(aura)
 			},
-			!aura.enabled && {
+			!this.disabled && !aura.enabled && {
 				label: "Enable",
 				icon: "fas fa-toggle-on",
 				onClick: () => this.#setAuraEnabled(aura.id, true)
 			},
-			aura.enabled && {
+			!this.disabled && aura.enabled && {
 				label: "Disable",
 				icon: "fas fa-toggle-off",
 				onClick: () => this.#setAuraEnabled(aura.id, false)
 			},
-			{
+			!this.disabled && {
 				label: "Duplicate",
 				icon: "fas fa-clone",
 				onClick: () => {
@@ -319,7 +318,7 @@ export class AuraTable extends LitElement {
 				icon: "fas fa-download",
 				onClick: () => exportAuraJson(aura)
 			},
-			{
+			!this.disabled && {
 				label: "Delete",
 				icon: "fas fa-trash",
 				onClick: () => {
