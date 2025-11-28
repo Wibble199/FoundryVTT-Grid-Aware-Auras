@@ -50,7 +50,9 @@ The '_Enable Effect Automation_' setting must be enabled by the GM in the world 
 
 ## Macros
 
-This automation executes the provided macro under certain triggers. Note that this macro is executed for all players that are currently on the scene.
+This automation executes the provided macro under certain triggers. Note that this macro is executed for all players that are currently on the scene (provided the player has permission to execute the macro).
+
+If you only wish the macros to execute on some user's clients, either configure the ownership of the macro so that the user cannot access it or add a guard to your macro script to check the current user.
 
 All macros are called with the following parameters:
 

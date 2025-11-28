@@ -162,10 +162,10 @@ function tryCallMacro(macroConfig, token, parent, aura, options) {
 	if (!canTargetToken(token, parent, aura, macroConfig.targetTokens)) return;
 
 	const macro = game.macros.get(macroConfig.macroId);
-	if (macro) {
+	if (macro?.canExecute) {
 		// Foundry already wraps the execution inside a try..catch, so we do not need to worry about errors thrown in macros.
 		macro.execute({ token, parent, aura, options });
-	} else {
+	} else if (!macro) {
 		warn(`Attempted to call macro with ID '${macroConfig.macroId}' due to ${macroConfig.mode} from aura '${aura.name}' on token '${parent.name}', but it could not be found.`);
 	}
 }
