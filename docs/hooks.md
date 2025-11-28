@@ -1,10 +1,12 @@
 # Hooks
 
 - [`gridAwareAuras.endMoveInsideAura`](#gridawareaurasendmoveinsideaura)
-- [`gridAwareAuras.enterLeaveAura`](#gridawareaurasenteraura)
+- [`gridAwareAuras.enterLeaveAura`](#gridawareaurasenterleaveaura)
 - [`gridAwareAuras.startMoveInsideAura`](#gridawareaurasstartmoveinsideaura)
 
 ## gridAwareAuras.endMoveInsideAura
+
+![Available Since v0.5.3](https://img.shields.io/badge/Available%20Since-v0.5.3-blue?style=flat-square)
 
 This hook fires when a token ends its movement inside another token's aura.
 
@@ -21,6 +23,8 @@ This hook fires when a token ends its movement inside another token's aura.
 |`options.userId`|`string`|The ID of the user that triggered the movement.|
 
 ## gridAwareAuras.enterLeaveAura
+
+![Available Since v0.2.0](https://img.shields.io/badge/Available%20Since-v0.2.0-blue?style=flat-square)
 
 This hook fires when a token enters or leaves another token's aura.
 
@@ -78,6 +82,8 @@ Hooks.on("gridAwareAuras.enterLeaveAura", async (token, parent, aura, options) =
 ```
 
 ## gridAwareAuras.startMoveInsideAura
+
+![Available Since v0.5.3](https://img.shields.io/badge/Available%20Since-v0.5.3-blue?style=flat-square)
 
 This hook fires when a token starts its movemovement inside another token's aura.
 
