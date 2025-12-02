@@ -58,7 +58,7 @@ Deletes auras from the specified owner document.
 |Name|Type|Default|Description|
 |-|-|-|-|
 |`owner`|`Token \| TokenDocument \| Item`|*Required*|The target entity to delete the auras from. Must be a token or an item.|
-|`filter`|`{ name?: string; id?: string; }`|`{}`|A filter used to specify which aura(s) to delete. Note that the name filter is case-insensitive. You can also find an aura's ID by opening the edit dialog and clicking the book icon in the header.|
+|`filter`|`{ name?: string \| RegExp; id?: string \| RegExp; }`|`{}`|A filter used to specify which aura(s) to delete. When using a string, the name filter is case-insensitive. Note that you can find an aura's ID by opening the edit dialog and clicking the book icon in the header.|
 |`options`|`Object`|`{}`|Additional options|
 |`options.includeItems`|`boolean`|`false`|If the target entity is a token and this is true, then auras on items owned by that token's actor will also be considered for deletion.|
 
@@ -145,7 +145,7 @@ for (const aura of auras) {
 ![Available Since v0.2.0](https://img.shields.io/badge/Available%20Since-v0.2.0-blue?style=flat-square)
 ![Changed In v0.4.0](https://img.shields.io/badge/Changed%20In-v0.4.0-orange?style=flat-square)
 
-Returns a list of auras that are defined on the given token and any items owned by the token's actor.
+Returns a list of auras that are defined on the given token including auras from any items owned by the token's actor.
 
 ### Parameters
 
@@ -280,7 +280,7 @@ Updates one or more auras on the target document.
 |Name|Type|Default|Description|
 |-|-|-|-|
 |`owner`|`Token \| TokenDocument \| Item`|*Required*|The target entity to update the auras on. Must be a token or an item.|
-|`filter`|`{ name?: string; id?: string; }`|*Required*|A filter used to specify which aura(s) to update. Note that the name filter is case-insensitive. You can find an aura's ID by opening the edit dialog and clicking the book icon in the header.|
+|`filter`|`{ name?: string \| RegExp; id?: string \| RegExp; }`|*Required*|A filter used to specify which aura(s) to update. When using a string, the name filter is case-insensitive. Note that you can find an aura's ID by opening the edit dialog and clicking the book icon in the header.|
 |`update`|[`Partial<AuraConfig> \| ((existing: AuraConfig) => Partial<AuraConfig>)`](#auraconfig)|*Required*|Either the changes to be made to the config (partial [`AuraConfig`](#auraconfig)), or a function that runs for each aura and is passed the existing aura config and returns the changes [`AuraConfig`](#auraconfig).|
 |`options`|`Object`|`{}`|Additional options|
 |`options.includeItems`|`boolean`|`false`|If the target entity is a token and this is true, then auras on items owned by that token's actor will also be considered for updates.|
@@ -300,6 +300,9 @@ await api.updateAuras(token, { id: "GFjtK29pZqW88hcb" }, { radius: 10 });
 
 // Disables the aura with the given name (case-insensitive).
 await api.updateAuras(token, { name: "Toxic Gas" }, { enabled: false });
+
+// Increase the range of all auras whose name ends with 'range'
+await api.updateAuras(token, { name: /.* range/i }, aura => ({ enabled: !aura.enabled }));
 
 // Toggles all the auras on the token and it's children - enabling disabled ones and disabling enabled ones.
 await api.updateAuras(token, {}, aura => ({ enabled: !aura.enabled }), { includeItems: true });

@@ -22,7 +22,7 @@ export async function createAura(owner, aura = {}) {
 /**
  * Deletes the aura(s) matching the given filter on the provided document.
  * @param {Token | TokenDocument | Item} owner The entity that owns the auras to delete.
- * @param {{ name?: string; id?: string; }} filter
+ * @param {{ name?: string | RegExp; id?: string | RegExp; }} filter
  * @param {Object} [options]
  * @param {boolean} [options.includeItems] When the owner is a token, whether or not to also delete auras on owned items.
  * @returns {Promise<void>}
@@ -132,7 +132,7 @@ export async function toggleEffect(target, effectId, state, { overlay = false } 
 /**
  * Updates the aura(s) matching the given filter with the given partial data or function.
  * @param {Token | TokenDocument | Item} owner The entity that owns the auras to update.
- * @param {{ name?: string; id?: string; }} filter
+ * @param {{ name?: string | RegExp; id?: string | RegExp; }} filter
  * @param {Partial<AuraConfig> | ((existing: AuraConfig) => Partial<AuraConfig>)} update
  * @param {Object} [options]
  * @param {boolean} [options.includeItems] When the owner is a token, whether or not to also affect auras on owned items.
@@ -168,11 +168,19 @@ export async function updateAuras(owner, filter, update, { includeItems = false 
 
 /**
  * @param {AuraConfig} aura
- * @param {{ name?: string; id?: string; } | undefined} filter
+ * @param {{ name?: string | RegExp; id?: string | RegExp; } | undefined} filter
  */
 function auraFilterTest(aura, filter) {
 	return (
-		(filter?.id === undefined || aura.id === filter.id) &&
-		(filter?.name === undefined || aura.name.localeCompare(filter.name, undefined, { sensitivity: "accent" }) === 0)
+		(
+			filter?.id === undefined ||
+			(typeof filter.id === "string" && aura.id === filter.id) ||
+			(filter.id instanceof RegExp && filter.id.test(aura.id))
+		) &&
+		(
+			filter?.name === undefined ||
+			(typeof filter.name === "string" && aura.name.localeCompare(filter.name, undefined, { sensitivity: "accent" }) === 0) ||
+			(filter.name instanceof RegExp && filter.name.test(aura.name))
+		)
 	);
 }
