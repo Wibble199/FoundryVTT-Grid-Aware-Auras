@@ -269,7 +269,9 @@ api.toggleEffect(token, statusEffectId, true, { overlay: true });
 
 ## updateAuras
 
-![Available Since v0.5.2](https://img.shields.io/badge/Available%20Since-v0.5.2-blue?style=flat-square)
+![Available Since v0.5.4](https://img.shields.io/badge/Available%20Since-v0.5.4-blue?style=flat-square)
+
+<sup>(Technically, this function has been available since v0.5.2, but was broken until v0.5.4)</sup>
 
 Updates one or more auras on the target document.
 

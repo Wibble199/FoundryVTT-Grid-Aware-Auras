@@ -141,7 +141,7 @@ export async function toggleEffect(target, effectId, state, { overlay = false } 
 export async function updateAuras(owner, filter, update, { includeItems = false } = {}) {
 	owner = owner instanceof Token ? owner.document : owner;
 
-	if (!update || ["object", "function"].includes(typeof update)) {
+	if (!update || !["object", "function"].includes(typeof update)) {
 		throw new Error("Must provide an object or a function as the `update` parameter.");
 	}
 
