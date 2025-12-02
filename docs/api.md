@@ -301,8 +301,8 @@ await api.updateAuras(token, { id: "GFjtK29pZqW88hcb" }, { radius: 10 });
 // Disables the aura with the given name (case-insensitive).
 await api.updateAuras(token, { name: "Toxic Gas" }, { enabled: false });
 
-// Increase the range of all auras whose name ends with " range"
-await api.updateAuras(token, { name: /.* range/i }, aura => ({ enabled: !aura.enabled }));
+// Increase the radius of all auras whose name ends with " range"
+await api.updateAuras(token, { name: /.* range/i }, aura => ({ radius: +aura.radius + 1 }));
 
 // Toggles all the auras on the token and its children - enabling disabled ones and disabling enabled ones.
 await api.updateAuras(token, {}, aura => ({ enabled: !aura.enabled }), { includeItems: true });
