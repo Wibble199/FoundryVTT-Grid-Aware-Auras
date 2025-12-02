@@ -30,7 +30,7 @@ Creates a new aura on the specified owner.
 
 ### Returns
 
-A `Promise<void>` that will resolve when the aura has been created.
+A [`Promise<AuraConfig>`](#auraconfig) that will resolve with the newly created aura once the aura has been created.
 
 ### Example
 
@@ -64,7 +64,7 @@ Deletes auras from the specified owner document.
 
 ### Returns
 
-A `Promise<void>` that will resolve when the aura(s) have been removed.
+A [`Promise<AuraConfig[]>`](#auraconfig) that will resolve with the configs of the deleted aura(s) once the aura(s) have been removed.
 
 ### Example
 
@@ -75,7 +75,7 @@ const [token] = canvas.tokens.controlled;
 // Delete the aura on the token with a specific ID.
 await api.deleteAuras(token, { id: "GFjtK29pZqW88hcb" });
 
-// Deletes all auras on the token and any of it's items with the given name (case-insensitive).
+// Deletes all auras on the token and any of its items with the given name (case-insensitive).
 await api.deleteAuras(token, { name: "Range" }, { includeItems: true });
 ```
 
@@ -287,7 +287,7 @@ Updates one or more auras on the target document.
 
 ### Returns
 
-A `Promise<void>` that will resolve when the aura(s) have been updated.
+A [`Promise<AuraConfig[]>`](#auraconfig) that will resolve with the updated aura config(s) once the aura(s) have been updated.
 
 ### Example
 
@@ -301,10 +301,10 @@ await api.updateAuras(token, { id: "GFjtK29pZqW88hcb" }, { radius: 10 });
 // Disables the aura with the given name (case-insensitive).
 await api.updateAuras(token, { name: "Toxic Gas" }, { enabled: false });
 
-// Increase the range of all auras whose name ends with 'range'
+// Increase the range of all auras whose name ends with " range"
 await api.updateAuras(token, { name: /.* range/i }, aura => ({ enabled: !aura.enabled }));
 
-// Toggles all the auras on the token and it's children - enabling disabled ones and disabling enabled ones.
+// Toggles all the auras on the token and its children - enabling disabled ones and disabling enabled ones.
 await api.updateAuras(token, {}, aura => ({ enabled: !aura.enabled }), { includeItems: true });
 ```
 

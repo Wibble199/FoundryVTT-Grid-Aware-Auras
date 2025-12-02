@@ -8,7 +8,7 @@ import { toggleEffect as toggleEffectImpl } from "./utils/misc-utils.mjs";
  * Creates a new aura on the provided document.
  * @param {Token | TokenDocument | Item} owner The entity that will own the aura.
  * @param {Omit<Partial<AuraConfig>, "id" | "_v">} aura The aura to create.
- * @param {Promise<void>}
+ * @param {Promise<AuraConfig>}
  */
 export async function createAura(owner, aura = {}) {
 	owner = owner instanceof Token ? owner.document : owner;
@@ -17,6 +17,7 @@ export async function createAura(owner, aura = {}) {
 	const newAura = foundry.utils.mergeObject(auraDefaults(), aura, { inplace: false });
 	newAura.id = foundry.utils.randomID();
 	await owner.update({ [`flags.${MODULE_NAME}.${DOCUMENT_AURAS_FLAG}`]: [...auras, newAura] });
+	return newAura;
 }
 
 /**
@@ -25,23 +26,29 @@ export async function createAura(owner, aura = {}) {
  * @param {{ name?: string | RegExp; id?: string | RegExp; }} filter
  * @param {Object} [options]
  * @param {boolean} [options.includeItems] When the owner is a token, whether or not to also delete auras on owned items.
- * @returns {Promise<void>}
+ * @returns {Promise<AuraConfig[]>}
  */
 export async function deleteAuras(owner, filter, { includeItems = false } = {}) {
 	owner = owner instanceof Token ? owner.document : owner;
 
-	await Promise.all([
+	return (await Promise.all([
 		deleteAuraImpl(owner),
 		...owner instanceof TokenDocument && includeItems ? owner.actor?.items?.map(deleteAuraImpl) ?? [] : []
-	]);
+	])).flat();
 
 	async function deleteAuraImpl(target) {
 		const auras = getDocumentOwnAurasImpl(target);
-		const filteredAuras = auras.filter(aura => !auraFilterTest(aura, filter));
 
-		if (auras.length !== filteredAuras.length) {
-			await target.update({ [`flags.${MODULE_NAME}.${DOCUMENT_AURAS_FLAG}`]: filteredAuras });
+		/** @type {Record<boolean, typeof auras>} */
+		const filteredAuras = Object.groupBy(auras, aura => auraFilterTest(aura, filter));
+
+		// If there are any auras to delete, then set the new auras to be the ones that shouldn't be deleted
+		if (filteredAuras[true]?.length > 0) {
+			await target.update({ [`flags.${MODULE_NAME}.${DOCUMENT_AURAS_FLAG}`]: filteredAuras[false] ?? [] });
 		}
+
+		// Return the ones that were deleted
+		return filteredAuras[true] ?? [];
 	}
 }
 
@@ -145,17 +152,19 @@ export async function updateAuras(owner, filter, update, { includeItems = false 
 		throw new Error("Must provide an object or a function as the `update` parameter.");
 	}
 
-	await Promise.all([
+	return (await Promise.all([
 		updateAuraImpl(owner),
 		...owner instanceof TokenDocument && includeItems ? owner.actor?.items?.map(updateAuraImpl) ?? [] : []
-	]);
+	])).flat();
 
 	async function updateAuraImpl(target) {
 		const auras = getDocumentOwnAurasImpl(target);
+		const updatedAuras = [];
 		let anyMatched = false;
 		for (const aura of auras) {
 			if (auraFilterTest(aura, filter)) {
 				Object.assign(aura, typeof update === "function" ? update(aura) : update);
+				updatedAuras.push(aura);
 				anyMatched = true;
 			}
 		}
@@ -163,6 +172,8 @@ export async function updateAuras(owner, filter, update, { includeItems = false 
 		if (anyMatched) {
 			await target.update({ [`flags.${MODULE_NAME}.${DOCUMENT_AURAS_FLAG}`]: auras });
 		}
+
+		return updatedAuras;
 	}
 }
 
