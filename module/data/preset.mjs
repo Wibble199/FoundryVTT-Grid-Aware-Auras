@@ -8,6 +8,11 @@ import { getAura } from "./aura.mjs";
  * @property {string[]} applyToNew
  */
 
+/** @type {() => Preset} */
+export const presetDefaults = () => ({
+	applyToNew: []
+});
+
 /**
  * Represents a preset loaded from settings. The aura config it contains may not be complete or may be a previous data
  * version.
@@ -28,7 +33,11 @@ export function getPresetsRaw() {
  * @returns {Preset[]}
  */
 export function getPresets() {
-	return getPresetsRaw().map(p => ({ ...p, config: getAura(p.config) }));
+	return getPresetsRaw().map(p => ({
+		...presetDefaults(),
+		...p,
+		config: getAura(p.config)
+	}));
 }
 
 /**
@@ -47,7 +56,7 @@ export async function saveAuraAsNewPreset(aura) {
 	const existing = getPresetsRaw();
 
 	/** @type {Preset} */
-	const newPreset = { config: aura };
+	const newPreset = { ...presetDefaults(), config: aura };
 
 	await savePresets([...existing, newPreset]);
 	ui.notifications.info(`Saved aura '${aura.name}' as a new preset`);
