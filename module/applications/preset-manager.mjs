@@ -185,7 +185,7 @@ export class PresetManagerApplication extends ApplicationV2 {
 				label: "Delete",
 				icon: "fas fa-trash",
 				onClick: () => {
-					this.#presets = this.#presets.filter(p => p.config.id !== preset.config.id);
+					this.#presets = this.#presets.filter((_, i) => i !== idx);
 					this.render();
 				}
 			}
