@@ -37,6 +37,9 @@ export class ContextMenu extends LitElement {
 
 		/** @type {ContextMenu | undefined} */
 		this._parentMenu = undefined;
+
+		/** @type {HTMLLIElement | undefined} */
+		this._parentMenuItem = undefined;
 	}
 
 	render() {
@@ -66,8 +69,21 @@ export class ContextMenu extends LitElement {
 	};
 
 	updated() {
-		// TODO: draw menu upwards if not enough space below
-		// TODO: draw menu leftwards if not enough space to the right
+		const { top, left, width, height } = this.getBoundingClientRect();
+
+		// Position menu upwards if not enough space below
+		// If there is a parent menu, position it so that the bottom of this submenu is at the bottom of the parent item
+		if (top + height > window.innerHeight) {
+			const parentItemHeight = this._parentMenuItem?.getBoundingClientRect()?.height ?? 0;
+			this.style.top = `${top - height + parentItemHeight}px`;
+		}
+
+		// Position menu leftwards if not enough space to the right
+		// If there is a parent menu, position it so that this is left of the parent
+		if (left + width > window.innerWidth) {
+			const parentWidth = this._parentMenu?.getBoundingClientRect()?.width ?? 0;
+			this.style.left = `${left - width - parentWidth}px`;
+		}
 	}
 
 	connectedCallback() {
@@ -96,8 +112,10 @@ export class ContextMenu extends LitElement {
 		const item = this.items[itemIdx];
 		if (item.children?.length) {
 			this._subMenu?.close();
-			const { x, y, width } = e.target.closest("li").getBoundingClientRect();
-			this._subMenu = ContextMenu.open({ x: x + width, y }, item.children, { parentMenu: this });
+			const li = e.target.closest("li");
+			const { y } = li.getBoundingClientRect();
+			const { x, width } = this.getBoundingClientRect();
+			this._subMenu = ContextMenu.open({ x: x + width, y }, item.children, { parentMenu: this, parentMenuItem: li });
 		} else {
 			item.onClick?.();
 			this.close();
@@ -154,8 +172,9 @@ export class ContextMenu extends LitElement {
 	 * @param {(ContextMenuItem | false | null | undefined)[]} items Any falsy elements will be ignored.
 	 * @param {Object} [options]
 	 * @param {ContextMenu} [options.parentMenu]
+	 * @param {HTMLLIElement} [options.parentMenuItem]
 	 */
-	static open(e, items, { parentMenu } = {}) {
+	static open(e, items, { parentMenu, parentMenuItem } = {}) {
 		if (!container) {
 			container = document.createElement("div");
 			container.id = "gaa-context-menu-container";
@@ -170,6 +189,7 @@ export class ContextMenu extends LitElement {
 		const element = document.createElement(elementName);
 		element.items = items.filter(Boolean);
 		element._parentMenu = parentMenu;
+		element._parentMenuItem = parentMenuItem;
 		element.style.left = `${position.x}px`;
 		element.style.top = `${position.y}px`;
 		container.appendChild(element);
