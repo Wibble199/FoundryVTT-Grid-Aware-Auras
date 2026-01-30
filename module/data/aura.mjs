@@ -1,5 +1,6 @@
 /** @import { AURA_POSITIONS, EFFECT_MODES, MACRO_MODES, SEQUENCE_EASINGS, SEQUENCE_TRIGGERS, SEQUENCE_POSITIONS, THT_RULER_ON_DRAG_MODES } from "../consts.mjs" */
 import { DOCUMENT_AURAS_FLAG, LINE_TYPES, MODULE_NAME } from "../consts.mjs";
+import { createRadiusExtensionProxy, hasRadiusExtensions } from "./aura-radius-expression-extensions.mjs";
 
 export const latestAuraConfigVersion = 1;
 
@@ -158,8 +159,13 @@ export function calculateAuraRadius(expression, context) {
 	if (typeof parsed === "number" && !isNaN(parsed))
 		return round2dp(parsed);
 
+	// Add radius extensions to the context
+	const finalContext = { ...context };
+	if (hasRadiusExtensions())
+		finalContext.ext = createRadiusExtensionProxy(context.actor, context.item);
+
 	// For backwards compatibility, we see if it is a property path on the context. If so, we use that.
-	const property = foundry.utils.getProperty(context, expression);
+	const property = foundry.utils.getProperty(finalContext, expression);
 	if (property !== undefined) {
 		parsed = parseInt(property);
 		return typeof parsed === "number" && !isNaN(parsed) ? round2dp(parsed) : undefined;
@@ -167,7 +173,7 @@ export function calculateAuraRadius(expression, context) {
 
 	// Finally, try and evaluate it as a Roll
 	try {
-		const roll = new Roll(expression, context);
+		const roll = new Roll(expression, finalContext);
 		if (roll.isDeterministic) {
 			roll.evaluateSync();
 			return round2dp(roll.total);

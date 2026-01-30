@@ -12,6 +12,7 @@ Grid-Aware Auras exposes an API to be used by other macros, scripts, or modules.
 - [`getTokenAuras`](#gettokenauras)
 - [`getTokensInsideAura`](#gettokensinsideaura)
 - [`isTokenInside`](#istokeninside)
+- [`registerRadiusExpressionExtension`](#registerradiusexpressionextension)
 - [`toggleEffect`](#toggleeffect)
 - [`updateAuras`](#updateauras)
 
@@ -234,6 +235,41 @@ const [aura] = api.getTokenAuras(parent);
 const isInside = api.isTokenInside(target, parent, aura.id);
 console.log(`${target.name} ${isInside ? 'is' : 'is not'} inside ${parent.name}'s "${aura.name}" aura.`);
 ```
+
+## registerRadiusExpressionExtension
+
+![Available Since v0.6.6](https://img.shields.io/badge/Available%20Since-v0.6.6-blue?style=flat-square)
+
+Starting from v0.6.6, it is possible to register functions whose result can be used within a radius expression - they "extend" the radius expression. These can be used to run logic that would otherwise be difficult/impossible to do in a roll expression. This API method allows for registering these functions.
+
+The functions are only invoked when actually used in a radius expression. However, they will be called whenever GAA needs to determine the radius of an aura (e.g. when updating the token, or updating the actor etc.), so long running functions should be avoided.
+
+### Parameters
+
+|Name|Type|Default|Description|
+|-|-|-|-|
+|`name`|`string`|*Required*|The path that this extension will be available under. Must only contain alphanumeric characters, or '.', '-' or '_' and must not start or end with '.' or contain consequtive '.'s.|
+|`resolver`|`(actor: Actor \| undefined, item: Item \| undefined) => number`|*Required*|The actual implementation of the extension. It may be called with an actor and an item, but either of these may be undefined so your function should handle that gracefully. It should return a number. If it throws an error or does not return a number, it will be treated at 0 instead.|
+|`options`|`Object`|`{}`|Additional options.|
+|`options.description`|`string`|`""`|Optional HTML description that will be displayed to the user describing this extension. (Not yet implemented)|
+
+### Returns
+
+Nothing.
+
+### Example
+
+```js
+const { api } = game.modules.get("grid-aware-auras");
+
+api.registerRadiusExpressionExtension(
+	"my.custom",
+	(actor, _item) => actor.items.filter(i => i.type === "mech_weapon").length,
+	{ description: "A (probably useless) example that returns the number of 'mech_weapon' items in an actor's inventory" }
+);
+```
+
+After calling this, this can be used within a radius expression. Setting the radius of an aura to `@ext.my.custom + 1` would invoke the resolver function, and add one to it. So if the actor had 1 mech_weapon item, the radius would be 2; if the actor had 2 mech_weapon items, the radius would be 3, etc.
 
 ## toggleEffect
 

@@ -7,6 +7,7 @@ import { initialiseAuraTargetFilters } from "./data/aura-target-filters.mjs";
 import { getPresets } from "./data/preset.mjs";
 import { AuraLayer } from "./layers/aura-layer/aura-layer.mjs";
 import { registerSettings } from "./settings.mjs";
+import { setupSystemIntegration } from "./system-integrations/index.mjs";
 import { pickProperties, toggleEffect } from "./utils/misc-utils.mjs";
 
 // Token properties (flattened) to trigger an aura check on
@@ -23,6 +24,7 @@ Hooks.once("init", () => {
 	registerSettings();
 	initialiseAuraTargetFilters();
 	setupAutomation();
+	setupSystemIntegration();
 
 	CONFIG.Canvas.layers.gaaAuraLayer = { group: "interface", layerClass: AuraLayer };
 
@@ -175,9 +177,10 @@ Hooks.on("updateActor", (actor, _delta, _options, userId) => {
 	AuraLayer.current?._updateActorAuras(actor, { userId });
 });
 
-// When an item is created, if it has auras and belongs to an actor, update auras on any of that actor's tokens
+// When an item is created, update auras on any of that actor's tokens
+// Do this regardless of whether the item itself has auras, as some aura values may be calculated from the actor's items
 Hooks.on("createItem", (item, _options, userId) => {
-	if (!!item.actor && item.flags?.[MODULE_NAME]?.[DOCUMENT_AURAS_FLAG]?.length > 0) {
+	if (item.actor) {
 		AuraLayer.current?._updateActorAuras(item.actor, { userId });
 	}
 });
@@ -190,9 +193,10 @@ Hooks.on("updateItem", (item, _delta, _options, userId) => {
 	}
 });
 
-// When an item is created, if it had auras and belonged to an actor, update auras on any of that actor's tokens
+// When an item is created, update auras on any of that actor's tokens
+// Do this regardless of whether the item itself has auras, as some aura values may be calculated from the actor's items
 Hooks.on("deleteItem", (item, _options, userId) => {
-	if (!!item.actor && item.flags?.[MODULE_NAME]?.[DOCUMENT_AURAS_FLAG]?.length > 0) {
+	if (item.actor) {
 		AuraLayer.current?._updateActorAuras(item.actor, { userId });
 	}
 });
