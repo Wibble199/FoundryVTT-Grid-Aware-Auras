@@ -2,6 +2,7 @@
  * @typedef {Object} AuraGeometryIsInsideOptions
  * @property {{ x: number; y: number; }?} auraOffset The aura's own x and y position to offset against.
  * @property {{ x: number; y: number; }?} tokenAltPosition If provided, an alternative position to use for the test token.
+ * @property {("partial" | "total")?} mode Whether to test for a token being partially inside or totally inside this geometry.
  */
 /**
  * The AuraGeometry interface represents the shape of an aura and provides relevant methods.

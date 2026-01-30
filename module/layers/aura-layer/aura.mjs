@@ -21,6 +21,9 @@ export class Aura {
 	/** @type {number | undefined} */
 	#radius;
 
+	/** @type {number | undefined} */
+	#innerRadius;
+
 	#isVisible = false;
 
 	/** @type {PIXI.Graphics} */
@@ -32,6 +35,13 @@ export class Aura {
 	 * @type {AuraGeometry | null}
 	 */
 	#geometry = null;
+
+	/**
+	 * The inner geometry of the aura (its hole), relative to the token position.
+	 * Will be null if there is no hole.
+	 * @type {AuraGeometry | null}
+	 */
+	#innerGeometry = null;
 
 	/** @param {Token} token */
 	constructor(token) {
@@ -59,6 +69,7 @@ export class Aura {
 		const shouldRedraw = force ||
 			this.#config !== config ||
 			this.#radius !== config.radiusCalculated ||
+			this.#innerRadius !== config.innerRadiusCalculated ||
 			(tokenDelta && (
 				"width" in tokenDelta ||
 				"height" in tokenDelta ||
@@ -67,13 +78,14 @@ export class Aura {
 
 		this.#config = config;
 		this.#radius = config.radiusCalculated;
+		this.#innerRadius = config.innerRadiusCalculated;
 
 		this.updatePosition({ tokenDelta });
 
 		// If a relevant property has changed, do a redraw
 		if (shouldRedraw || force) {
 			const { width, height, hexagonalShape } = pickProperties(["width", "height", "hexagonalShape"], tokenDelta, this.#token.document);
-			this.#redraw(width, height, config.radiusCalculated, hexagonalShape);
+			this.#redraw(width, height, config.radiusCalculated, config.innerRadiusCalculated, hexagonalShape);
 		}
 
 		this.updateVisibility();
@@ -106,10 +118,14 @@ export class Aura {
 	 * were at these coordinates instead.
 	 */
 	isInside(targetToken, { sourceTokenPosition, useActualSourcePosition = false, targetTokenPosition } = {}) {
+		if (!this.#geometry) return false;
+
 		// Need to offset by token position, as the geometry is relative to token position, not relative to canvas pos
 		const auraOffset = this.#getOffset(sourceTokenPosition, useActualSourcePosition ? this.#token : this.#token.document);
 
-		return this.#geometry?.isInside(targetToken, { auraOffset, tokenAltPosition: targetTokenPosition }) ?? false;
+		// Token is inside the aura if it is partially inside the outer geometry and not totally inside the inner geometry.
+		return this.#geometry.isInside(targetToken, { auraOffset, tokenAltPosition: targetTokenPosition, mode: "partial" })
+			&& !this.#innerGeometry?.isInside(targetToken, { auraOffset, tokenAltPosition: targetTokenPosition, mode: "total" });
 	}
 
 	destroy() {
@@ -120,9 +136,10 @@ export class Aura {
 	 * @param {number} width
 	 * @param {number} height
 	 * @param {number} radius
+	 * @param {number} innerRadius
 	 * @param {number} hexagonalShape
 	 */
-	async #redraw(width, height, radius, hexagonalShape) {
+	async #redraw(width, height, radius, innerRadius, hexagonalShape) {
 		const auraConfig = { ...auraDefaults(), ...this.#config };
 
 		// If there is a positional offset (i.e. aura is non-central), then use 0 as the effective token width/height.
@@ -136,10 +153,11 @@ export class Aura {
 
 		hexagonalShape ??= this.#token.document.hexagonalShape;
 
-		// Negative radii are not supported
-		if (typeof radius !== "number" || radius < 0) {
+		// Auras with negative radii are not rendered, neither are those where the innerRadius >= radius.
+		if (typeof radius !== "number" || radius < 0 || (typeof innerRadius === "number" && innerRadius >= radius)) {
 			this.#graphics.clear();
 			this.#geometry = null;
+			this.#innerGeometry = null;
 			return;
 		}
 
@@ -147,31 +165,10 @@ export class Aura {
 		// This is fairly arbitrary, but if it's too high, the browser can crash trying to generate geometry.
 		radius = Math.min(radius, 1000);
 
-		switch (canvas.grid.type) {
-			case CONST.GRID_TYPES.GRIDLESS:
-				this.#geometry = new GridlessAuraGeometry(width, height, radius, canvas.grid.size);
-				break;
-
-			case CONST.GRID_TYPES.SQUARE:
-				this.#geometry = new SquareAuraGeometry(
-					width,
-					height,
-					radius,
-					game.settings.get(MODULE_NAME, SQUARE_GRID_MODE_SETTING),
-					canvas.grid.size
-				);
-				break;
-
-			default: // hexagonal
-				this.#geometry = new HexagonalAuraGeometry(
-					width,
-					height,
-					radius,
-					hexagonalShape,
-					[CONST.GRID_TYPES.HEXEVENQ, CONST.GRID_TYPES.HEXODDQ].includes(canvas.grid.type),
-					canvas.grid.size
-				);
-		}
+		this.#geometry = createGeometry(radius);
+		this.#innerGeometry = typeof innerRadius === "number" && innerRadius >= 0
+			? createGeometry(innerRadius)
+			: null;
 
 		if (!this.#geometry) {
 			this.#graphics.clear();
@@ -187,20 +184,58 @@ export class Aura {
 
 		this.#configureFillStyle({ ...auraConfig, fillTexture: texture });
 
-		// If we are using a dashed path, because of the way the dash is implemted, we need to draw the fill separately
-		// from the stroke.
-		if (auraConfig.lineType === LINE_TYPES.DASHED) {
-			this.#configureLineStyle({ lineType: LINE_TYPES.NONE });
-			drawComplexPath(this.#graphics, this.#geometry.getPath());
-			this.#graphics.endFill();
+		// Becasue of the way dashed paths are implemented and because of inner radius (holes), it is easier to draw the
+		// background without the borders, the draw the outer/inner borders afterwards.
+		// 1. Fill
+		this.#configureLineStyle({ lineType: LINE_TYPES.NONE });
+		drawComplexPath(this.#graphics, this.#geometry.getPath());
+		if (this.#innerGeometry) {
+			this.#graphics.beginHole();
+			drawComplexPath(this.#graphics, this.#innerGeometry.getPath());
+			this.#graphics.endHole();
+		}
+		this.#graphics.endFill();
 
-			this.#configureLineStyle(auraConfig);
-			drawDashedComplexPath(this.#graphics, this.#geometry.getPath(), { dashSize: auraConfig.lineDashSize, gapSize: auraConfig.lineGapSize });
+		// 2. Outer border
+		this.#configureLineStyle(auraConfig, 1);
+		drawDashedComplexPath(this.#graphics, this.#geometry.getPath(), { dashSize: auraConfig.lineDashSize, gapSize: auraConfig.lineGapSize });
 
-		} else {
-			this.#configureLineStyle(auraConfig);
-			drawComplexPath(this.#graphics, this.#geometry.getPath());
-			this.#graphics.endFill();
+		// 3. Inner border
+		if (this.#innerGeometry) {
+			this.#configureLineStyle(auraConfig, 0);
+			drawDashedComplexPath(this.#graphics, this.#innerGeometry.getPath(), { dashSize: auraConfig.lineDashSize, gapSize: auraConfig.lineGapSize });
+		}
+
+		return;
+
+		/**
+		 * Creates a geometry of the specified radius for the current grid type and scoped token size/shape.
+		 * @param {number} r
+		 */
+		function createGeometry(r) {
+			switch (canvas.grid.type) {
+				case CONST.GRID_TYPES.GRIDLESS:
+					return new GridlessAuraGeometry(width, height, r, canvas.grid.size);
+
+				case CONST.GRID_TYPES.SQUARE:
+					return new SquareAuraGeometry(
+						width,
+						height,
+						r,
+						game.settings.get(MODULE_NAME, SQUARE_GRID_MODE_SETTING),
+						canvas.grid.size
+					);
+
+				default: // hexagonal
+					return new HexagonalAuraGeometry(
+						width,
+						height,
+						r,
+						hexagonalShape,
+						[CONST.GRID_TYPES.HEXEVENQ, CONST.GRID_TYPES.HEXODDQ].includes(canvas.grid.type),
+						canvas.grid.size
+					);
+			}
 		}
 	}
 
@@ -306,12 +341,12 @@ export class Aura {
 	 */
 	#configureLineStyle({
 		lineType = LINE_TYPES.NONE, lineWidth = 0, lineColor = "#000000", lineOpacity = 0
-	} = {}) {
+	} = {}, alignment = 0.5) {
 		this.#graphics.lineStyle({
 			color: Color.from(lineColor),
 			alpha: lineOpacity,
 			width: lineType === LINE_TYPES.NONE ? 0 : lineWidth,
-			alignment: 0
+			alignment
 		});
 	}
 

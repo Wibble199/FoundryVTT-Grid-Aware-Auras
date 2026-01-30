@@ -42,12 +42,12 @@ export class SquareAuraGeometry {
 	 * @param {Token} token
 	 * @param {AuraGeometryIsInsideOptions} options
 	 */
-	isInside(token, { auraOffset = { x: 0, y: 0 }, tokenAltPosition } = {}) {
+	isInside(token, { auraOffset = { x: 0, y: 0 }, tokenAltPosition, mode = "partial" } = {}) {
 		const { width, height } = token.document;
 		const { x, y } = tokenAltPosition ?? token;
 		const points = generateSquareTokenSpaces(width, height)
 			.map(p => ({ x: x + (p.x * this.#config.gridSize), y: y + (p.y * this.#config.gridSize) }));
-		return points.some(p => this._isPointInside(p.x - auraOffset.x, p.y - auraOffset.y));
+		return points[mode === "total" ? "every" : "some"](p => this._isPointInside(p.x - auraOffset.x, p.y - auraOffset.y));
 	}
 
 	/**

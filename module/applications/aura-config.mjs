@@ -94,6 +94,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 	/** @override */
 	_renderHTML() {
 		const radiusIsInvalidPath = typeof calculateAuraRadius(this.#aura.radius, this.#radiusContext) !== "number";
+		const innerRadiusIsInvalidPath = typeof calculateAuraRadius(this.#aura.innerRadius, this.#radiusContext) !== "number";
 
 		return html`
 			<form class=${classMap({ "standard-form": true, "hidden": this.#alternateContent })} @input=${this.#valueChange}>
@@ -113,6 +114,19 @@ export class AuraConfigApplication extends ApplicationV2 {
 						</span>
 					</div>
 					${when(radiusIsInvalidPath, () => html`
+						<div class="hint" style="text-align: right; color: var(--color-level-error);">${l("GRIDAWAREAURAS.UnresolvedRadiusConfigDialogWarning")}</div>
+					`)}
+				</div>
+
+				<div class="form-group">
+					<label>Inner Radius</label>
+					<div class="form-fields">
+						<input type="text" name="innerRadius" value=${this.#aura.innerRadius} ?disabled=${this.#disabled} required>
+						<span style="flex: 0; margin-left: 0.5rem; cursor: help;">
+							<i class="fas fa-question-circle" data-tooltip=${l("GRIDAWAREAURAS.Radius.Hint")}></i>
+						</span>
+					</div>
+					${when(innerRadiusIsInvalidPath, () => html`
 						<div class="hint" style="text-align: right; color: var(--color-level-error);">${l("GRIDAWAREAURAS.UnresolvedRadiusConfigDialogWarning")}</div>
 					`)}
 				</div>

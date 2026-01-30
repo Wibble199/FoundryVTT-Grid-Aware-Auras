@@ -9,7 +9,8 @@ export const latestAuraConfigVersion = 1;
  * @property {string} id
  * @property {string} name
  * @property {boolean} enabled
- * @property {number | string} radius A numeric value or a property name on the actor pointing to a numeric value.
+ * @property {number | string} radius A numeric value or a expression representing the outer radius of the aura.
+ * @property {number | string} innerRadius A numeric value or expression representing the inner radius (hole) of the aura. If negative, there is no hole.
  * @property {AURA_POSITIONS} position
  * @property {LINE_TYPES} lineType
  * @property {number} lineWidth
@@ -32,7 +33,7 @@ export const latestAuraConfigVersion = 1;
  * @property {THT_RULER_ON_DRAG_MODES} terrainHeightTools.rulerOnDrag
  * @property {string} terrainHeightTools.targetTokens ID of the filter to use to specify targetable tokens.
  */
-/** @typedef {AuraConfig & { radiusCalculated: number | undefined; }} AuraConfigWithRadius */
+/** @typedef {AuraConfig & { radiusCalculated: number; innerRadiusCalculated: number | undefined; }} AuraConfigWithRadius */
 /**
  * @typedef {Object} VisibilityConfig
  * @property {boolean} default
@@ -115,7 +116,7 @@ export function getTokenAuras(token) {
  * @param {TokenDocument | Item} document
  * @param {Object} [options]
  * @param {boolean} [options.calculateRadius] If true, calculates the actual radius (resolving property paths).
- * @returns {(AuraConfig & { radiusCalculated?: number; })[]}
+ * @returns {(AuraConfig & { radiusCalculated?: number; & innerRadiusCalculated?: number; })[]}
  */
 export function getDocumentOwnAuras(document, { calculateRadius = false } = {}) {
 	// Only Items and TokenDocuments can have auras
@@ -131,7 +132,11 @@ export function getDocumentOwnAuras(document, { calculateRadius = false } = {}) 
 		const actor = document instanceof TokenDocument ? document.actor : document instanceof Item ? document.parent : undefined;
 		const item = document instanceof Item ? document : undefined;
 		const context = { actor, item };
-		auras = auras.map(a => ({ ...a, radiusCalculated: calculateAuraRadius(a.radius, context) }));
+		auras = auras.map(a => ({
+			...a,
+			radiusCalculated: calculateAuraRadius(a.radius, context),
+			innerRadiusCalculated: calculateAuraRadius(a.innerRadius, context)
+		}));
 	}
 
 	return auras;
@@ -190,6 +195,7 @@ export const auraDefaults = () => ({
 	name: "New Aura",
 	enabled: true,
 	radius: 1,
+	innerRadius: -1,
 	position: "CENTER",
 	lineType: LINE_TYPES.SOLID,
 	lineWidth: 4,

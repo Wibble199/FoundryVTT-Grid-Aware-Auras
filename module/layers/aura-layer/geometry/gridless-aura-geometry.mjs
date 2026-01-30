@@ -22,9 +22,9 @@ export class GridlessAuraGeometry {
 	 * @param {Token} token
 	 * @param {AuraGeometryIsInsideOptions} options
 	 */
-	isInside(token, { auraOffset = { x: 0, y: 0 }, tokenAltPosition } = {}) {
+	isInside(token, { auraOffset = { x: 0, y: 0 }, tokenAltPosition, mode = "partial" } = {}) {
 		const { width: aWidth, height: aHeight, gridSize } = this.#config;
-		let { radius } = this.#config;
+		let { radius: distance } = this.#config;
 		let { x: aX, y: aY } = auraOffset;
 		aX = (aX / gridSize) + (aWidth / 2);
 		aY = (aY / gridSize) + (aHeight / 2);
@@ -35,21 +35,33 @@ export class GridlessAuraGeometry {
 		tX = (tX / gridSize) + (tWidth / 2);
 		tY = (tY / gridSize) + (tHeight / 2);
 
-		if (tWidth === tHeight) {
+		if (tWidth === tHeight && mode === "partial") {
 			// If the width and height are the same, then the test token is circular, so we just add half of it's size
-			// to the allowable radius range.
-			radius += tWidth / 2;
+			// to the distance. (Easier than translating the tX or tY).
+			distance += tWidth / 2;
 
-		} else {
+		} else if (tWidth === tHeight && mode === "total") {
+			// Test token is circular, but we want to subtract the radius of the target token from the allowable
+			// distance. This effectively makes the test point the furthest point on the test token's perimeter.
+			distance -= tWidth / 2;
+
+		} else if (mode === "partial") {
 			// If the width and height aren't the same, then the test token is rectangular. The test point for the token
-			// should be the point that is closest to this aura.
+			// should be the point on the perimeter that is closest to the aura.
 			tX = Math.max(tX - (tWidth / 2), Math.min(aX, tX + (tWidth / 2)));
 			tY = Math.max(tY - (tHeight / 2), Math.min(aY, tY + (tHeight / 2)));
+
+		} else if (mode === "total") {
+			// Test token is rectangular, but test point for the token should be the furthest on the perimeter from the
+			// aura.
+			tX = aX < tX ? tX + (tWidth / 2) : tX - (tWidth / 2);
+			tY = aY < tY ? tY + (tHeight / 2) : tY - (tHeight / 2);
 		}
 
-		// Work out the test point of the aura's token (same logic as for the target token above)
+		// Work out the test point of the aura's token (similar logic as for the target token above, but we don't care
+		// about the mode here since we will always be measuring from the nearest point on the parent's perimeter)
 		if (aWidth === aHeight) {
-			radius += aWidth / 2;
+			distance += aWidth / 2;
 		} else {
 			aX = Math.max(aX - (aWidth / 2), Math.min(tX, aX + (aWidth / 2)));
 			aY = Math.max(aY - (aHeight / 2), Math.min(tY, aY + (aHeight / 2)));
@@ -57,7 +69,7 @@ export class GridlessAuraGeometry {
 
 		// Work out the difference between test points and check if they're within aura range
 		const distSq = ((tX - aX) ** 2) + ((tY - aY) ** 2);
-		return distSq < radius ** 2;
+		return distSq < distance ** 2;
 	}
 
 	/** @returns {Generator<import("../../../utils/pixi-utils.mjs").PathCommand, void, never>} */

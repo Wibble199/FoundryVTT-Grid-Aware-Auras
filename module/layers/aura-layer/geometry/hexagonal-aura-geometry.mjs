@@ -51,11 +51,11 @@ export class HexagonalAuraGeometry {
 	 * @param {Token} token
 	 * @param {AuraGeometryIsInsideOptions} options
 	 */
-	isInside(token, { auraOffset = { x: 0, y: 0 }, tokenAltPosition } = {}) {
+	isInside(token, { auraOffset = { x: 0, y: 0 }, tokenAltPosition, mode = "partial" } = {}) {
 		const { width, height, hexagonalShape } = token.document;
 		const { x, y } = tokenAltPosition ?? token;
 		const points = getSpacesUnderHexToken(x, y, width, height, hexagonalShape, this.#isColumnar, this.#gridSize);
-		return points.some(p => this._isPointInside(p.x - auraOffset.x, p.y - auraOffset.y));
+		return points[mode === "total" ? "every" : "some"](p => this._isPointInside(p.x - auraOffset.x, p.y - auraOffset.y));
 	}
 
 	/**
