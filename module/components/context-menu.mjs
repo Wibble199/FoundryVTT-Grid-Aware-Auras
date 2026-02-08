@@ -44,7 +44,7 @@ export class ContextMenu extends LitElement {
 
 	render() {
 		return html`
-			<menu @mousedown=${this.#onMenuMouseDown}>
+			<menu class="gaa-dropdown-menu" @mousedown=${this.#onMenuMouseDown}>
 				${this.items.map(this.#renderItem)}
 			</menu>
 		`;

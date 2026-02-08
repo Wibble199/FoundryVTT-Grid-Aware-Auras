@@ -1,4 +1,6 @@
 /** @import { AuraConfig, VisibilityConfig } from "../data/aura.mjs"; */
+import "../components/data-path-autocomplete.mjs";
+import { collectDataPathsFromObject } from "../components/data-path-autocomplete.mjs";
 import "../components/tabs.mjs";
 import {
 	AURA_POSITIONS,
@@ -48,6 +50,8 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	#radiusContext;
 
+	#datapathAutocompleteSuggestions;
+
 	/** @type {ReturnType<html> | null} */
 	#alternateContent = null;
 
@@ -72,6 +76,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 		this.#parentId = parentId;
 		this.#attachTo = attachTo;
 		this.#radiusContext = radiusContext ?? {};
+		this.#datapathAutocompleteSuggestions = collectDataPathsFromObject(this.#radiusContext);
 	}
 
 	static DEFAULT_OPTIONS = {
@@ -108,7 +113,12 @@ export class AuraConfigApplication extends ApplicationV2 {
 				<div class="form-group">
 					<label>Radius</label>
 					<div class="form-fields">
-						<input type="text" name="radius" value=${this.#aura.radius} ?disabled=${this.#disabled} required>
+						<gaa-data-path-autocomplete
+							name="radius"
+							value=${this.#aura.radius}
+							.dataPaths=${this.#datapathAutocompleteSuggestions}
+							?disabled=${this.#disabled}>
+						</gaa-data-path-autocomplete>
 						<span style="flex: 0; margin-left: 0.5rem; cursor: help;">
 							<i class="fas fa-question-circle" data-tooltip=${l("GRIDAWAREAURAS.Radius.Hint")}></i>
 						</span>
@@ -121,7 +131,12 @@ export class AuraConfigApplication extends ApplicationV2 {
 				<div class="form-group">
 					<label>Inner Radius</label>
 					<div class="form-fields">
-						<input type="text" name="innerRadius" value=${this.#aura.innerRadius} ?disabled=${this.#disabled} required>
+						<gaa-data-path-autocomplete
+							name="innerRadius"
+							value=${this.#aura.innerRadius}
+							.dataPaths=${this.#datapathAutocompleteSuggestions}
+							?disabled=${this.#disabled}>
+						</gaa-data-path-autocomplete>
 						<span style="flex: 0; margin-left: 0.5rem; cursor: help;">
 							<i class="fas fa-question-circle" data-tooltip=${l("GRIDAWAREAURAS.Radius.Hint")}></i>
 						</span>
