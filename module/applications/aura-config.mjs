@@ -1,6 +1,6 @@
 /** @import { AuraConfig, VisibilityConfig } from "../data/aura.mjs"; */
 import "../components/data-path-autocomplete.mjs";
-import { collectDataPathsFromObject } from "../components/data-path-autocomplete.mjs";
+import { collectDataPathsFromDatamodels, collectDataPathsFromObject } from "../components/data-path-autocomplete.mjs";
 import "../components/tabs.mjs";
 import {
 	AURA_POSITIONS,
@@ -76,7 +76,19 @@ export class AuraConfigApplication extends ApplicationV2 {
 		this.#parentId = parentId;
 		this.#attachTo = attachTo;
 		this.#radiusContext = radiusContext ?? {};
-		this.#datapathAutocompleteSuggestions = collectDataPathsFromObject(this.#radiusContext);
+
+		// If there is no actor in the radius context, we are likely in a preset menu. In this case, we need to inspect
+		// the document schemas to get the data path suggestions. If we do have an actor in the context, then we can use
+		// that instead. We should prefer the context when possible as it will also include computed properties that
+		// aren't in the schema.
+		// If there is an actor but no item, we're likely in the context of an aura that's being applied to a token, so
+		// we don't need to add the item data model in here as it's irrelevant (i.e. no special handling for this case).
+		this.#datapathAutocompleteSuggestions = radiusContext?.actor
+			? collectDataPathsFromObject(radiusContext)
+			: [
+				...collectDataPathsFromDatamodels(CONFIG.Actor.dataModels, { prefix: "actor" }),
+				...collectDataPathsFromDatamodels(CONFIG.Item.dataModels, { prefix: "item" })
+			];
 	}
 
 	static DEFAULT_OPTIONS = {

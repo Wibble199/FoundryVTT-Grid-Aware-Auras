@@ -236,8 +236,8 @@
     --text-color: var(--color-text-secondary, #e7d1b1);
     --hover-text-color: var(--color-text-emphatic, #f7f3e8);
     --group-separator: var(--color-cool-4, #302831);
-    --hover-entry-border: var(--color-cool-4, #302831);
-    --hover-entry-background: var(--color-dark-1, #111);
+    --hover-entry-border: #4a394d;
+    --hover-entry-background: #1c1c1c;
 
 	padding: 4px;
 	margin: 0;
@@ -272,7 +272,8 @@
 	transition: all ease-out 200ms;
 }
 
-.gaa-dropdown-menu > li:hover {
+.gaa-dropdown-menu.gaa-dropdown-menu-hover > li:hover,
+.gaa-dropdown-menu > li.active {
 	border-color: var(--hover-entry-border);
     background: var(--hover-entry-background);
     color: var(--hover-text-color);
@@ -403,8 +404,11 @@ gaa-data-path-autocomplete {
 
 .gaa-data-path-autocomplete-dropdown {
 	position: absolute;
-	top: 100%;
-	width: 100%;
+	z-index: var(--z-index-tooltip);
+	width: max-content;
+}
+
+.gaa-data-path-autocomplete-dropdown > menu {
 	max-width: unset;
 	max-height: 208px;
 	overflow-y: auto;
