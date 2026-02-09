@@ -1,4 +1,6 @@
 /** @import { AuraConfig, VisibilityConfig } from "../data/aura.mjs"; */
+import "../components/data-path-autocomplete.mjs";
+import { collectDataPathsFromDatamodels, collectDataPathsFromObject } from "../components/data-path-autocomplete.mjs";
 import "../components/tabs.mjs";
 import {
 	AURA_POSITIONS,
@@ -48,6 +50,8 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	#radiusContext;
 
+	#datapathAutocompleteSuggestions;
+
 	/** @type {ReturnType<html> | null} */
 	#alternateContent = null;
 
@@ -72,6 +76,19 @@ export class AuraConfigApplication extends ApplicationV2 {
 		this.#parentId = parentId;
 		this.#attachTo = attachTo;
 		this.#radiusContext = radiusContext ?? {};
+
+		// If there is no actor in the radius context, we are likely in a preset menu. In this case, we need to inspect
+		// the document schemas to get the data path suggestions. If we do have an actor in the context, then we can use
+		// that instead. We should prefer the context when possible as it will also include computed properties that
+		// aren't in the schema.
+		// If there is an actor but no item, we're likely in the context of an aura that's being applied to a token, so
+		// we don't need to add the item data model in here as it's irrelevant (i.e. no special handling for this case).
+		this.#datapathAutocompleteSuggestions = radiusContext?.actor
+			? collectDataPathsFromObject(radiusContext)
+			: [
+				...collectDataPathsFromDatamodels(CONFIG.Actor.dataModels, { prefix: "actor" }),
+				...collectDataPathsFromDatamodels(CONFIG.Item.dataModels, { prefix: "item" })
+			];
 	}
 
 	static DEFAULT_OPTIONS = {
@@ -108,7 +125,12 @@ export class AuraConfigApplication extends ApplicationV2 {
 				<div class="form-group">
 					<label>Radius</label>
 					<div class="form-fields">
-						<input type="text" name="radius" value=${this.#aura.radius} ?disabled=${this.#disabled} required>
+						<gaa-data-path-autocomplete
+							name="radius"
+							value=${this.#aura.radius}
+							.dataPaths=${this.#datapathAutocompleteSuggestions}
+							?disabled=${this.#disabled}>
+						</gaa-data-path-autocomplete>
 						<span style="flex: 0; margin-left: 0.5rem; cursor: help;">
 							<i class="fas fa-question-circle" data-tooltip=${l("GRIDAWAREAURAS.Radius.Hint")}></i>
 						</span>
@@ -121,7 +143,12 @@ export class AuraConfigApplication extends ApplicationV2 {
 				<div class="form-group">
 					<label>Inner Radius</label>
 					<div class="form-fields">
-						<input type="text" name="innerRadius" value=${this.#aura.innerRadius} ?disabled=${this.#disabled} required>
+						<gaa-data-path-autocomplete
+							name="innerRadius"
+							value=${this.#aura.innerRadius}
+							.dataPaths=${this.#datapathAutocompleteSuggestions}
+							?disabled=${this.#disabled}>
+						</gaa-data-path-autocomplete>
 						<span style="flex: 0; margin-left: 0.5rem; cursor: help;">
 							<i class="fas fa-question-circle" data-tooltip=${l("GRIDAWAREAURAS.Radius.Hint")}></i>
 						</span>

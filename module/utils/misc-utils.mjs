@@ -28,6 +28,14 @@ export function debug(message, ...args) {
 }
 
 /**
+ * @param {any[]} a
+ * @param {any[]} b
+ */
+export function arrayEqual(a, b) {
+	return a.length === b.length && a.every((_, i) => a[i] === b[i]);
+}
+
+/**
  * Groups elements in the iterable by the specified keySelector.
  * Sort order will be maintained with the groups.
  * @template TElement

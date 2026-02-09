@@ -89,7 +89,7 @@ export class MultiSelect extends LitElement {
 		// Render dropdown into the container
 		const selectedValues = new Set(this.value ?? []);
 
-		litRender(html`<menu>
+		litRender(html`<menu class="gaa-dropdown-menu gaa-dropdown-menu-hover">
 			${this.items.map(item => html`
 				<li
 					class=${classMap({ checked: selectedValues.has(this.#getItemValue(item)) })}
