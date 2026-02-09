@@ -1,6 +1,6 @@
 /** @import { AuraTable } from "../components/aura-table.mjs"; */
 import { DOCUMENT_AURAS_FLAG, MODULE_NAME } from "../consts.mjs";
-import { getDocumentOwnAuras } from "../data/aura.mjs";
+import { createRadiusExpressionContext, getDocumentOwnAuras } from "../data/aura.mjs";
 import { AuraLayer } from "../layers/aura-layer/aura-layer.mjs";
 import { createRef, html, LitElement, ref, repeat, styleMap, when } from "../lib/lit-all.min.js";
 import { warn } from "../utils/misc-utils.mjs";
@@ -60,7 +60,7 @@ class TokenConfigGridAwareAurasElement extends LitElement {
 				.value=${tokenAuras}
 				subHeadingText="Token"
 				@change=${e => { this.#onChangeInput(e); this.#requestResize(); }}
-				.radiusContext=${{ actor }}
+				.radiusContext=${createRadiusExpressionContext(actor)}
 				${ref(this.#tokenAurasTableRef)}
 				style=${styleMap({ display: "block", marginTop: "0.5rem", marginBottom: itemsWithAuras.length ? "0" : "0.5rem" })}
 			></gaa-aura-table>
@@ -72,7 +72,7 @@ class TokenConfigGridAwareAurasElement extends LitElement {
 					.showHeader=${false}
 					.subHeadingText=${item.name}
 					.attachConfigsTo=${item}
-					.radiusContext=${{ actor, item }}
+					.radiusContext=${createRadiusExpressionContext(actor, item)}
 					@change=${e => this.#updateItemAura(item, e.target.value)}
 				></gaa-aura-table>
 			`)}

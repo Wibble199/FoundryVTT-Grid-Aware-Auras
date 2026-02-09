@@ -86,6 +86,13 @@ export const latestAuraConfigVersion = 1;
  */
 
 /**
+ * @typedef {Object} RadiusExpressionContext
+ * @property {Actor | undefined} actor
+ * @property {Item | undefined} item
+ * @property {Record<string, any>} [ext]
+ */
+
+/**
  * Gets the auras that are present on the given token.
  * @param {Token | TokenDocument} token
  * @returns {AuraConfigWithRadius[]}
@@ -132,7 +139,7 @@ export function getDocumentOwnAuras(document, { calculateRadius = false } = {}) 
 	if (calculateRadius) {
 		const actor = document instanceof TokenDocument ? document.actor : document instanceof Item ? document.parent : undefined;
 		const item = document instanceof Item ? document : undefined;
-		const context = { actor, item };
+		const context = createRadiusExpressionContext(actor, item);
 		auras = auras.map(a => ({
 			...a,
 			radiusCalculated: calculateAuraRadius(a.radius, context),
@@ -144,9 +151,22 @@ export function getDocumentOwnAuras(document, { calculateRadius = false } = {}) 
 }
 
 /**
+ * Creates the context used to resolve the radius roll expressions.
+ * @param {Actor | undefined} actor
+ * @param {Item | undefined} item
+ * @returns {RadiusExpressionContext}
+ */
+export function createRadiusExpressionContext(actor = undefined, item = undefined) {
+	const context = { actor, item };
+	if (hasRadiusExtensions())
+		context.ext = createRadiusExtensionProxy(actor, item);
+	return context;
+}
+
+/**
  * Calculates the actual aura radius from a radius expression.
  * @param {string | number} expression A radius value or the name of a property on the actor or item documents.
- * @param {{ actor: Actor | undefined; item: Item | undefined; }} context The context used to resolve properties from.
+ * @param {RadiusExpressionContext} context The context used to resolve properties from.
  */
 export function calculateAuraRadius(expression, context) {
 	if (expression === "") return undefined;
@@ -159,13 +179,8 @@ export function calculateAuraRadius(expression, context) {
 	if (typeof parsed === "number" && !isNaN(parsed))
 		return round2dp(parsed);
 
-	// Add radius extensions to the context
-	const finalContext = { ...context };
-	if (hasRadiusExtensions())
-		finalContext.ext = createRadiusExtensionProxy(context.actor, context.item);
-
 	// For backwards compatibility, we see if it is a property path on the context. If so, we use that.
-	const property = foundry.utils.getProperty(finalContext, expression);
+	const property = foundry.utils.getProperty(context, expression);
 	if (property !== undefined) {
 		parsed = parseInt(property);
 		return typeof parsed === "number" && !isNaN(parsed) ? round2dp(parsed) : undefined;
@@ -173,7 +188,7 @@ export function calculateAuraRadius(expression, context) {
 
 	// Finally, try and evaluate it as a Roll
 	try {
-		const roll = new Roll(expression, finalContext);
+		const roll = new Roll(expression, context);
 		if (roll.isDeterministic) {
 			roll.evaluateSync();
 			return round2dp(roll.total);

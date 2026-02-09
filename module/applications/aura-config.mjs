@@ -1,4 +1,4 @@
-/** @import { AuraConfig, VisibilityConfig } from "../data/aura.mjs"; */
+/** @import { AuraConfig, RadiusExpressionContext, VisibilityConfig } from "../data/aura.mjs"; */
 import "../components/data-path-autocomplete.mjs";
 import { collectDataPathsFromDatamodels, collectDataPathsFromObject } from "../components/data-path-autocomplete.mjs";
 import "../components/tabs.mjs";
@@ -63,7 +63,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 	 * @param {() => void} [options.onClose]
 	 * @param {string} [options.parentId]
 	 * @param {Object} [options.attachTo]
-	 * @param {{ actor?: Actor | undefined; item?: Item | undefined; }} [options.radiusContext]
+	 * @param {RadiusExpressionContext} [options.radiusContext]
 	 */
 	constructor(aura, { disabled = false, onChange, onClose, parentId, attachTo, radiusContext, ...options } = {}) {
 		super(options);

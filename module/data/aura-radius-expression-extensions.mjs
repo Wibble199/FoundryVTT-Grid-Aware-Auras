@@ -50,7 +50,7 @@ export function registerRadiusExpressionExtension(name, resolver, { description 
 }
 
 export function hasRadiusExtensions() {
-	return extensions.size > 0;
+	return Object.keys(extensions).length > 0;
 }
 
 /**
