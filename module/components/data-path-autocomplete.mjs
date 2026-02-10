@@ -16,6 +16,7 @@ class DataPathAutoComplete extends LitElement {
 		_focusedDataPath: { state: true },
 		dataPaths: { attribute: false },
 		value: { type: String },
+		placeholder: { type: String },
 		disabled: { type: Boolean },
 		name: { type: String } // Not used internally, but exposes the "name" attribute as a property (for forms)
 	};
@@ -46,6 +47,7 @@ class DataPathAutoComplete extends LitElement {
 		this.dataPaths = [];
 
 		this.value = "";
+		this.placeholder = "";
 		this.disabled = false;
 	}
 
@@ -62,6 +64,7 @@ class DataPathAutoComplete extends LitElement {
 				${ref(this._inputRef)}
 				type="text"
 				.value=${this.value}
+				placeholder=${this.placeholder}
 				@focus=${() => { this._isInputFocused = true; this.#recalculateDisplayedDataPaths(); }}
 				@blur=${() => this._isInputFocused = false}
 				@input=${e => this.#setValue(e.target.value, e)}

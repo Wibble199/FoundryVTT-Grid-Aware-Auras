@@ -33,7 +33,7 @@ export const latestAuraConfigVersion = 1;
  * @property {THT_RULER_ON_DRAG_MODES} terrainHeightTools.rulerOnDrag
  * @property {string} terrainHeightTools.targetTokens ID of the filter to use to specify targetable tokens.
  */
-/** @typedef {AuraConfig & { radiusCalculated: number; innerRadiusCalculated: number | undefined; }} AuraConfigWithRadius */
+/** @typedef {AuraConfig & { radiusCalculated: number; innerRadiusCalculated: number; }} AuraConfigWithRadius */
 /**
  * @typedef {Object} VisibilityConfig
  * @property {boolean} default
@@ -116,7 +116,7 @@ export function getTokenAuras(token) {
  * @param {TokenDocument | Item} document
  * @param {Object} [options]
  * @param {boolean} [options.calculateRadius] If true, calculates the actual radius (resolving property paths).
- * @returns {(AuraConfig & { radiusCalculated?: number; & innerRadiusCalculated?: number; })[]}
+ * @returns {(AuraConfig & { radiusCalculated?: number; innerRadiusCalculated?: number; })[]}
  */
 export function getDocumentOwnAuras(document, { calculateRadius = false } = {}) {
 	// Only Items and TokenDocuments can have auras
@@ -134,8 +134,8 @@ export function getDocumentOwnAuras(document, { calculateRadius = false } = {}) 
 		const context = { actor, item };
 		auras = auras.map(a => ({
 			...a,
-			radiusCalculated: calculateAuraRadius(a.radius, context),
-			innerRadiusCalculated: calculateAuraRadius(a.innerRadius, context)
+			radiusCalculated: calculateAuraRadius(a.radius, context) ?? -1,
+			innerRadiusCalculated: calculateAuraRadius(a.innerRadius, context) ?? -1
 		}));
 	}
 
@@ -195,7 +195,7 @@ export const auraDefaults = () => ({
 	name: "New Aura",
 	enabled: true,
 	radius: 1,
-	innerRadius: -1,
+	innerRadius: "",
 	position: "CENTER",
 	lineType: LINE_TYPES.SOLID,
 	lineWidth: 4,

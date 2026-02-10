@@ -111,7 +111,8 @@ export class AuraConfigApplication extends ApplicationV2 {
 	/** @override */
 	_renderHTML() {
 		const radiusIsInvalidPath = typeof calculateAuraRadius(this.#aura.radius, this.#radiusContext) !== "number";
-		const innerRadiusIsInvalidPath = typeof calculateAuraRadius(this.#aura.innerRadius, this.#radiusContext) !== "number";
+		const innerRadiusIsInvalidPath = this.#aura.innerRadius !== "" && // innerRadius is optional
+			typeof calculateAuraRadius(this.#aura.innerRadius, this.#radiusContext) !== "number";
 
 		return html`
 			<form class=${classMap({ "standard-form": true, "hidden": this.#alternateContent })} @input=${this.#valueChange}>
@@ -146,6 +147,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 						<gaa-data-path-autocomplete
 							name="innerRadius"
 							value=${this.#aura.innerRadius}
+							placeholder="None"
 							.dataPaths=${this.#datapathAutocompleteSuggestions}
 							?disabled=${this.#disabled}>
 						</gaa-data-path-autocomplete>
