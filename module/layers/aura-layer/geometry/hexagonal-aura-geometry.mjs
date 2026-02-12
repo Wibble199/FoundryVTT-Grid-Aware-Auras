@@ -348,7 +348,7 @@ const getRectangleHexAuraBorder = cacheReturn(
 			: [primaryAxisOffset, secondaryAxisOffset];
 
 		const firstIsSmall = secondaryAxisSize > 1 && isVariant2;
-		const lastIsSmall = secondaryAxisSize > 1 && (secondaryAxisSize % 2) === +isVariant2;
+		const lastIsSmall = radius === 0 || (secondaryAxisSize > 1 && (secondaryAxisSize % 2) === +isVariant2);
 
 		const points = [
 			...generateSide(primaryAxisSize + radius - +firstIsSmall, 270),

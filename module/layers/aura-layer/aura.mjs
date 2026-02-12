@@ -197,12 +197,12 @@ export class Aura {
 		this.#graphics.endFill();
 
 		// 2. Outer border
-		this.#configureLineStyle(auraConfig, 1);
+		this.#configureLineStyle(auraConfig);
 		drawDashedComplexPath(this.#graphics, this.#geometry.getPath(), { dashSize: auraConfig.lineDashSize, gapSize: auraConfig.lineGapSize });
 
 		// 3. Inner border
 		if (this.#innerGeometry) {
-			this.#configureLineStyle(auraConfig, 0);
+			this.#configureLineStyle(auraConfig);
 			drawDashedComplexPath(this.#graphics, this.#innerGeometry.getPath(), { dashSize: auraConfig.lineDashSize, gapSize: auraConfig.lineGapSize });
 		}
 
@@ -341,12 +341,12 @@ export class Aura {
 	 */
 	#configureLineStyle({
 		lineType = LINE_TYPES.NONE, lineWidth = 0, lineColor = "#000000", lineOpacity = 0
-	} = {}, alignment = 0.5) {
+	} = {}) {
 		this.#graphics.lineStyle({
 			color: Color.from(lineColor),
 			alpha: lineOpacity,
 			width: lineType === LINE_TYPES.NONE ? 0 : lineWidth,
-			alignment
+			alignment: 0.5
 		});
 	}
 
