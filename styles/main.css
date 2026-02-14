@@ -262,7 +262,7 @@
     --hover-entry-background: #f0f0e0;
 }
 
-.gaa-dropdown-menu > li {
+.gaa-dropdown-menu > li:not(.gaa-context-menu-separator) {
 	display: flex;
 	align-items: center;
 	padding: 6px;
@@ -272,7 +272,7 @@
 	transition: all ease-out 200ms;
 }
 
-.gaa-dropdown-menu.gaa-dropdown-menu-hover > li:hover,
+.gaa-dropdown-menu.gaa-dropdown-menu-hover > li:not(.gaa-context-menu-separator):hover,
 .gaa-dropdown-menu > li.active {
 	border-color: var(--hover-entry-border);
     background: var(--hover-entry-background);
