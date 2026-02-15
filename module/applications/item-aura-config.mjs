@@ -2,7 +2,7 @@
 /** @import { AuraConfig } from "../data/aura.mjs" */
 import "../components/aura-table.mjs";
 import { DOCUMENT_AURAS_FLAG, MODULE_NAME } from "../consts.mjs";
-import { getDocumentOwnAuras } from "../data/aura.mjs";
+import { createRadiusExpressionContext, getDocumentOwnAuras } from "../data/aura.mjs";
 import { createRef, html, ref, render, when } from "../lib/lit-all.min.js";
 
 const { ApplicationV2 } = foundry.applications.api;
@@ -63,7 +63,7 @@ export class ItemAuraConfigApplication extends ApplicationV2 {
 				.value=${getDocumentOwnAuras(this.#item)}
 				.disabled=${this.#disabled}
 				.parentId=${this.#item.id}
-				.radiusContext=${{ actor: this.#item.parent, item: this.#item }}
+				.radiusContext=${createRadiusExpressionContext(this.#item.parent, this.#item)}
 				${ref(this.#auraTableRef)}>
 			</gaa-aura-table>
 

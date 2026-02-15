@@ -1,5 +1,4 @@
-/** @import { AuraConfig, importAuraJson } from "../data/aura.mjs" */
-/** @import { Preset } from "../data/preset.mjs" */
+/** @import { AuraConfig, importAuraJson, RadiusExpressionContext } from "../data/aura.mjs" */
 import { AuraConfigApplication } from "../applications/aura-config.mjs";
 import { PresetManagerApplication } from "../applications/preset-manager.mjs";
 import { ENABLE_EFFECT_AUTOMATION_SETTING, ENABLE_MACRO_AUTOMATION_SETTING, LINE_TYPES, MODULE_NAME } from "../consts.mjs";
@@ -52,7 +51,7 @@ export class AuraTable extends LitElement {
 		/** @type {Object | undefined} */
 		this.attachConfigsTo = undefined;
 
-		/** @type {{ actor: Actor | undefined; item: Item | undefined; }} */
+		/** @type {RadiusExpressionContext} */
 		this.radiusContext = { actor: undefined, item: undefined };
 	}
 

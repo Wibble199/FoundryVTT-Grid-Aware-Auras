@@ -1,5 +1,6 @@
 /** @import { AuraConfig, AuraConfigWithRadius } from "./data/aura.mjs" */
 import { DOCUMENT_AURAS_FLAG, MODULE_NAME } from "./consts.mjs";
+import { registerRadiusExpressionExtension as registerRadiusExpressionExtensionImpl } from "./data/aura-radius-expression-extensions.mjs";
 import { auraDefaults, getDocumentOwnAuras as getDocumentOwnAurasImpl } from "./data/aura.mjs";
 import { AuraLayer } from "./layers/aura-layer/aura-layer.mjs";
 import { toggleEffect as toggleEffectImpl } from "./utils/misc-utils.mjs";
@@ -102,6 +103,17 @@ export function getTokensInsideAura(parent, auraId) {
  */
 export function isTokenInside(testToken, parentToken, auraId) {
 	return AuraLayer.current?._auraManager.isInside(testToken, parentToken, auraId) ?? false;
+}
+
+/**
+ * Registers a new radius expression extension.
+ * @param {string} name The name to register the expression under. Must only use alphanumeric, '.', '-' or '_' characters, must not start or end with '.', or contain consequtive '.'s.
+ * @param {(actor: Actor | undefined, item: Item | undefined) => number} resolver Function to resolve a value. Accepts actor and item parameters.
+ * @param {Object} [options]
+ * @param {string} [options.description] An optional HTML message shown to the user describing this extension.
+ */
+export function registerRadiusExpressionExtension(name, resolver, options) {
+	return registerRadiusExpressionExtensionImpl(name, resolver, options);
 }
 
 /**
