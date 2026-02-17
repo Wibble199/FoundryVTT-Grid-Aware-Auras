@@ -2,7 +2,6 @@
 import { ContextMenu } from "../components/context-menu.mjs";
 import "../components/data-path-autocomplete.mjs";
 import { collectDataPathsFromDatamodels, collectDataPathsFromObject } from "../components/data-path-autocomplete.mjs";
-import "../components/vertical-tabs.mjs";
 import {
 	AURA_POSITIONS,
 	AURA_VISIBILITY_MODES,
