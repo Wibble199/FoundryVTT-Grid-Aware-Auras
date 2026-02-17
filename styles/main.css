@@ -2,19 +2,64 @@
 /* Aura Config Window */
 /* ------------------ */
 .grid-aware-auras-aura-config {
-	grid-template: 1fr / 1fr;
+	display: grid !important;
+	grid-template:
+		"h h" min-content
+		"t c" 1fr
+		"f f" min-content
+		/ 160px 1fr;
 	position: relative;
 }
 
-.grid-aware-auras-aura-config hr {
-	width: 100%;
-	border-top: 2px groove #FFFFFF;
+.grid-aware-auras-aura-config .sheet-header {
+	grid-area: h;
+	padding-bottom: 1rem;
+	border-bottom: 1px solid rgb(135 135 135 / 25%);
+}
+
+.grid-aware-auras-aura-config .gaa-vertical-tabs {
+	grid-area: t;
+}
+
+.grid-aware-auras-aura-config .sheet-content {
+	grid-area: c;
+	padding: 0.5rem 1rem 0.5rem 0;
+	overflow-y: scroll;
+}
+
+.grid-aware-auras-aura-config .sheet-footer {
+	grid-area: f;
 }
 
 .grid-aware-auras-aura-config .standard-form hr {
 	margin: 0.5rem 0;
 	border-top: none;
 	flex: 0 0 2px;
+}
+
+.grid-aware-auras-aura-config .gaa-popover {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+    justify-content: center;
+	background: rgba(0, 0, 0, 0.8);
+	backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.grid-aware-auras-aura-config .gaa-popover > .gaa-popover-content {
+	display: flex;
+	width: 480px;
+	max-height: calc(100% - 3rem);
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: 4px;
+	background: var(--background);
+}
+
+.grid-aware-auras-aura-config > .gaa-popover > .gaa-popover-content > * {
+	flex: 1 1 0;
 }
 
 .grid-aware-auras-aura-config .visibility-grid {
@@ -61,11 +106,6 @@
 	opacity: 0.4;
 }
 
-.grid-aware-auras-aura-config nav.sheet-tabs.secondary-tabs {
-	margin-top: -4px;
-    border-top: none;
-}
-
 .grid-aware-auras-aura-config .alert {
 	margin: 0;
 	padding: 4px;
@@ -92,27 +132,42 @@
 }
 
 .grid-aware-auras-aura-config .automated-item-list > li {
-	display: grid;
-	grid-template-columns: 2fr 3fr min-content min-content;
+	display: flex;
 	align-items: center;
 	gap: 0.25rem;
-	padding: 0.25rem 0;
-	border-top: 2px groove transparent;
-	border-bottom: 2px groove transparent;
-}
-
-.grid-aware-auras-aura-config .automated-item-list.automated-item-list-1-col > li {
-	grid-template-columns: 1fr min-content min-content;
+	padding: 0.5rem 0;
+	border-top: 1px solid transparent;
+	border-bottom: 1px solid transparent;
+	cursor: pointer;
 }
 
 .grid-aware-auras-aura-config .automated-item-list > li:hover {
-	border-color: var(--color-border-dark-secondary);
+	border-color: rgb(135 135 135 / 25%);
 }
 
-.grid-aware-auras-aura-config .automated-item-list > li > span {
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+.grid-aware-auras-aura-config .automated-item-list > li > :not(.menu-button) {
+	flex: 1 1 0;
+}
+
+.grid-aware-auras-aura-config .automated-item-list > li > .menu-button {
+	flex: 0 0 16px;
+	text-align: center;
+}
+
+.grid-aware-auras-aura-config .automated-item-list-create-button {
+	display: flex;
+	justify-content: center;
+	margin-top: 1rem;
+}
+
+.grid-aware-auras-aura-config .automated-item-list-create-button > button {
+	width: max-content;
+    padding: 0 2rem;
+}
+
+.grid-aware-auras-aura-config .standard-form .form-group > label {
+	/* Not sure why the labels seem to have such a large line height. */
+	--input-height: 1.25;
 }
 
 /* ---------- */
@@ -295,6 +350,39 @@
 .gaa-dropdown-menu > li.gaa-context-menu-separator {
 	margin: 4px 0;
 	border-bottom: 1px solid var(--group-separator);
+}
+
+/* ------------- */
+/* Vertical tabs */
+/* ------------- */
+.gaa-vertical-tabs {
+	display: flex;
+	flex-direction: column;
+	padding-right: 1rem;
+	border-right: 4px double rgb(135 135 135 / 25%);
+}
+
+.gaa-vertical-tabs > a {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+	margin-bottom: 0.25rem;
+	padding: 0.3rem;
+	border-top: 1px solid transparent;
+	border-bottom: 1px solid transparent;
+}
+
+.gaa-vertical-tabs > a > .gaa-vertical-tabs-icon {
+	width: 18px;
+	text-align: center;
+}
+
+.gaa-vertical-tabs > a:hover {
+	border-color: rgb(135 135 135 / 25%);
+}
+
+.gaa-vertical-tabs > a.active {
+	border-color: var(--color-border-highlight);
 }
 
 /* ------------ */

@@ -1,7 +1,8 @@
-/** @import { AuraConfig, RadiusExpressionContext, VisibilityConfig } from "../data/aura.mjs"; */
+/** @import { AuraConfig, EffectConfig, MacroConfig SequencerEffectConfig, VisibilityConfig } from "../data/aura.mjs"; */
+import { ContextMenu } from "../components/context-menu.mjs";
 import "../components/data-path-autocomplete.mjs";
 import { collectDataPathsFromDatamodels, collectDataPathsFromObject } from "../components/data-path-autocomplete.mjs";
-import "../components/tabs.mjs";
+import "../components/vertical-tabs.mjs";
 import {
 	AURA_POSITIONS,
 	AURA_VISIBILITY_MODES,
@@ -52,8 +53,55 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	#datapathAutocompleteSuggestions;
 
+	#selectedTabIndex = 0;
+
 	/** @type {ReturnType<html> | null} */
 	#alternateContent = null;
+
+	#tabs = [
+		{
+			name: "Geometry",
+			icon: "far fa-hexagon",
+			template: () => this.#geometryTab()
+		},
+		{
+			name: l("GRIDAWAREAURAS.TabLines"),
+			icon: "fas fa-paint-brush",
+			template: () => this.#linesTab()
+		},
+		{
+			name: l("GRIDAWAREAURAS.TabFill"),
+			icon: "fas fa-fill-drip",
+			template: () => this.#fillTab()
+		},
+		{
+			name: l("GRIDAWAREAURAS.TabVisibility"),
+			icon: "fas fa-eye-low-vision",
+			template: () => this.#visibilityTab()
+		},
+		{
+			name: l("GRIDAWAREAURAS.TabEffects"),
+			icon: "fas fa-stars",
+			template: () => this.#automationEffectTab()
+		},
+		{
+			name: l("GRIDAWAREAURAS.TabMacros"),
+			icon: "fas fa-scroll",
+			template: () => this.#automationMacroTab()
+		},
+		{
+			name: l("GRIDAWAREAURAS.TabSequencer"),
+			icon: "fas fa-list-ol",
+			hidden: !isSequencerActive(),
+			template: () => this.#automationSequencerTab()
+		},
+		{
+			name: l("GRIDAWAREAURAS.TabTerrainHeightTools"),
+			icon: "fas fa-chart-simple",
+			hidden: !isTerrainHeightToolsActive(),
+			template: () => this.#automationThtTab()
+		}
+	];
 
 	/**
 	 * @param {AuraConfig} aura
@@ -92,14 +140,15 @@ export class AuraConfigApplication extends ApplicationV2 {
 	}
 
 	static DEFAULT_OPTIONS = {
+		tag: "form",
 		window: {
 			contentClasses: ["sheet", "standard-form", "grid-aware-auras-aura-config"],
 			icon: "far fa-hexagon",
 			title: "Aura Configuration"
 		},
 		position: {
-			width: 480,
-			height: "auto"
+			width: 620,
+			height: 580
 		}
 	};
 
@@ -110,19 +159,48 @@ export class AuraConfigApplication extends ApplicationV2 {
 
 	/** @override */
 	_renderHTML() {
+		return html`
+			<div class="sheet-header form-group">
+				<label style="flex: 0; margin-right: 1rem;">${l("Name")}</label>
+				<div class="form-fields">
+					<input type="text" name="name" .value=${this.#aura.name} ?disabled=${this.#disabled} required>
+				</div>
+			</div>
+
+			<nav class="gaa-vertical-tabs">
+				${this.#tabs.map((tab, index) => tab.hidden ? nothing : html`
+					<a class=${classMap({ active: this.#selectedTabIndex === index })} @click=${() => this.#setSelectedTab(index)}>
+						<span class="gaa-vertical-tabs-icon"><i class=${tab.icon}></i></span>
+						<span>${tab.name}</span>
+					</a>
+				`)}
+			</nav>
+
+			<div class="sheet-content">
+				${this.#tabs[this.#selectedTabIndex].template() ?? nothing}
+			</div>
+
+			<footer class="sheet-footer">
+				<button type="button" @click=${() => this.close()}>Close</button>
+			</footer>
+
+			${when(this.#alternateContent, () => html`
+				<div class="gaa-popover" @click=${e => !e.target.closest(".gaa-popover-content") && this.#setAlternateContent(null, { render: true })}>
+					<div class="gaa-popover-content">
+						${this.#alternateContent}
+					</div>
+				</div>
+			`)}
+		`;
+	}
+
+	#geometryTab = () => {
 		const radiusIsInvalidPath = typeof calculateAuraRadius(this.#aura.radius, this.#radiusContext) !== "number";
 		const innerRadiusIsInvalidPath = this.#aura.innerRadius !== "" && // innerRadius is optional
 			typeof calculateAuraRadius(this.#aura.innerRadius, this.#radiusContext) !== "number";
 
 		return html`
-			<form class=${classMap({ "standard-form": true, "hidden": this.#alternateContent })} @input=${this.#valueChange}>
-				<div class="form-group">
-					<label>${l("Name")}</label>
-					<div class="form-fields">
-						<input type="text" name="name" .value=${this.#aura.name} ?disabled=${this.#disabled} required>
-					</div>
-				</div>
-
+			<div class="standard-form">
 				<div class="form-group">
 					<label>Radius</label>
 					<div class="form-fields">
@@ -132,10 +210,8 @@ export class AuraConfigApplication extends ApplicationV2 {
 							.dataPaths=${this.#datapathAutocompleteSuggestions}
 							?disabled=${this.#disabled}>
 						</gaa-data-path-autocomplete>
-						<span style="flex: 0; margin-left: 0.5rem; cursor: help;">
-							<i class="fas fa-question-circle" data-tooltip=${l("GRIDAWAREAURAS.Radius.Hint")}></i>
-						</span>
 					</div>
+					<p class="hint">${l("GRIDAWAREAURAS.Radius.Hint")}</p>
 					${when(radiusIsInvalidPath, () => html`
 						<div class="hint" style="text-align: right; color: var(--color-level-error);">${l("GRIDAWAREAURAS.UnresolvedRadiusConfigDialogWarning")}</div>
 					`)}
@@ -149,12 +225,10 @@ export class AuraConfigApplication extends ApplicationV2 {
 							value=${this.#aura.innerRadius}
 							placeholder="None"
 							.dataPaths=${this.#datapathAutocompleteSuggestions}
-							?disabled=${this.#disabled}>
-						</gaa-data-path-autocomplete>
-						<span style="flex: 0; margin-left: 0.5rem; cursor: help;">
-							<i class="fas fa-question-circle" data-tooltip=${l("GRIDAWAREAURAS.Radius.Hint")}></i>
-						</span>
+							?disabled=${this.#disabled}
+						></gaa-data-path-autocomplete>
 					</div>
+					<p class="hint">${l("GRIDAWAREAURAS.InnerRadius.Hint")}</p>
 					${when(innerRadiusIsInvalidPath, () => html`
 						<div class="hint" style="text-align: right; color: var(--color-level-error);">${l("GRIDAWAREAURAS.UnresolvedRadiusConfigDialogWarning")}</div>
 					`)}
@@ -166,89 +240,58 @@ export class AuraConfigApplication extends ApplicationV2 {
 						<select name="position" ?disabled=${this.#disabled}>
 							${selectOptions(AURA_POSITIONS, { selected: this.#aura.position })}
 						</select>
-						<span style="flex: 0; margin-left: 0.5rem; cursor: help;">
-							<i class="fas fa-question-circle" data-tooltip=${l("GRIDAWAREAURAS.Position.Hint")}></i>
-						</span>
 					</div>
+					<p class="hint">${l("GRIDAWAREAURAS.Position.Hint")}</p>
 				</div>
-
-				<gaa-tabs .tabs=${[
-					{
-						name: l("GRIDAWAREAURAS.TabLines"),
-						icon: "fas fa-paint-brush",
-						template: this.#linesTab
-					},
-					{
-						name: l("GRIDAWAREAURAS.TabFill"),
-						icon: "fas fa-fill-drip",
-						template: this.#fillTab
-					},
-					{
-						name: l("GRIDAWAREAURAS.TabVisibility"),
-						icon: "fas fa-eye-low-vision",
-						template: this.#visibilityTab
-					},
-					{
-						name: l("GRIDAWAREAURAS.TabAutomation"),
-						icon: "fas fa-bolt",
-						template: this.#automationTab
-					}
-				]}></gaa-tabs>
-
-				<footer class="sheet-footer flexrow">
-					<button type="button" @click=${() => this.close()}>Close</button>
-				</footer>
-			</form>
-
-			<div class=${classMap({ "hidden": !this.#alternateContent })}>
-				${this.#alternateContent ?? nothing}
 			</div>
 		`;
-	}
+	};
 
 	#linesTab = () => {
 		const isDashed = this.#aura.lineType === LINE_TYPES.DASHED;
 
 		return html`
-			<div class="form-group">
-				<label>${l("GRIDAWAREAURAS.LineType")}</label>
-				<div class="form-fields">
-					<select name="lineType" ?disabled=${this.#disabled} data-dtype="Number">
-						${selectOptions(LINE_TYPES, {
-							selected: this.#aura.lineType,
-							labelSelector: ([name]) => `GRIDAWAREAURAS.LineType${name.titleCase()}`,
-							valueSelector: ([, value]) => value
-						})}
-					</select>
+			<div class="standard-form">
+				<div class="form-group">
+					<label>${l("GRIDAWAREAURAS.LineType")}</label>
+					<div class="form-fields">
+						<select name="lineType" ?disabled=${this.#disabled} data-dtype="Number">
+							${selectOptions(LINE_TYPES, {
+								selected: this.#aura.lineType,
+								labelSelector: ([name]) => `GRIDAWAREAURAS.LineType${name.titleCase()}`,
+								valueSelector: ([, value]) => value
+							})}
+						</select>
+					</div>
 				</div>
-			</div>
 
-			<div class="form-group">
-				<label>${l("DRAWING.LineWidth")} <span class="units">(${l("Pixels")})</span></label>
-				<div class="form-fields">
-					<input type="number" name="lineWidth" .value=${this.#aura.lineWidth} required min="0" step="1" ?disabled=${this.#disabled}>
+				<div class="form-group">
+					<label>${l("DRAWING.LineWidth")} <span class="units">(px)</span></label>
+					<div class="form-fields">
+						<input type="number" name="lineWidth" .value=${this.#aura.lineWidth} required min="0" step="1" ?disabled=${this.#disabled}>
+					</div>
 				</div>
-			</div>
 
-			<div class="form-group">
-				<label>${l("DRAWING.StrokeColor")}</label>
-				<div class="form-fields">
-					<color-picker name="lineColor" .value=${this.#aura.lineColor} ?disabled=${this.#disabled}></color-picker>
+				<div class="form-group">
+					<label>${l("DRAWING.StrokeColor")}</label>
+					<div class="form-fields">
+						<color-picker name="lineColor" .value=${this.#aura.lineColor} ?disabled=${this.#disabled}></color-picker>
+					</div>
 				</div>
-			</div>
 
-			<div class="form-group">
-				<label>${l("DRAWING.LineOpacity")}</label>
-				<div class="form-fields">
-					<range-picker name="lineOpacity" .value=${this.#aura.lineOpacity} min="0" max="1" step="0.1" ?disabled=${this.#disabled}></range-picker>
+				<div class="form-group">
+					<label>${l("DRAWING.LineOpacity")}</label>
+					<div class="form-fields">
+						<range-picker name="lineOpacity" .value=${this.#aura.lineOpacity} min="0" max="1" step="0.1" ?disabled=${this.#disabled}></range-picker>
+					</div>
 				</div>
-			</div>
 
-			<div class="form-group">
-				<label>Dash Config</label>
-				<div class="form-fields">
-					<input type="number" name="lineDashSize" placeholder="Dash" .value=${this.#aura.lineDashSize} required min="0" step="1" ?disabled=${this.#disabled || !isDashed}>
-					<input type="number" name="lineGapSize" placeholder="Gap" .value=${this.#aura.lineGapSize} required min="0" step="1" ?disabled=${this.#disabled || !isDashed}>
+				<div class="form-group">
+					<label>Dash Config <span class="units">(px)</span></label>
+					<div class="form-fields">
+						<input type="number" name="lineDashSize" placeholder="Dash" .value=${this.#aura.lineDashSize} required min="0" step="1" ?disabled=${this.#disabled || !isDashed}>
+						<input type="number" name="lineGapSize" placeholder="Gap" .value=${this.#aura.lineGapSize} required min="0" step="1" ?disabled=${this.#disabled || !isDashed}>
+					</div>
 				</div>
 			</div>
 		`;
@@ -257,175 +300,182 @@ export class AuraConfigApplication extends ApplicationV2 {
 	#fillTab = () => {
 		const isPattern = this.#aura.fillType === CONST.DRAWING_FILL_TYPES.PATTERN;
 		return html`
-			<div class="form-group">
-				<label>${l("DRAWING.FillTypes")}</label>
-				<div class="form-fields">
-					<select name="fillType" ?disabled=${this.#disabled} data-dtype="Number">
-						${selectOptions(CONST.DRAWING_FILL_TYPES, {
-							selected: this.#aura.fillType,
-							labelSelector: ([name]) => `DRAWING.FillType${name.titleCase()}`,
-							valueSelector: ([, value]) => value
-						})}
-					</select>
+			<div class="standard-form">
+				<div class="form-group">
+					<label>${l("DRAWING.FillTypes")}</label>
+					<div class="form-fields">
+						<select name="fillType" ?disabled=${this.#disabled} data-dtype="Number">
+							${selectOptions(CONST.DRAWING_FILL_TYPES, {
+								selected: this.#aura.fillType,
+								labelSelector: ([name]) => `DRAWING.FillType${name.titleCase()}`,
+								valueSelector: ([, value]) => value
+							})}
+						</select>
+					</div>
 				</div>
-			</div>
 
-			<div class="form-group">
-				<label>${l("DRAWING.FillColor")}</label>
-				<div class="form-fields">
-					<color-picker name="fillColor" .value=${this.#aura.fillColor} ?disabled=${this.#disabled}></color-picker>
+				<div class="form-group">
+					<label>${l("DRAWING.FillColor")}</label>
+					<div class="form-fields">
+						<color-picker name="fillColor" .value=${this.#aura.fillColor} ?disabled=${this.#disabled}></color-picker>
+					</div>
 				</div>
-			</div>
 
-			<div class="form-group">
-				<label>${l("DRAWING.FillOpacity")}</label>
-				<div class="form-fields">
-					<range-picker name="fillOpacity" .value=${this.#aura.fillOpacity} min="0" max="1" step="0.1" ?disabled=${this.#disabled}></range-picker>
+				<div class="form-group">
+					<label>${l("DRAWING.FillOpacity")}</label>
+					<div class="form-fields">
+						<range-picker name="fillOpacity" .value=${this.#aura.fillOpacity} min="0" max="1" step="0.1" ?disabled=${this.#disabled}></range-picker>
+					</div>
 				</div>
-			</div>
 
-			<div class="form-group">
-				<label>${l("DRAWING.FillTexture")}</label>
-				<div class="form-fields">
-					<file-picker name="fillTexture" type="image" value=${this.#aura.fillTexture} ?disabled=${this.#disabled}></file-picker>
+				<div class="form-group">
+					<label>${l("DRAWING.FillTexture")}</label>
+					<div class="form-fields">
+						<file-picker name="fillTexture" type="image" value=${this.#aura.fillTexture} ?disabled=${this.#disabled}></file-picker>
+					</div>
 				</div>
-			</div>
 
-			<div class="form-group">
-				<label>Texture Offset <span class="units">(px)</span></label>
-				<div class="form-fields">
-					<input type="number" name="fillTextureOffset.x" placeholder="x" .value=${this.#aura.fillTextureOffset.x} required ?disabled=${this.#disabled || !isPattern}>
-					<input type="number" name="fillTextureOffset.y" placeholder="y" .value=${this.#aura.fillTextureOffset.y} required ?disabled=${this.#disabled || !isPattern}>
+				<div class="form-group">
+					<label>Texture Offset <span class="units">(px)</span></label>
+					<div class="form-fields">
+						<input type="number" name="fillTextureOffset.x" placeholder="x" .value=${this.#aura.fillTextureOffset.x} required ?disabled=${this.#disabled || !isPattern}>
+						<input type="number" name="fillTextureOffset.y" placeholder="y" .value=${this.#aura.fillTextureOffset.y} required ?disabled=${this.#disabled || !isPattern}>
+					</div>
 				</div>
-			</div>
 
-			<div class="form-group">
-				<label>Texture Scale <span class="units">(%)</span></label>
-				<div class="form-fields">
-					<input type="number" name="fillTextureScale.x" placeholder="x" .value=${this.#aura.fillTextureScale.x} required ?disabled=${this.#disabled || !isPattern}>
-					<input type="number" name="fillTextureScale.y" placeholder="y" .value=${this.#aura.fillTextureScale.y} required ?disabled=${this.#disabled || !isPattern}>
+				<div class="form-group">
+					<label>Texture Scale <span class="units">(%)</span></label>
+					<div class="form-fields">
+						<input type="number" name="fillTextureScale.x" placeholder="x" .value=${this.#aura.fillTextureScale.x} required ?disabled=${this.#disabled || !isPattern}>
+						<input type="number" name="fillTextureScale.y" placeholder="y" .value=${this.#aura.fillTextureScale.y} required ?disabled=${this.#disabled || !isPattern}>
+					</div>
 				</div>
 			</div>
 		`;
 	};
 
 	#visibilityTab = () => html`
-		<div class="form-group">
-			<label>Display Aura</label>
-			<div class="form-fields">
-				<select name="visibilityMode" ?disabled=${this.#disabled} @change=${this.#setVisibilityMode}>
-					${selectOptions(AURA_VISIBILITY_MODES, { selected: this.#visibilityMode })}
-				</select>
+		<div class="standard-form">
+			<div class="form-group">
+				<label>Display Aura</label>
+				<div class="form-fields">
+					<select name="visibilityMode" ?disabled=${this.#disabled} @change=${this.#setVisibilityMode}>
+						${selectOptions(AURA_VISIBILITY_MODES, { selected: this.#visibilityMode })}
+					</select>
+				</div>
 			</div>
+
+			<fieldset class=${classMap({ disabled: this.#disabled, hidden: this.#visibilityMode !== "CUSTOM" })} style="padding-block-end: 0;">
+				<legend>Custom</legend>
+
+				<p class="hint" style="margin-top: 0;">
+					Specify under which states the aura should be visible to owners and non-owners.
+					When multiple states are appliable, the aura is visible when ANY applicable state is checked.
+				</p>
+
+				<div class="visibility-grid">
+					<div class="visibility-row">
+						<span class="owner text-bold">Owner</span>
+						<span class="nonowner text-bold">Non-owners</span>
+					</div>
+
+					<div class="visibility-row">
+						<span class="title">Default</span>
+						<p class="hint">When none of the below states are applicable.</p>
+						<input type="checkbox" class="owner" name="ownerVisibility.default" .checked=${this.#aura.ownerVisibility.default}>
+						<input type="checkbox" class="nonowner" name="nonOwnerVisibility.default" .checked=${this.#aura.nonOwnerVisibility.default}>
+					</div>
+
+					<div class="visibility-row">
+						<span class="title">Hovered</span>
+						<input type="checkbox" class="owner" name="ownerVisibility.hovered" .checked=${this.#aura.ownerVisibility.hovered}>
+						<input type="checkbox" class="nonowner" name="nonOwnerVisibility.hovered" .checked=${this.#aura.nonOwnerVisibility.hovered}>
+					</div>
+
+					<div class="visibility-row">
+						<span class="title">Controlled/Selected</span>
+						<input type="checkbox" class="owner" name="ownerVisibility.controlled" .checked=${this.#aura.ownerVisibility.controlled}>
+					</div>
+
+					<div class="visibility-row">
+						<span class="title">Dragging</span>
+						<input type="checkbox" class="owner" name="ownerVisibility.dragging" .checked=${this.#aura.ownerVisibility.dragging}>
+					</div>
+
+					<div class="visibility-row">
+						<span class="title">Targeted</span>
+						<input type="checkbox" class="owner" name="ownerVisibility.targeted" .checked=${this.#aura.ownerVisibility.targeted}>
+						<input type="checkbox" class="nonowner" name="nonOwnerVisibility.targeted" .checked=${this.#aura.nonOwnerVisibility.targeted}>
+					</div>
+
+					<div class="visibility-row">
+						<span class="title">Combat Turn</span>
+						<p class="hint">When the token has its turn in the combat tracker.</p>
+						<input type="checkbox" class="owner" name="ownerVisibility.turn" .checked=${this.#aura.ownerVisibility.turn}>
+						<input type="checkbox" class="nonowner" name="nonOwnerVisibility.turn" .checked=${this.#aura.nonOwnerVisibility.turn}>
+					</div>
+				</div>
+			</fieldset>
 		</div>
-
-		<fieldset class=${classMap({ disabled: this.#disabled || this.#visibilityMode !== "CUSTOM" })} style="padding-block-end: 0;">
-			<legend>Custom</legend>
-
-			<p class="hint" style="margin-top: 0;">
-				Specify under which states the aura should be visible to owners and non-owners.
-				When multiple states are appliable, the aura is visible when ANY applicable state is checked.
-			</p>
-
-			<div class="visibility-grid">
-				<div class="visibility-row">
-					<span class="owner text-bold">Owner</span>
-					<span class="nonowner text-bold">Non-owners</span>
-				</div>
-
-				<div class="visibility-row">
-					<span class="title">Default</span>
-					<p class="hint">When none of the below states are applicable.</p>
-					<input type="checkbox" class="owner" name="ownerVisibility.default" .checked=${this.#aura.ownerVisibility.default}>
-					<input type="checkbox" class="nonowner" name="nonOwnerVisibility.default" .checked=${this.#aura.nonOwnerVisibility.default}>
-				</div>
-
-				<div class="visibility-row">
-					<span class="title">Hovered</span>
-					<input type="checkbox" class="owner" name="ownerVisibility.hovered" .checked=${this.#aura.ownerVisibility.hovered}>
-					<input type="checkbox" class="nonowner" name="nonOwnerVisibility.hovered" .checked=${this.#aura.nonOwnerVisibility.hovered}>
-				</div>
-
-				<div class="visibility-row">
-					<span class="title">Controlled/Selected</span>
-					<input type="checkbox" class="owner" name="ownerVisibility.controlled" .checked=${this.#aura.ownerVisibility.controlled}>
-				</div>
-
-				<div class="visibility-row">
-					<span class="title">Dragging</span>
-					<input type="checkbox" class="owner" name="ownerVisibility.dragging" .checked=${this.#aura.ownerVisibility.dragging}>
-				</div>
-
-				<div class="visibility-row">
-					<span class="title">Targeted</span>
-					<input type="checkbox" class="owner" name="ownerVisibility.targeted" .checked=${this.#aura.ownerVisibility.targeted}>
-					<input type="checkbox" class="nonowner" name="nonOwnerVisibility.targeted" .checked=${this.#aura.nonOwnerVisibility.targeted}>
-				</div>
-
-				<div class="visibility-row">
-					<span class="title">Combat Turn</span>
-					<p class="hint">When the token has its turn in the combat tracker.</p>
-					<input type="checkbox" class="owner" name="ownerVisibility.turn" .checked=${this.#aura.ownerVisibility.turn}>
-					<input type="checkbox" class="nonowner" name="nonOwnerVisibility.turn" .checked=${this.#aura.nonOwnerVisibility.turn}>
-				</div>
-			</div>
-		</fieldset>
-	`;
-
-	#automationTab = () => html`
-		<gaa-tabs .tabs=${[
-			{
-				name: "Effect",
-				icon: "fas fa-stars",
-				template: this.#automationEffectTab
-			},
-			{
-				name: "Macro",
-				icon: "fas fa-scroll",
-				template: this.#automationMacroTab
-			},
-			{
-				name: "Sequencer",
-				icon: "fas fa-list-ol",
-				hidden: !isSequencerActive(),
-				template: this.#automationSequencerTab
-			},
-			{
-				name: "Terrain Height Tools",
-				icon: "fas fa-chart-simple",
-				template: this.#automationThtTab,
-				hidden: !isTerrainHeightToolsActive()
-			}
-		]} navStyle="margin-top: -0.75rem"></gaa-tabs>
 	`;
 
 	#automationEffectTab = () => {
 		const effectsEnabled = game.settings.get(MODULE_NAME, ENABLE_EFFECT_AUTOMATION_SETTING);
+
+		/** @type {(e: Event, effect: EffectConfig, idx: number) => void} */
+		const openItemContextMenu = (e, effect, idx) => ContextMenu.open(e, [
+			{
+				label: "Edit",
+				icon: "fas fa-edit",
+				onClick: () => this.#editEffect(idx)
+			},
+			{
+				label: "Duplicate",
+				icon: "fas fa-clone",
+				onClick: () => this.#createEffect(effect)
+			},
+			{
+				label: "Delete",
+				icon: "fas fa-trash",
+				onClick: () => this.#deleteEffect(idx)
+			}
+		]);
 
 		return html`
 			${when(!effectsEnabled, () => html`
 				<p class="alert" role="alert">Effect automation is not turned on for this world. GMs can configure this in the settings.</p>
 			`)}
 
-			<div class="text-right" style="margin-top: -0.5rem; margin-bottom: -0.5rem;">
-				<button type="button" class="icon fas fa-plus" @click=${this.#createEffect} ?disabled=${this.#disabled || !effectsEnabled} style="display: inline-block">
-				</button>
-			</div>
-
 			${when(this.#aura.effects.length, () => html`<ul class="automated-item-list">
 				${this.#aura.effects.map((effect, idx) => html`
-					<li>
-						<span><strong>${l(CONFIG.statusEffects.find(e => e.id === effect.effectId)?.name ?? "None")}</strong></span>
-						<span><em>${l(EFFECT_MODES[effect.mode] ?? "")}</em></span>
-						<button type="button" class=${"icon fas " + (this.#disabled ? "fa-eye" : "fa-edit")} @click=${() => this.#editEffect(idx)} ?disabled=${!effectsEnabled}></button>
-						<button type="button" class="icon fas fa-trash" @click=${() => this.#deleteEffect(idx)} ?disabled=${this.#disabled || !effectsEnabled}></button>
+					<li @contextmenu=${e => openItemContextMenu(e, effect, idx)}>
+						<div class="flexcol">
+							<span><strong>${l(CONFIG.statusEffects.find(e => e.id === effect.effectId)?.name ?? "None")}</strong></span>
+							<span><em>${l(EFFECT_MODES[effect.mode] ?? "")}</em></span>
+						</div>
+						${when(!this.#disabled && effectsEnabled, () => html`
+							<a class="menu-button" @click=${e => openItemContextMenu(e, effect, idx)}>
+								<i class="fas fa-ellipsis-vertical"></i>
+							</a>
+						`, () => html`
+							<a class="menu-button" @click=${() => this.#editEffect(idx)}>
+								<i class="fas fa-eye"></i>
+							</a>
+						`)}
 					</li>
 				`)}
 			</ul>`)}
 
 			${when(effectsEnabled && this.#aura.effects.length === 0, () => html`
-				<p class="hint text-center">No automated effects configured. Click the plus above to create one.</p>
+				<p class="hint text-center">No automated effects configured.</p>
 			`)}
+
+			<div class="automated-item-list-create-button">
+				<button @click=${this.#createEffect} ?disabled=${this.#disabled || !effectsEnabled}>
+					<i class="fas fa-plus"></i>
+					Create Effect
+				</button>
+			</div>
 		`;
 	};
 
@@ -512,30 +562,60 @@ export class AuraConfigApplication extends ApplicationV2 {
 	#automationMacroTab = () => {
 		const macrosEnabled = game.settings.get(MODULE_NAME, ENABLE_MACRO_AUTOMATION_SETTING);
 
+		/** @type {(e: Event, macro: MacroConfig, idx: number) => void} */
+		const openItemContextMenu = (e, macro, idx) => ContextMenu.open(e, [
+			{
+				label: "Edit",
+				icon: "fas fa-edit",
+				onClick: () => this.#editMacro(idx)
+			},
+			{
+				label: "Duplicate",
+				icon: "fas fa-clone",
+				onClick: () => this.#createMacro(macro)
+			},
+			{
+				label: "Delete",
+				icon: "fas fa-trash",
+				onClick: () => this.#deleteMacro(idx)
+			}
+		]);
+
 		return html`
 			${when(!macrosEnabled, () => html`
 				<p class="alert" role="alert">Macro automation is not turned on for this world. GMs can configure this in the settings.</p>
 			`)}
 
-			<div class="text-right" style="margin-top: -0.5rem; margin-bottom: -0.5rem;">
-				<button type="button" class="icon fas fa-plus" @click=${this.#createMacro} ?disabled=${this.#disabled || !macrosEnabled} style="display: inline-block">
-				</button>
-			</div>
-
 			${when(this.#aura.macros.length, () => html`<ul class="automated-item-list">
 				${this.#aura.macros.map((macro, idx) => html`
-					<li>
-						<span><strong>${game.macros.get(macro.macroId)?.name ?? l("None")}</strong></span>
-						<span><em>${l(MACRO_MODES[macro.mode] ?? "")}</em></span>
-						<button type="button" class=${"icon fas " + (this.#disabled ? "fa-eye" : "fa-edit")} @click=${() => this.#editMacro(idx)} ?disabled=${!macrosEnabled}></button>
-						<button type="button" class="icon fas fa-trash" @click=${() => this.#deleteMacro(idx)} ?disabled=${this.#disabled || !macrosEnabled}></button>
+					<li @contextmenu=${e => openItemContextMenu(e, macro, idx)}>
+						<div class="flexcol">
+							<span><strong>${game.macros.get(macro.macroId)?.name ?? l("None")}</strong></span>
+							<span><em>${l(MACRO_MODES[macro.mode] ?? "")}</em></span>
+						</div>
+						${when(!this.#disabled && macrosEnabled, () => html`
+							<a class="menu-button" @click=${e => openItemContextMenu(e, macro, idx)}>
+								<i class="fas fa-ellipsis-vertical"></i>
+							</a>
+						`, () => html`
+							<a class="menu-button" @click=${() => this.#editMacro(idx)}>
+								<i class="fas fa-eye"></i>
+							</a>
+						`)}
 					</li>
 				`)}
 			</ul>`)}
 
 			${when(macrosEnabled && this.#aura.macros.length === 0, () => html`
-				<p class="hint text-center">No macros configured. Click the plus above to create one.</p>
+				<p class="hint text-center">No macros configured.</p>
 			`)}
+
+			<div class="automated-item-list-create-button">
+				<button @click=${this.#createMacro} ?disabled=${this.#disabled || !macrosEnabled}>
+					<i class="fas fa-plus"></i>
+					Create Macro
+				</button>
+			</div>
 		`;
 	};
 
@@ -598,29 +678,61 @@ export class AuraConfigApplication extends ApplicationV2 {
 		// GAA's (lazy) usage of Sequencer doesn't work properly unless players can create effects
 		const sequencerEnabled = game.settings.get("sequencer", "permissions-effect-create") === 0;
 
+		/** @type {(e: Event, sequence: SequencerEffectConfig, idx: number) => void} */
+		const openItemContextMenu = (e, sequence, idx) => ContextMenu.open(e, [
+			{
+				label: "Edit",
+				icon: "fas fa-edit",
+				onClick: () => this.#editSequence(idx)
+			},
+			{
+				label: "Duplicate",
+				icon: "fas fa-clone",
+				onClick: () => this.#createSequence(sequence)
+			},
+			{
+				label: "Delete",
+				icon: "fas fa-trash",
+				onClick: () => this.#deleteSequence(idx)
+			}
+		]);
+
 		return html`
 			${when(!sequencerEnabled, () => html`
 				<p class="alert" role="alert">Sequencer integration requires players to have permission to create effects. GMs can configure this in the Sequencer settings.</p>
 			`)}
 
-			<div class="text-right" style="margin-top: -0.5rem; margin-bottom: -0.5rem;">
-				<button type="button" class="icon fas fa-plus" @click=${this.#createSequence} ?disabled=${this.#disabled || !sequencerEnabled} style="display: inline-block">
-				</button>
-			</div>
-
-			${when(this.#aura.sequencerEffects.length, () => html`<ul class="automated-item-list automated-item-list-1-col">
+			${when(this.#aura.sequencerEffects.length, () => html`<ul class="automated-item-list">
 				${this.#aura.sequencerEffects.map((sequence, idx) => html`
-					<li>
-						<span><strong>${sequence.effectPath}</strong></span>
-						<button type="button" class=${"icon fas " + (this.#disabled ? "fa-eye" : "fa-edit")} @click=${() => this.#editSequence(idx)} ?disabled=${!sequencerEnabled}></button>
-						<button type="button" class="icon fas fa-trash" @click=${() => this.#deleteSequence(idx)} ?disabled=${this.#disabled || !sequencerEnabled}></button>
+					<li @contextmenu=${e => openItemContextMenu(e, sequence, idx)}>
+						<div class="flexcol">
+							<span><strong>${sequence.effectPath?.length ? sequence.effectPath : "- No effect selected -"}</strong></span>
+							<span><em>${l(SEQUENCE_TRIGGERS[sequence.trigger] ?? "")}</em></span>
+							<span><em>${l(SEQUENCE_POSITIONS[sequence.position] ?? "")}</em></span>
+						</div>
+						${when(!this.#disabled && sequencerEnabled, () => html`
+							<a class="menu-button" @click=${e => openItemContextMenu(e, sequence, idx)}>
+								<i class="fas fa-ellipsis-vertical"></i>
+							</a>
+						`, () => html`
+							<a class="menu-button" @click=${() => this.#editSequence(idx)}>
+								<i class="fas fa-eye"></i>
+							</a>
+						`)}
 					</li>
 				`)}
 			</ul>`)}
 
 			${when(sequencerEnabled && this.#aura.sequencerEffects.length === 0, () => html`
-				<p class="hint text-center">No sequencer effects configured. Click the plus above to create one.</p>
+				<p class="hint text-center">No sequencer effects configured.</p>
 			`)}
+
+			<div class="automated-item-list-create-button">
+				<button @click=${this.#createSequence} ?disabled=${this.#disabled || !sequencerEnabled}>
+					<i class="fas fa-plus"></i>
+					Create Sequence
+				</button>
+			</div>
 		`;
 	};
 
@@ -629,8 +741,8 @@ export class AuraConfigApplication extends ApplicationV2 {
 		const effect = this.#aura.sequencerEffects[sequenceIndex];
 
 		return html`
-			<form class="standard-form" @submit=${e => this.#updateArrayItem(e, this.#aura.sequencerEffects, sequenceIndex)}>
-				<div class="standard-form" style="height: 480px; overflow-y: scroll; padding-right: 1rem;">
+			<form class="flexcol" @submit=${e => this.#updateArrayItem(e, this.#aura.sequencerEffects, sequenceIndex)}>
+				<div class="standard-form" style="flex: 1; overflow-y: scroll; padding-right: 1rem;">
 					<input type="hidden" name="uId" value=${effect.uId}>
 
 					<div class="form-group">
@@ -786,7 +898,7 @@ export class AuraConfigApplication extends ApplicationV2 {
 					</div>
 				</div>
 
-				<div class="flexrow">
+				<div class="flexrow" style="margin-top: 1rem">
 					${when(this.#disabled, () => html`
 						<button type="button" @click=${() => this.#setAlternateContent(null, { render: true })}>
 							${l("Close")}
@@ -805,24 +917,32 @@ export class AuraConfigApplication extends ApplicationV2 {
 	};
 
 	#automationThtTab = () => html`
-		<div class="form-group">
-			<label>Token Ruler on Drag</label>
-			<div class="form-fields">
-				<select name="terrainHeightTools.rulerOnDrag" ?disabled=${this.#disabled}>
-					${selectOptions(THT_RULER_ON_DRAG_MODES, { selected: this.#aura.terrainHeightTools.rulerOnDrag })}
-				</select>
+		<div class="standard-form">
+			<div class="form-group">
+				<label>Token Ruler on Drag</label>
+				<div class="form-fields">
+					<select name="terrainHeightTools.rulerOnDrag" ?disabled=${this.#disabled}>
+						${selectOptions(THT_RULER_ON_DRAG_MODES, { selected: this.#aura.terrainHeightTools.rulerOnDrag })}
+					</select>
+				</div>
 			</div>
-		</div>
 
-		<div class="form-group">
-			<label>Target Tokens</label>
-			<div class="form-fields">
-				<select name="terrainHeightTools.targetTokens" ?disabled=${this.#disabled}>
-					${selectOptions(listAuraTargetFilters(), { selected: this.#aura.terrainHeightTools.targetTokens })}
-				</select>
+			<div class="form-group">
+				<label>Target Tokens</label>
+				<div class="form-fields">
+					<select name="terrainHeightTools.targetTokens" ?disabled=${this.#disabled}>
+						${selectOptions(listAuraTargetFilters(), { selected: this.#aura.terrainHeightTools.targetTokens })}
+					</select>
+				</div>
 			</div>
 		</div>
 	`;
+
+	/** @param {number} tabIndex  */
+	#setSelectedTab(tabIndex) {
+		this.#selectedTabIndex = tabIndex;
+		this.render();
+	}
 
 	/** @type {(e: Event) => void} */
 	#valueChange = e => {
@@ -872,8 +992,11 @@ export class AuraConfigApplication extends ApplicationV2 {
 		this.#auraUpdated();
 	};
 
-	#createEffect = () => {
-		this.#aura.effects.push(effectConfigDefaults());
+	#createEffect = source => {
+		this.#aura.effects.push({
+			...effectConfigDefaults(),
+			...foundry.utils.deepClone(source)
+		});
 		this.#setAlternateContent(this.#effectEditNestedDialog(this.#aura.effects.length - 1), { title: "Edit Effect" });
 		this.#auraUpdated();
 	};
@@ -890,8 +1013,11 @@ export class AuraConfigApplication extends ApplicationV2 {
 		this.#auraUpdated();
 	};
 
-	#createMacro = () => {
-		this.#aura.macros.push(macroConfigDefaults());
+	#createMacro = source => {
+		this.#aura.macros.push({
+			...macroConfigDefaults(),
+			...foundry.utils.deepClone(source)
+		});
 		this.#setAlternateContent(this.#macroEditNestedDialog(this.#aura.macros.length - 1), { title: "Edit Macro" });
 		this.#auraUpdated();
 	};
@@ -925,8 +1051,12 @@ export class AuraConfigApplication extends ApplicationV2 {
 		}
 	};
 
-	#createSequence = () => {
-		this.#aura.sequencerEffects.push(sequencerEffectConfigDefaults());
+	/** @param {SequencerEffectConfig | undefined} [source] */
+	#createSequence = source => {
+		this.#aura.sequencerEffects.push({
+			...sequencerEffectConfigDefaults(),
+			...foundry.utils.deepClone(source)
+		});
 		this.#editSequence(this.#aura.sequencerEffects.length - 1);
 		this.#auraUpdated();
 	};
@@ -961,15 +1091,11 @@ export class AuraConfigApplication extends ApplicationV2 {
 	}
 
 	/** @override */
-	render(...args) {
-		const promise = super.render(...args);
-		setTimeout(() => this.setPosition({ height: "auto" }));
-		return promise;
-	}
-
-	/** @override */
 	_onFirstRender(...args) {
 		super._onFirstRender(...args);
+
+		this.element.addEventListener("input", this.#valueChange.bind(this));
+
 		if (this.#attachTo) {
 			this.#attachTo[this.id] = this;
 		}
@@ -984,12 +1110,8 @@ export class AuraConfigApplication extends ApplicationV2 {
 	}
 
 	/** @override */
-	_replaceHTML(templateResult, container, { isFirstRender }) {
+	_replaceHTML(templateResult, container) {
 		render(templateResult, container);
-
-		if (isFirstRender) {
-			container.addEventListener("tabchange", () => setTimeout(() => this.setPosition({ height: "auto" })));
-		}
 	}
 
 	/** @override */
