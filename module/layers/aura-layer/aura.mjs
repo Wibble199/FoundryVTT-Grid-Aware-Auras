@@ -196,14 +196,23 @@ export class Aura {
 		}
 		this.#graphics.endFill();
 
-		// 2. Outer border
+		// 2. Borders
 		this.#configureLineStyle(auraConfig);
-		drawDashedComplexPath(this.#graphics, this.#geometry.getPath(), { dashSize: auraConfig.lineDashSize, gapSize: auraConfig.lineGapSize });
+		switch (auraConfig.lineType) {
+			case LINE_TYPES.SOLID: {
+				drawComplexPath(this.#graphics, this.#geometry.getPath());
+				if (this.#innerGeometry)
+					drawComplexPath(this.#graphics, this.#innerGeometry.getPath());
+				break;
+			}
 
-		// 3. Inner border
-		if (this.#innerGeometry) {
-			this.#configureLineStyle(auraConfig);
-			drawDashedComplexPath(this.#graphics, this.#innerGeometry.getPath(), { dashSize: auraConfig.lineDashSize, gapSize: auraConfig.lineGapSize });
+			case LINE_TYPES.DASHED: {
+				const dashConfig = { dashSize: auraConfig.lineDashSize, gapSize: auraConfig.lineGapSize };
+				drawDashedComplexPath(this.#graphics, this.#geometry.getPath(), dashConfig);
+				if (this.#innerGeometry)
+					drawDashedComplexPath(this.#graphics, this.#innerGeometry.getPath(), dashConfig);
+				break;
+			}
 		}
 
 		return;
